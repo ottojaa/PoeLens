@@ -43,7 +43,8 @@ trap 'rm -f "${BACKUP_FILE}.partial"' EXIT
 echo "Dumping the database to ${BACKUP_FILE}..."
 docker exec "$CONTAINER" sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' >"${BACKUP_FILE}.partial"
 
-# Reading the archive's table of contents catches a truncated or empty dump before it replaces anything.
+# A failed or interrupted pg_dump already aborts the script (set -e). Reading the archive's table of contents on top
+# catches an empty or garbled file before it is kept.
 docker exec -i "$CONTAINER" pg_restore --list <"${BACKUP_FILE}.partial" >/dev/null
 mv "${BACKUP_FILE}.partial" "$BACKUP_FILE"
 echo "Wrote $(du -h "$BACKUP_FILE" | cut -f1): ${BACKUP_FILE}"

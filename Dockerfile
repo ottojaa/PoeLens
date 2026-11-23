@@ -19,7 +19,8 @@ RUN node .yarn/releases/yarn-4.17.1.cjs install --immutable
 
 COPY . .
 
-# Where the browser reaches the API. A production web build refuses to run without it.
+# Where the browser reaches the API. A production web build refuses to run without it. The only place this URL is
+# set: scripts/deploy.sh builds this stage as it is, and the runtime image carries no web files.
 ARG VITE_API_URL=https://api.poelens.com
 ENV VITE_API_URL=$VITE_API_URL
 ENV CI=true

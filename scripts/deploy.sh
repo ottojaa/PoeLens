@@ -5,7 +5,8 @@
 set -euo pipefail
 
 # The whole script lives in a function: `git reset` below replaces this very file, and bash reads a script as it
-# runs, so a file rewritten mid-run could be executed from the wrong offset. As a function it is parsed first.
+# runs, so a file rewritten mid-run could be executed from the wrong offset. As a function it is parsed first, and
+# `main "$@"; exit` on the last line stops bash from reading anything after it.
 main() {
     DEPLOY_DIR="${DEPLOY_DIR:-/opt/poelens}"
     WEB_DIR="${DEPLOY_DIR}/web"
@@ -59,7 +60,7 @@ main() {
 extract_web() {
     local cid
 
-    docker build --target builder --build-arg VITE_API_URL=https://api.poelens.com -t poelens-builder .
+    docker build --target builder -t poelens-builder .
 
     # An extractor container left by an aborted run would block `docker rmi`, and under `set -e` that used to abort
     # the deploy before the backend restarted. Clear it first.
@@ -78,5 +79,4 @@ extract_web() {
     docker rmi -f poelens-builder >/dev/null 2>&1 || true
 }
 
-main "$@"
-exit
+main "$@"; exit

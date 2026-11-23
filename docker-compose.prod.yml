@@ -11,8 +11,6 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-            args:
-                VITE_API_URL: https://api.poelens.com
         container_name: poelens-backend
         # An absolute default so it works from any checkout. Override POELENS_ENV_FILE to point elsewhere, for example
         # to validate this file: POELENS_ENV_FILE=.env.production.example docker compose -f docker-compose.prod.yml config
