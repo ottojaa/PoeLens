@@ -1,7 +1,8 @@
 #!/bin/bash
 # Deploys origin/main on the home server. Run on the server: bash /opt/poelens/scripts/deploy.sh
 # (the GitHub workflow does it over SSH). Order: build everything, dump the database, migrate, start the backend,
-# and only then publish the web files, so a failed step leaves the previous site and API running together.
+# and only then publish the web files. A step that fails stops the deploy there: the old web files stay in place, and
+# the old backend keeps running unless the failure is its own health check (the new container has replaced it by then).
 set -euo pipefail
 
 # The whole script lives in a function: `git reset` below replaces this very file, and bash reads a script as it
@@ -30,11 +31,13 @@ main() {
     extract_web
 
     # 2. Dump the database from the running (old) container. A failed dump aborts the deploy with the old stack
-    #    untouched. The only skip is the first deploy, when no database container exists yet.
-    if [ -n "$(docker ps -q --filter 'name=^poelens-postgres$')" ]; then
+    #    untouched. The only skip is the first deploy, when no database container exists yet. A stopped container
+    #    is started first, so it can be dumped.
+    if [ -n "$(docker ps -aq --filter 'name=^poelens-postgres$')" ]; then
+        "${COMPOSE[@]}" up -d --wait postgres
         bash scripts/backup.sh predeploy 7
     else
-        echo "No running poelens-postgres container: skipping the pre-deploy backup (first deploy)."
+        echo "No poelens-postgres container: skipping the pre-deploy backup (first deploy)."
     fi
 
     # 3. Database up, then migrate BEFORE the new backend starts, so an enabled collector never polls against an old

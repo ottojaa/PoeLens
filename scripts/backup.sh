@@ -28,14 +28,21 @@ read_env_value() {
 }
 
 BACKUP_DIR="${BACKUP_DIR:-$(read_env_value BACKUP_DIR)}"
-BACKUP_DIR="${BACKUP_DIR:-${DEPLOY_DIR}/backups}"
+
+# A configured directory must already exist: `mkdir -p` on an unmounted NAS would quietly fill the local disk instead.
+if [ -z "$BACKUP_DIR" ]; then
+    BACKUP_DIR="${DEPLOY_DIR}/backups"
+    mkdir -p "$BACKUP_DIR"
+elif [ ! -d "$BACKUP_DIR" ]; then
+    echo "ERROR: BACKUP_DIR ${BACKUP_DIR} does not exist (is the NAS mounted?)" >&2
+    exit 1
+fi
 
 if [ -z "$(docker ps -q --filter "name=^${CONTAINER}\$")" ]; then
     echo "ERROR: container ${CONTAINER} is not running; nothing to dump" >&2
     exit 1
 fi
 
-mkdir -p "$BACKUP_DIR"
 BACKUP_FILE="${BACKUP_DIR}/poelens-${PREFIX}-$(date -u '+%Y%m%dT%H%M%SZ').dump"
 # A half-written file must never look like a dump, and must not be left behind when the dump fails.
 trap 'rm -f "${BACKUP_FILE}.partial"' EXIT

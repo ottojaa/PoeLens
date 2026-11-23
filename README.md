@@ -182,6 +182,7 @@ dbexec 'psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE \"$POSTGRES_DB\" 
 dbexec 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS timescaledb" -c "SELECT timescaledb_pre_restore()"'
 dbexec 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <"$DUMP"
 dbexec 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SELECT timescaledb_post_restore()"'
+$COMPOSE run --rm --no-deps backend node apps/backend/dist/apps/backend/src/db/migrate.js   # the dump may predate the deployed code
 $COMPOSE up -d --wait backend
 ```
 
