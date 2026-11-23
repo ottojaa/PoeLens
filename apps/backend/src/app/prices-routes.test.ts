@@ -1,0 +1,72 @@
+import {
+    HistoryResponseSchema,
+    LatestResponseSchema,
+    LeaguesResponseSchema,
+    MoversResponseSchema,
+    SearchResponseSchema,
+    TableResponseSchema,
+} from '@poelens/shared';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { runCycle } from '../collector/runtime.js';
+import { createPoeNinjaPoe2Adapter } from '../collector/sources/poe-ninja/poe2.js';
+import { createPgCollectorStore } from '../collector/store-pg.js';
+import { buildTestApp } from '../testing/build-app.js';
+import { FakeNinja } from '../testing/fake-ninja.js';
+import { createTestDatabase, SKIP_DB_TESTS, type TestDatabase } from '../testing/test-database.js';
+
+// Under NODE_ENV=test the price routes are open: the production refusal is covered in prices-access.test.ts.
+describe.skipIf(SKIP_DB_TESTS)('price routes in test mode', () => {
+    let test: TestDatabase;
+    let server: Awaited<ReturnType<typeof buildTestApp>>;
+
+    beforeAll(async () => {
+        test = await createTestDatabase();
+        await runCycle({
+            adapter: createPoeNinjaPoe2Adapter({ leagues: ['Forbidden Rites'] }),
+            store: createPgCollectorStore(test.db),
+            fetcher: new FakeNinja(),
+            now: () => new Date(),
+        });
+        process.env.DATABASE_URL = test.url;
+        server = await buildTestApp();
+    });
+
+    afterAll(async () => {
+        await server.close();
+        await test.close();
+    });
+
+    async function get(url: string) {
+        const res = await server.inject({ method: 'GET', url });
+
+        return { status: res.statusCode, body: res.json() };
+    }
+
+    it('answers the Currency table with its envelope', async () => {
+        const { status, body } = await get('/prices/table?game=poe2&category=Currency');
+        const parsed = TableResponseSchema.parse(body);
+
+        expect(status).toBe(200);
+        expect(parsed).toMatchObject({ game: 'poe2', league: { name: 'Forbidden Rites', current: true }, unit: 'exalted' });
+        expect(parsed.rows).toHaveLength(11);
+    });
+
+    it('answers latest, history, movers, search and leagues', async () => {
+        const table = TableResponseSchema.parse((await get('/prices/table?game=poe2&category=Currency')).body);
+        const divine = table.rows.find((row) => row.item.name === 'Divine Orb');
+        const id = divine?.item.id ?? 0;
+
+        expect(LatestResponseSchema.parse((await get(`/prices/latest?game=poe2&items=${id},999999`)).body).unlisted).toEqual([999999]);
+        expect(HistoryResponseSchema.parse((await get(`/prices/history?game=poe2&item=${id}&bucket=day`)).body).points).toHaveLength(1);
+        expect(MoversResponseSchema.parse((await get('/prices/movers?game=poe2')).body).window).toBe('24h');
+        expect(SearchResponseSchema.parse((await get('/prices/search?game=poe2&q=divne')).body).results[0]?.item.name).toBe('Divine Orb');
+        expect(LeaguesResponseSchema.parse((await get('/prices/leagues?game=poe2')).body).leagues[0]?.name).toBe('Forbidden Rites');
+    });
+
+    it('answers a bad query with 400 and an unknown league or item with 404', async () => {
+        expect((await get('/prices/table?game=poe2')).status).toBe(400);
+        expect((await get('/prices/table?game=poe2&category=Currency&league=Nowhere')).status).toBe(404);
+        expect((await get('/prices/history?game=poe2&item=999999')).status).toBe(404);
+        expect((await get('/prices/history?game=poe2&item=1&bucket=hour&from=2026-01-01T00:00:00.000Z')).status).toBe(400);
+    });
+});

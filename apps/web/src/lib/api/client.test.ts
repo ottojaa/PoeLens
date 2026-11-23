@@ -7,7 +7,7 @@ const validHealth = {
     timestamp: '2026-12-11T18:00:00.000Z',
     version: '0.0.1',
     uptime: 3,
-    services: { database: 'down' },
+    services: { database: 'down', collector: { status: 'disabled', lastRun: null, lastSuccessAt: null } },
 };
 
 function respondWith(body: unknown, init?: { status?: number }) {

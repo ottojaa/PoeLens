@@ -1,55 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { FakeNinja, fixture } from '../testing/fake-ninja.js';
 import { MemoryCollectorStore } from '../testing/memory-collector-store.js';
-import type { FetchResult, Fetcher } from './http.js';
 import { runCycle } from './runtime.js';
 import { createPoeNinjaPoe2Adapter } from './sources/poe-ninja/poe2.js';
 import { gunzipBody } from './store.js';
-
-const FIXTURES = join(__dirname, 'sources/poe-ninja/fixtures');
-
-function fixture(name: string): Buffer {
-    return readFileSync(join(FIXTURES, name));
-}
-
-interface Call {
-    url: string;
-    etag: string | null;
-}
-
-/** A fake poe.ninja: serves the recorded fixtures, and answers 304 when asked with the ETag it handed out. */
-class FakeNinja implements Fetcher {
-    calls: Call[] = [];
-    leagues = fixture('leagues.json');
-    etagSuffix = 'v1';
-    /** Per-URL overrides: a status to answer with, or a body to serve. */
-    overrides = new Map<string, { status: number } | { body: Buffer }>();
-    failWith: Error | null = null;
-
-    async get(url: string, etag: string | null): Promise<FetchResult> {
-        this.calls.push({ url, etag });
-
-        if (this.failWith) throw this.failWith;
-
-        const override = this.overrides.get(url);
-
-        if (override && 'status' in override) return { status: override.status, etag: null, body: Buffer.alloc(0) };
-
-        const body = override && 'body' in override ? override.body : this.bodyFor(url);
-        const tag = `W/"${url.length}-${this.etagSuffix}"`;
-
-        if (etag === tag && !override) return { status: 304, etag: tag, body: Buffer.alloc(0) };
-
-        return { status: 200, etag: tag, body };
-    }
-
-    private bodyFor(url: string): Buffer {
-        if (url.endsWith('/leagues')) return this.leagues;
-
-        return url.includes('/exchange/') ? fixture('exchange-currency.json') : fixture('stash-unique-weapons.json');
-    }
-}
 
 function setup(leagues: string[] = ['Forbidden Rites']) {
     const ninja = new FakeNinja();

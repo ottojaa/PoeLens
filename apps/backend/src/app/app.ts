@@ -18,6 +18,9 @@ export const app = fp(async function app(fastify: FastifyInstance) {
 
     fastify.register(AutoLoad, {
         dir: path.join(__dirname, 'routes'),
+        // Runs a folder's `autohooks.ts` in front of every route in it (the price routes' access check). A folder also
+        // prefixes its routes' paths, so `routes/prices/table.route.ts` serves `/prices/table`.
+        autoHooks: true,
         ignorePattern: AUTOLOAD_IGNORE_PATTERN,
     });
 });

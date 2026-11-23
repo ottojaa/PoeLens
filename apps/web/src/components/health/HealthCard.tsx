@@ -7,16 +7,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHealth } from '@/lib/api/health';
 import { formatUptime } from '@/lib/format';
 
-const STATUS_TONE = {
+type Status = HealthResponse['status'] | HealthResponse['services']['database'] | HealthResponse['services']['collector']['status'];
+
+const STATUS_TONE: Record<Status, string> = {
     ok: 'border-success/40 bg-success/10 text-success',
     degraded: 'border-warning/50 bg-warning/10 text-warning',
-} as const;
+    down: 'border-warning/50 bg-warning/10 text-warning',
+    disabled: 'border-border text-muted-foreground',
+};
 
-function StatusBadge({ status }: { status: HealthResponse['status'] | HealthResponse['services']['database'] }) {
-    const tone = status === 'ok' ? STATUS_TONE.ok : STATUS_TONE.degraded;
-
+function StatusBadge({ status }: { status: Status }) {
     return (
-        <Badge variant="outline" className={tone}>
+        <Badge variant="outline" className={STATUS_TONE[status]}>
             {status}
         </Badge>
     );
@@ -66,6 +68,9 @@ export function HealthCard() {
                         </Row>
                         <Row label="Database">
                             <StatusBadge status={data.services.database} />
+                        </Row>
+                        <Row label="Price collector">
+                            <StatusBadge status={data.services.collector.status} />
                         </Row>
                         <Row label="Version">{data.version}</Row>
                         <Row label="Uptime">{formatUptime(data.uptime)}</Row>
