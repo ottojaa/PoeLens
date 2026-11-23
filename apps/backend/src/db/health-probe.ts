@@ -27,23 +27,28 @@ function getProbePool(): Pool {
     return probePool;
 }
 
-/** True when Postgres answers a trivial query in time. Never throws. */
-export async function checkDbConnection(): Promise<boolean> {
+/** Runs a query on the probe pool under the probe's limits. Resolves to null when the database fails or is too slow. Never throws. */
+export async function probeQuery<Row extends object>(text: string, values: unknown[] = []): Promise<Row[] | null> {
     let timer: NodeJS.Timeout | undefined;
     // The connect and query limits above add up (a slow accept, then a stalled query), so one timer bounds the whole probe.
-    const deadline = new Promise<false>((resolve) => {
-        timer = setTimeout(() => resolve(false), PROBE_DEADLINE_MS);
+    const deadline = new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), PROBE_DEADLINE_MS);
     });
     const probe = getProbePool()
-        .query('SELECT 1')
-        .then(() => true)
-        .catch(() => false);
+        .query<Row>(text, values)
+        .then((result) => result.rows)
+        .catch(() => null);
 
     try {
         return await Promise.race([probe, deadline]);
     } finally {
         clearTimeout(timer);
     }
+}
+
+/** True when Postgres answers a trivial query in time. Never throws. */
+export async function checkDbConnection(): Promise<boolean> {
+    return (await probeQuery('SELECT 1')) !== null;
 }
 
 export async function closeHealthProbe(): Promise<void> {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppError, ConflictError, NotFoundError, ValidationError } from './errors.js';
+import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from './errors.js';
 
 describe('AppError family', () => {
     it('serialises to the wire format the clients read', () => {
@@ -13,6 +13,7 @@ describe('AppError family', () => {
         [new NotFoundError('League'), 404, 'NOT_FOUND', 'League not found'],
         [new ValidationError('Bad game'), 400, 'VALIDATION_ERROR', 'Bad game'],
         [new ConflictError('Already exists'), 409, 'CONFLICT', 'Already exists'],
+        [new ForbiddenError('Not yet'), 403, 'FORBIDDEN', 'Not yet'],
     ])('%s maps to its status and code', (error, statusCode, code, message) => {
         expect(error).toBeInstanceOf(AppError);
         expect(error).toBeInstanceOf(Error);

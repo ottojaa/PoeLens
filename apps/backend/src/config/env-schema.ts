@@ -3,6 +3,8 @@ import { z } from 'zod';
 // Matches docker-compose.yml. Only used outside production, so a checkout with no .env still boots (and /health says "degraded").
 const DEV_DATABASE_URL = 'postgres://poelens:poelens@localhost:5433/poelens';
 
+const DEFAULT_COLLECTOR_CONTACT = 'https://github.com/ottojaa/PoeLens';
+
 const envSchema = z
     .object({
         // Server
@@ -15,6 +17,24 @@ const envSchema = z
 
         // CORS (HTTP API): comma-separated origins
         CORS_ORIGIN: z.string().default('http://localhost:4300'),
+
+        // Price collector. Off unless switched on (production only), so boots, `nx serve` and tests never poll poe.ninja.
+        COLLECTOR_ENABLED: z
+            .enum(['true', 'false'])
+            .default('false')
+            .transform((value) => value === 'true'),
+        // Goes into the User-Agent so a data source can reach whoever is polling.
+        COLLECTOR_CONTACT: z.string().min(1).default(DEFAULT_COLLECTOR_CONTACT),
+        // Comma-separated league names; empty means the current challenge league and its hardcore version.
+        COLLECTOR_LEAGUES: z
+            .string()
+            .default('')
+            .transform((value) =>
+                value
+                    .split(',')
+                    .map((name) => name.trim())
+                    .filter(Boolean),
+            ),
     })
     .superRefine((value, ctx) => {
         if (value.NODE_ENV === 'production' && !value.DATABASE_URL) {

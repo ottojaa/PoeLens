@@ -2,7 +2,8 @@ import Fastify from 'fastify';
 import { app } from './app/app.js';
 import { env } from './config/env.js';
 import { checkDbConnection } from './db/health-probe.js';
-import { closeDb } from './db/kysely.js';
+import { closeDb, db } from './db/kysely.js';
+import { startCollector } from './collector/start.js';
 
 const LOGGER_BY_ENV = {
     development: {
@@ -24,10 +25,14 @@ async function main(): Promise<void> {
 
     server.register(app);
 
+    let stopCollector: (() => Promise<void>) | undefined;
+
     for (const signal of ['SIGINT', 'SIGTERM'] as const) {
         process.on(signal, async () => {
             server.log.info(`Received ${signal}, shutting down`);
             await server.close();
+            // Before the database closes: a cycle in flight is still writing.
+            await stopCollector?.();
             await closeDb();
             process.exit(0);
         });
@@ -38,6 +43,11 @@ async function main(): Promise<void> {
 
     // After listen, so a slow or missing database never delays the API coming up.
     const dbUp = await checkDbConnection();
+
+    if (env.COLLECTOR_ENABLED) {
+        stopCollector = startCollector({ db, log: server.log });
+        server.log.info('Price collector enabled');
+    }
 
     if (dbUp) server.log.info('Database connection established');
     else server.log.warn('Database connection failed: /health reports "degraded" until it comes back');
