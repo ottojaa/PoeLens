@@ -31,9 +31,10 @@ main() {
     extract_web
 
     # 2. Dump the database. A failed dump aborts the deploy before anything running has changed. The only skip is the
-    #    first deploy: no data volume yet. If the volume exists but its container is stopped or was removed, the
-    #    container is started from the existing definition (--no-recreate never replaces a running one) so it can be
-    #    dumped, rather than treating months of history as a first deploy.
+    #    first deploy: no data volume yet. If the volume exists but its container is not running, it is started so it
+    #    can be dumped, rather than treating months of history as a first deploy. --no-recreate leaves a running
+    #    container alone, and a stopped one keeps its old definition; a removed one (after `docker compose down`) is
+    #    created from the compose file that was just fetched, on the old data, before the dump.
     if docker volume inspect poelens_postgres_data >/dev/null 2>&1; then
         "${COMPOSE[@]}" up -d --wait --no-recreate postgres
         bash scripts/backup.sh predeploy 7
