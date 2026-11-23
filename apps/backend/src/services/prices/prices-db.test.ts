@@ -266,7 +266,12 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
     describe('search', () => {
         const search = (q: string) => searchItems(test.db, SearchQuerySchema.parse({ game: 'poe2', q }));
 
-        it('finds Divine Orb from the typo "divne"', async () => {
+        it('finds Divine Orb from the typo "divne", ahead of a name that only shares trigrams', async () => {
+            await test.db
+                .insertInto('items')
+                .values({ game: 'poe2', name: 'Sanguine Diviner', base_type: 'Bone Wand', category: 'UniqueWeapons', icon: null })
+                .execute();
+
             const response = await search('divne');
 
             expect(response.query).toBe('divne');

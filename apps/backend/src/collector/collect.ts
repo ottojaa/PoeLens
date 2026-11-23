@@ -13,6 +13,9 @@ async function main(): Promise<void> {
     const collector = createCollector({ db, contact: env.COLLECTOR_CONTACT, leagues: env.COLLECTOR_LEAGUES });
     const pool = new Pool({ connectionString: env.DATABASE_URL, max: 1 });
 
+    // An idle-client error would otherwise crash the process.
+    pool.on('error', () => undefined);
+
     try {
         const result = await withCollectorLock(pool, async () => {
             await collector.store.abandonStaleRuns(new Date());

@@ -6,7 +6,12 @@ import { ExchangeBodySchema, LeaguesBodySchema, StashBodySchema } from './schema
 /** A unique with fewer listings than this has a price that one seller sets (a lone listing shows 39,235,000 divine). */
 export const MIN_LISTINGS = 5;
 
-/** An exchange line whose traded value is under this many units of the item itself is too thin to trust. */
+/**
+ * An exchange line whose traded value is under this many units of the item itself is too thin to trust. Kept at one unit
+ * on purpose: the rarest and dearest currencies (Mirror of Kalandra, Hinekora's Lock) trade only a few units an hour, so a
+ * higher cut would hide them from the default table. A line just above it can still swing hard between polls. Changing the
+ * number means bumping `PARSER_VERSION` and reparsing.
+ */
 export const MIN_TRADED_UNITS = 1;
 
 /** Exchange images are paths on GGG's image host, not on poe.ninja. */

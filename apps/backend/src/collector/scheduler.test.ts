@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createTestDatabase, SKIP_DB_TESTS, type TestDatabase } from '../testing/test-database.js';
 import { withCollectorLock } from './lock.js';
 import { CYCLE_INTERVAL_MS, startScheduler, toDelay } from './scheduler.js';
@@ -100,5 +100,98 @@ describe.skipIf(SKIP_DB_TESTS)('the scheduler', () => {
         await expect(scheduler.runNow()).rejects.toThrow('boom');
         expect(await withCollectorLock(pool, async () => 'free')).toEqual({ ran: true, value: 'free' });
         await scheduler.stop();
+    });
+    describe('the timer loop', () => {
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        /** A scheduler on fake timers whose cycles record when they began, as `collector_runs` would. */
+        function timedScheduler(runCycle: (calls: number) => Promise<RunSummary>) {
+            vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+            let clock = Date.UTC(2026, 10, 23, 12, 0, 0);
+            let lastStart: Date | null = null;
+            let calls = 0;
+            const onError = vi.fn();
+            const scheduler = startScheduler({
+                pool,
+                runCycle: async () => {
+                    calls += 1;
+                    lastStart = new Date(clock);
+
+                    return runCycle(calls);
+                },
+                abandonStaleRuns: async () => 0,
+                loadLastStart: async () => lastStart,
+                onError,
+                now: () => clock,
+            });
+
+            const advance = async (ms: number) => {
+                clock += ms;
+                await vi.advanceTimersByTimeAsync(ms);
+            };
+
+            return { scheduler, onError, advance, calls: () => calls };
+        }
+
+        it('runs the first cycle shortly after boot, then one interval after the last cycle began', async () => {
+            const { scheduler, advance, calls } = timedScheduler(async () => SUMMARY);
+
+            await advance(0);
+            await advance(5 * SECOND);
+            await vi.waitFor(() => expect(calls()).toBe(1));
+
+            await advance(CYCLE_INTERVAL_MS - SECOND);
+            expect(calls()).toBe(1);
+
+            await advance(SECOND);
+            await vi.waitFor(() => expect(calls()).toBe(2));
+            await scheduler.stop();
+        });
+
+        it('keeps scheduling after a cycle fails, and reports the failure', async () => {
+            const { scheduler, onError, advance, calls } = timedScheduler(async (call) => {
+                if (call === 1) throw new Error('boom');
+
+                return SUMMARY;
+            });
+
+            await advance(0);
+            await advance(5 * SECOND);
+            await vi.waitFor(() => expect(onError).toHaveBeenCalledWith('Collector cycle failed', expect.any(Error)));
+
+            await advance(CYCLE_INTERVAL_MS);
+            await vi.waitFor(() => expect(calls()).toBe(2));
+            await scheduler.stop();
+        });
+
+        it('waits for the cycle in flight when stopped, and schedules nothing afterwards', async () => {
+            let finish: () => void = () => undefined;
+            const { scheduler, advance, calls } = timedScheduler(
+                () =>
+                    new Promise<RunSummary>((resolve) => {
+                        finish = () => resolve(SUMMARY);
+                    }),
+            );
+
+            await advance(0);
+            await advance(5 * SECOND);
+            await vi.waitFor(() => expect(calls()).toBe(1));
+
+            let stopped = false;
+            const stopping = scheduler.stop().then(() => {
+                stopped = true;
+            });
+
+            await advance(SECOND);
+            expect(stopped).toBe(false);
+
+            finish();
+            await stopping;
+            await advance(CYCLE_INTERVAL_MS * 2);
+            expect(calls()).toBe(1);
+        });
     });
 });

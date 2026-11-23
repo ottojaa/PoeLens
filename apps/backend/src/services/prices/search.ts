@@ -24,8 +24,9 @@ const WORD_SIMILARITY_THRESHOLD = 0.4;
 
 /**
  * Items of a game whose name or base type match the text: a trigram word match (`<%`, which forgives typos: "divne" finds
- * Divine Orb) or a plain substring, ranked by how well the best of the two fields matches. Both are served by the GIN
- * trigram indexes.
+ * Divine Orb) or a plain substring. Results are ranked by strict word similarity, which only counts whole words, so "divne"
+ * puts Divine Orb ahead of Sanguine Diviner, which merely contains similar trigrams. The match conditions are served by the
+ * GIN trigram indexes.
  */
 export async function searchItems(db: Kysely<Database>, query: SearchQuery): Promise<SearchResponse> {
     const pattern = `%${escapeLike(query.q)}%`;
@@ -34,10 +35,10 @@ export async function searchItems(db: Kysely<Database>, query: SearchQuery): Pro
 
         return sql<MatchRow>`
         SELECT id, name, base_type, category, icon,
-               GREATEST(word_similarity(${query.q}, name), word_similarity(${query.q}, coalesce(base_type, ''))) AS score
+               GREATEST(strict_word_similarity(${query.q}, name), strict_word_similarity(${query.q}, base_type)) AS score
           FROM items
          WHERE game = ${query.game}
-           AND (${query.q} <% name OR ${query.q} <% coalesce(base_type, '') OR name ILIKE ${pattern} OR base_type ILIKE ${pattern})
+           AND (${query.q} <% name OR ${query.q} <% base_type OR name ILIKE ${pattern} OR base_type ILIKE ${pattern})
          ORDER BY score DESC, length(name), name
          LIMIT ${query.limit}`.execute(trx);
     });
