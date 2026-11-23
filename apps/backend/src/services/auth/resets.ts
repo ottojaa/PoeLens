@@ -1,4 +1,4 @@
-import { NotFoundError, type ResetLinkResponse } from '@poelens/shared';
+import { ConflictError, NotFoundError, type ResetLinkResponse } from '@poelens/shared';
 import { sql, type Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import { invalidLinkError } from './link-errors.js';
@@ -6,12 +6,17 @@ import { hashPassword } from './passwords.js';
 import { deleteRefreshTokens } from './sessions.js';
 import { expiresInDays, generateToken, hashToken, RESET_TTL_DAYS } from './tokens.js';
 
-/** An admin's one-time link for a user who lost their password. A user has at most one open link: a new one replaces it. */
+/**
+ * An admin's one-time link for a user who lost their password. A user has at most one open link: a new one replaces it.
+ * A deactivated user gets none, since redeeming it would be refused: reactivate them first.
+ */
 export function issueResetLink(db: Kysely<Database>, input: { userId: string; createdBy: string }): Promise<ResetLinkResponse> {
     return db.transaction().execute(async (trx) => {
-        const user = await trx.selectFrom('users').select('id').where('id', '=', input.userId).executeTakeFirst();
+        const user = await trx.selectFrom('users').select(['id', 'is_active']).where('id', '=', input.userId).executeTakeFirst();
 
         if (!user) throw new NotFoundError('User', input.userId);
+
+        if (!user.is_active) throw new ConflictError('Reactivate this person before issuing a reset link');
 
         await trx.deleteFrom('password_resets').where('user_id', '=', input.userId).where('used_at', 'is', null).execute();
 

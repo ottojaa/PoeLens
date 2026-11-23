@@ -88,7 +88,7 @@ function UserRow({ user, isSelf, busy, onToggle, onReset }: UserRowProps) {
                 <span className="text-muted-foreground truncate text-sm">{user.email}</span>
             </div>
             <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={busy} onClick={onReset}>
+                <Button size="sm" variant="outline" disabled={busy || !user.isActive} onClick={onReset}>
                     Reset link
                 </Button>
                 {/* An admin cannot deactivate themselves: the only admin would lock everyone out. */}

@@ -150,20 +150,27 @@ describe.skipIf(SKIP_DB_TESTS)('admin: users, deactivation and password resets',
             expect((await reset(token)).statusCode).toBe(410);
         });
 
-        it('keeps the link usable when the new password is refused, and rejects a deactivated account', async () => {
+        it('keeps the link usable when the new password is refused', async () => {
             const userId = await seedUser(test.db, { email: 'short@example.com' });
             const token = await issueLink(userId);
 
             expect((await reset(token, 'short')).statusCode).toBe(400);
             expect((await reset(token)).statusCode).toBe(200);
+        });
 
+        it('issues no link for a deactivated account, and a link issued earlier stops working once they are deactivated', async () => {
             const inactive = await seedUser(test.db, { email: 'off@example.com', isActive: false });
-            const offToken = await issueLink(inactive);
+            const refused = await post(`/admin/users/${inactive}/reset-link`);
 
-            expect((await reset(offToken)).statusCode).toBe(410);
-            expect(await test.db.selectFrom('password_resets').select('used_at').where('user_id', '=', inactive).executeTakeFirstOrThrow()).toEqual({
-                used_at: null,
-            });
+            expect(refused.statusCode).toBe(409);
+            expect(await test.db.selectFrom('password_resets').select('user_id').where('user_id', '=', inactive).execute()).toEqual([]);
+
+            const userId = await seedUser(test.db, { email: 'leaving@example.com' });
+            const token = await issueLink(userId);
+
+            await post(`/admin/users/${userId}/deactivate`);
+
+            expect((await reset(token)).statusCode).toBe(410);
         });
 
         it('answers 404 for a reset link for nobody', async () => {

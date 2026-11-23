@@ -6,6 +6,7 @@ import { Field } from '@/components/auth/Field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInvitePreview } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
 import { toFormError } from '@/lib/api/error-message';
 import { useAuth } from '@/lib/auth';
 
@@ -20,6 +21,16 @@ function InvitePage() {
     const preview = useInvitePreview(token);
 
     if (preview.isPending) return <Skeleton className="mx-auto h-72 w-full max-w-sm" aria-busy="true" aria-label="Checking your invite" />;
+
+    if (preview.isError && !(preview.error instanceof ApiError && preview.error.status === 410)) {
+        return (
+            <AuthCard title="Can't check this invite" description="The server didn't answer as expected. Your link may still be fine.">
+                <Button variant="outline" onClick={() => void preview.refetch()}>
+                    Try again
+                </Button>
+            </AuthCard>
+        );
+    }
 
     if (preview.isError) {
         return (

@@ -154,4 +154,14 @@ describe.skipIf(SKIP_DB_TESTS)('invites and the first admin', () => {
 
         expect(res.statusCode).toBe(403);
     });
+
+    it('issues a new bootstrap invite when every admin is deactivated, so the instance is never locked out', async () => {
+        await test.db.updateTable('users').set({ is_active: false }).where('role', '=', 'admin').execute();
+
+        const { stdout } = await runBootstrap();
+
+        expect(stdout).toContain('/invite/');
+
+        await test.db.updateTable('users').set({ is_active: true }).where('role', '=', 'admin').execute();
+    });
 });

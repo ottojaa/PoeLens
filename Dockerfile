@@ -49,4 +49,5 @@ EXPOSE 3100
 
 # One-off commands run from this image (see scripts/deploy.sh):
 #   node apps/backend/dist/apps/backend/src/db/migrate.js
+#   node apps/backend/dist/apps/backend/src/services/auth/bootstrap-admin.js   (prints the first admin's invite)
 CMD ["node", "apps/backend/dist/main.js"]
