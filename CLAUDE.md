@@ -38,7 +38,7 @@ API `3100`, web `4300` (offset from reverie's, so both stacks run at once). Post
 - `nx run-many -t lint typecheck` — lint and typecheck everything. `nx format:write --all` / `nx format:check --all` — Prettier.
 - **Build `@poelens/shared` before tests**: the backend imports its built `dist/`, so a stale build fails with "X is not a function". The `test` target depends on `^build`, so `nx test` does this itself; running `vitest` by hand does not.
 - Backend tests boot the **built** app (`apps/backend/dist`), so the backend `test` target depends on `build` too.
-- `nx migrate @poelens/backend` applies migrations, `nx run @poelens/backend:migrate:down` rolls back one. In production the build also emits the runner: `node dist/apps/backend/src/db/migrate.js` (the esbuild output is nested under `dist/apps/backend/src`).
+- `nx run @poelens/backend:migrate` applies migrations (`nx migrate` is Nx's own package-upgrade command, so the target needs `nx run`), `nx run @poelens/backend:migrate:down` rolls back one. In production the build also emits the runner: `node dist/apps/backend/src/db/migrate.js` (the esbuild output is nested under `dist/apps/backend/src`).
 - `nx serve @poelens/backend` answers `/health` with "degraded" when Postgres is not running; nothing needs a `.env` on a clean checkout.
 - A production web build needs `VITE_API_URL` (the API's base URL; empty means same-origin): `VITE_API_URL=https://api.example.com nx build @poelens/web`. Forgetting it fails the build instead of shipping a bundle that calls the wrong host.
 - `nx run @poelens/web:serve:electron` runs the Vite dev server and the desktop shell. `package:mac|win|linux` build installers.

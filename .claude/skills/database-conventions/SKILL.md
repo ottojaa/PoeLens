@@ -26,7 +26,7 @@ await db.transaction().execute(async (trx) => {
 
 ## Migrations
 
-Files in `db/migrations/` named `NNN_description.ts`, run by `nx migrate @poelens/backend` (`migrate:down` rolls back one). Rules:
+Files in `db/migrations/` named `NNN_description.ts`, run by `nx run @poelens/backend:migrate` (`migrate:down` rolls back one). Rules:
 
 - **Every migration is reversible**: `down` undoes `up` (drop what you created). A migration that cannot be undone (dropping a column with data) says so in a comment and is split into expand now, contract later.
 - **Safe against production data**: assume the table has months of hourly snapshots. Add columns nullable or with a constant default, backfill in batches, then add the constraint. Create indexes on large tables with `CREATE INDEX CONCURRENTLY` (outside a transaction: set the migration up for it). Never rewrite a whole hypertable in one statement.

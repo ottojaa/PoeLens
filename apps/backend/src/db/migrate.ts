@@ -6,7 +6,7 @@ import { env } from '../config/env.js';
 
 /**
  * Runs the migrations in ./migrations: `migrate` goes to the latest, `migrate down` rolls back one.
- * Dev: `nx migrate @poelens/backend`. Production: the build emits this file as its own entry (see apps/backend/project.json),
+ * Dev: `nx run @poelens/backend:migrate`. Production: the build emits this file as its own entry (see apps/backend/project.json),
  * so the container runs `node dist/apps/backend/src/db/migrate.js` before the server starts. It uses its own pool:
  * unlike the API's, a
  * migration may legitimately run for longer than a few seconds.

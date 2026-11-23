@@ -20,7 +20,7 @@ export default [
     { ignores: ['**/dist/**', '**/node_modules/**', '**/.nx/**', '**/routeTree.gen.ts'] },
     js.configs.recommended,
     {
-        files: ['**/*.ts', '**/*.tsx'],
+        files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
         languageOptions: {
             parser: tsParser,
             parserOptions: { ecmaVersion: 2022, sourceType: 'module' },

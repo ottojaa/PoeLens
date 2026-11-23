@@ -14,7 +14,7 @@ An Nx + Yarn 4 monorepo: `apps/backend` (Fastify API), `apps/web` (React web app
 node .yarn/releases/yarn-4.17.1.cjs install
 cp .env.example .env                       # optional: every value is also the default outside production
 docker compose up -d postgres              # TimescaleDB on 127.0.0.1:5433
-npx nx migrate @poelens/backend            # apply the migrations
+npx nx run @poelens/backend:migrate      # apply the migrations
 npx nx serve @poelens/backend              # API on http://localhost:3100, docs at /docs
 npx nx serve @poelens/web                  # web app on http://localhost:4300
 npx nx run @poelens/web:serve:electron     # web dev server plus the desktop shell around it
