@@ -1,0 +1,117 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "@poelens/web",
+    "projectType": "application",
+    "sourceRoot": "apps/web/src",
+    "tags": [],
+    "targets": {
+        "lint": {
+            "executor": "@nx/eslint:lint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["apps/web/**/*.{ts,tsx}"]
+            }
+        },
+        "build": {
+            "executor": "@nx/vite:build",
+            "outputs": ["{options.outputPath}"],
+            "defaultConfiguration": "production",
+            "options": {
+                "outputPath": "apps/web/dist"
+            },
+            "configurations": {
+                "development": {
+                    "mode": "development"
+                },
+                "production": {
+                    "mode": "production"
+                }
+            }
+        },
+        "serve": {
+            "executor": "@nx/vite:dev-server",
+            "continuous": true,
+            "defaultConfiguration": "development",
+            "options": {
+                "buildTarget": "@poelens/web:build"
+            },
+            "configurations": {
+                "development": {
+                    "buildTarget": "@poelens/web:build:development"
+                },
+                "production": {
+                    "buildTarget": "@poelens/web:build:production"
+                }
+            },
+            "dependsOn": ["^build"]
+        },
+        "preview": {
+            "executor": "@nx/vite:preview-server",
+            "defaultConfiguration": "development",
+            "options": {
+                "buildTarget": "@poelens/web:build"
+            },
+            "configurations": {
+                "development": {
+                    "buildTarget": "@poelens/web:build:development"
+                },
+                "production": {
+                    "buildTarget": "@poelens/web:build:production"
+                }
+            }
+        },
+        "build:electron": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "tsc -p electron/tsconfig.json",
+                "cwd": "apps/web"
+            }
+        },
+        "serve:electron": {
+            "executor": "nx:run-commands",
+            "continuous": true,
+            "options": {
+                "commands": ["vite --strictPort", "wait-on http://localhost:4300 && tsc -p electron/tsconfig.json && electron ."],
+                "cwd": "apps/web",
+                "parallel": true
+            }
+        },
+        "package:mac": {
+            "executor": "nx:run-commands",
+            "dependsOn": ["build:electron"],
+            "options": {
+                "command": "electron-builder build --mac",
+                "cwd": "apps/web"
+            }
+        },
+        "package:win": {
+            "executor": "nx:run-commands",
+            "dependsOn": ["build:electron"],
+            "options": {
+                "command": "electron-builder build --win",
+                "cwd": "apps/web"
+            }
+        },
+        "package:linux": {
+            "executor": "nx:run-commands",
+            "dependsOn": ["build:electron"],
+            "options": {
+                "command": "electron-builder build --linux",
+                "cwd": "apps/web"
+            }
+        },
+        "typecheck": {
+            "inputs": [
+                "default",
+                "^production",
+                {
+                    "externalDependencies": ["typescript"]
+                }
+            ],
+            "options": {
+                "command": "tsc --build --emitDeclarationOnly && tsc -p tsconfig.spec.json && tsc -p electron/tsconfig.json --noEmit",
+                "cwd": "apps/web"
+            }
+        }
+    }
+}

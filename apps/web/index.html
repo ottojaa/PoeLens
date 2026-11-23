@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>PoeLens</title>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <!-- Prevent a flash of the wrong theme: dark unless the user picked light. -->
+        <script>
+            (function () {
+                const stored = localStorage.getItem('poelens-theme');
+                if (stored !== 'light') document.documentElement.classList.add('dark');
+            })();
+        </script>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
+</html>

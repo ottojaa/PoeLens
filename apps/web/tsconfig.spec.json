@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.app.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "composite": false,
+        "declaration": false,
+        "declarationMap": false,
+        "emitDeclarationOnly": false,
+        "rootDir": ".",
+        "tsBuildInfoFile": null,
+        "types": ["node", "vite/client"]
+    },
+    "include": ["src/**/*.test.ts", "electron/**/*.test.ts"],
+    "exclude": ["dist"],
+    "references": []
+}

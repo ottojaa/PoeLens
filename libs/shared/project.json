@@ -1,0 +1,21 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "@poelens/shared",
+    "projectType": "library",
+    "sourceRoot": "libs/shared/src",
+    "targets": {
+        "typecheck": {
+            "inputs": ["default", "^production", { "externalDependencies": ["typescript"] }],
+            "options": {
+                "command": "tsc --build --noEmit && tsc -p tsconfig.spec.json"
+            }
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["libs/shared/**/*.ts"]
+            }
+        }
+    }
+}

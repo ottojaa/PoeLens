@@ -1,0 +1,23 @@
+# Local development services. The backend and web app run on the host (nx serve).
+# Host ports are offset from reverie's (5432/6379) so both stacks can run side by side.
+services:
+    # Postgres 17 with TimescaleDB: price history lives in hypertables (see the database-conventions skill).
+    postgres:
+        image: timescale/timescaledb:2.32.1-pg17
+        container_name: poelens-postgres
+        environment:
+            POSTGRES_USER: poelens
+            POSTGRES_PASSWORD: poelens
+            POSTGRES_DB: poelens
+        ports:
+            - '127.0.0.1:5433:5432'
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U poelens']
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    postgres_data:
