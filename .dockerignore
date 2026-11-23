@@ -38,6 +38,13 @@ Thumbs.db
 # Android app (not needed for backend image)
 apps/android
 
+# Deploy artefacts on the server (scripts/deploy.sh)
+/web
+/web.new
+/web.old
+/backups
+deploy.log
+
 # Logs
 *.log
 

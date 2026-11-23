@@ -1,0 +1,29 @@
+name: Deploy
+
+# Manual only. Whether a merge to main should deploy by itself is decided when the server is set up: add
+# `push: { branches: [main] }` below to turn that on.
+on:
+    workflow_dispatch:
+
+concurrency:
+    group: production
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+
+        steps:
+            - name: Deploy via SSH
+              # Pinned to a commit: this step holds the key to the server. The commit is the v1.2.5 release.
+              uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  port: ${{ secrets.SSH_PORT }}
+                  command_timeout: 30m
+                  # The server's authorized_keys line for this key forces `bash /opt/poelens/scripts/deploy.sh`
+                  # (see the README), so this text is never run: it only has to be non-empty.
+                  script: deploy
