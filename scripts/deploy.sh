@@ -16,6 +16,15 @@ main() {
     MIGRATE_PATH="apps/backend/dist/apps/backend/src/db/migrate.js"
     COMPOSE=(docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE")
 
+    # Only one deploy at a time, whether it comes from GitHub or from a shell on the server. Taken before the log is
+    # opened below, so a refused run cannot truncate the log of the one that is running. The lock is held on fd 9 until
+    # the script exits, however it exits.
+    exec 9>"${DEPLOY_DIR}/deploy.lock"
+    if ! flock -n 9; then
+        echo "Another deploy is already running (lock: ${DEPLOY_DIR}/deploy.lock). Follow it with: tail -f ${LOG_FILE}" >&2
+        exit 1
+    fi
+
     # Mirror all output to a log, so a running deploy can be followed: tail -f /opt/poelens/deploy.log
     exec > >(tee "$LOG_FILE") 2>&1
     echo "=== Deploy started: $(date -u '+%Y-%m-%dT%H:%M:%SZ') ==="
