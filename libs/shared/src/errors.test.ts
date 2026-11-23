@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from './errors.js';
+import { AppError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError, ValidationError } from './errors.js';
 
 describe('AppError family', () => {
     it('serialises to the wire format the clients read', () => {
@@ -14,6 +14,8 @@ describe('AppError family', () => {
         [new ValidationError('Bad game'), 400, 'VALIDATION_ERROR', 'Bad game'],
         [new ConflictError('Already exists'), 409, 'CONFLICT', 'Already exists'],
         [new ForbiddenError('Not yet'), 403, 'FORBIDDEN', 'Not yet'],
+        [new UnauthorizedError('Sign in'), 401, 'UNAUTHORIZED', 'Sign in'],
+        [new UnauthorizedError('Bad login', 'INVALID_CREDENTIALS'), 401, 'INVALID_CREDENTIALS', 'Bad login'],
     ])('%s maps to its status and code', (error, statusCode, code, message) => {
         expect(error).toBeInstanceOf(AppError);
         expect(error).toBeInstanceOf(Error);

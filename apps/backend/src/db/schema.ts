@@ -83,6 +83,58 @@ export interface CollectorRunsTable {
     fetch_errors: Generated<number>;
 }
 
+export type UserRole = 'admin' | 'member';
+
+export interface UsersTable {
+    id: Generated<string>;
+    /** Stored lower-cased; a unique index on lower(email) keeps it that way. */
+    email: string;
+    display_name: string;
+    password_hash: string;
+    role: UserRole;
+    is_active: Generated<boolean>;
+    created_at: Generated<Date>;
+    updated_at: Generated<Date>;
+    last_login_at: Date | null;
+}
+
+export interface UserIdentitiesTable {
+    provider: string;
+    subject: string;
+    user_id: string;
+    created_at: Generated<Date>;
+}
+
+export interface RefreshTokensTable {
+    id: Generated<string>;
+    user_id: string;
+    token_hash: string;
+    expires_at: Date;
+    created_at: Generated<Date>;
+}
+
+export interface InvitesTable {
+    id: Generated<string>;
+    token_hash: string;
+    role: UserRole;
+    created_by: string | null;
+    created_at: Generated<Date>;
+    expires_at: Date;
+    used_at: Date | null;
+    used_by: string | null;
+    revoked_at: Date | null;
+}
+
+export interface PasswordResetsTable {
+    id: Generated<string>;
+    token_hash: string;
+    user_id: string;
+    created_by: string | null;
+    created_at: Generated<Date>;
+    expires_at: Date;
+    used_at: Date | null;
+}
+
 export interface Database {
     leagues: LeaguesTable;
     items: ItemsTable;
@@ -90,4 +142,9 @@ export interface Database {
     raw_responses: RawResponsesTable;
     prices: PricesTable;
     collector_runs: CollectorRunsTable;
+    users: UsersTable;
+    user_identities: UserIdentitiesTable;
+    refresh_tokens: RefreshTokensTable;
+    invites: InvitesTable;
+    password_resets: PasswordResetsTable;
 }

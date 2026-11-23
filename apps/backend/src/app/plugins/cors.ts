@@ -12,7 +12,7 @@ export default fp(async function (fastify: FastifyInstance) {
 
     await fastify.register(cors, {
         origin: origins.length === 1 && origins[0] ? origins[0] : origins,
-        credentials: true, // allow session cookies once accounts exist
+        credentials: true, // the refresh-token cookie travels cross-origin in development (web on :4300, API on :3100)
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     });

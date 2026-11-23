@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import { app } from './app/app.js';
+import { SERVER_OPTIONS } from './app/server-options.js';
 import { env } from './config/env.js';
 import { checkDbConnection } from './db/health-probe.js';
 import { closeDb, db } from './db/kysely.js';
@@ -21,7 +22,7 @@ const LOGGER_BY_ENV = {
 };
 
 async function main(): Promise<void> {
-    const server = Fastify({ logger: LOGGER_BY_ENV[env.NODE_ENV] });
+    const server = Fastify({ ...SERVER_OPTIONS, logger: LOGGER_BY_ENV[env.NODE_ENV] });
 
     server.register(app);
 

@@ -22,7 +22,12 @@
                 "format": ["cjs"],
                 "bundle": false,
                 "main": "apps/backend/src/main.ts",
-                "additionalEntryPoints": ["apps/backend/src/db/migrate.ts", "apps/backend/src/collector/collect.ts", "apps/backend/src/collector/reparse.ts"],
+                "additionalEntryPoints": [
+                    "apps/backend/src/db/migrate.ts",
+                    "apps/backend/src/collector/collect.ts",
+                    "apps/backend/src/collector/reparse.ts",
+                    "apps/backend/src/services/auth/bootstrap-admin.ts"
+                ],
                 "tsConfig": "apps/backend/tsconfig.app.json",
                 "skipTypeCheck": true,
                 "esbuildOptions": {
@@ -91,6 +96,12 @@
             "executor": "nx:run-commands",
             "options": {
                 "command": "npx tsx apps/backend/src/collector/collect.ts"
+            }
+        },
+        "bootstrap-admin": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx tsx apps/backend/src/services/auth/bootstrap-admin.ts"
             }
         },
         "reparse": {

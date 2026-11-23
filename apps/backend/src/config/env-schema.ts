@@ -3,6 +3,11 @@ import { z } from 'zod';
 // Matches docker-compose.yml. Only used outside production, so a checkout with no .env still boots (and /health says "degraded").
 const DEV_DATABASE_URL = 'postgres://poelens:poelens@localhost:5433/poelens';
 
+// Only used outside production, like the database URL: tokens signed with it are worthless anywhere else.
+const DEV_JWT_SECRET = 'dev-only-jwt-secret-not-for-production-use-0123456789';
+
+const MIN_JWT_SECRET_LENGTH = 32;
+
 const DEFAULT_COLLECTOR_CONTACT = 'https://github.com/ottojaa/PoeLens';
 
 const envSchema = z
@@ -14,6 +19,12 @@ const envSchema = z
 
         // Database (Postgres + TimescaleDB). Required in production: a missing value must fail the boot, not point at localhost.
         DATABASE_URL: z.string().url().optional(),
+
+        // Signs the access tokens. Required in production (a missing or short value fails the boot), defaulted elsewhere.
+        JWT_SECRET: z
+            .string()
+            .min(MIN_JWT_SECRET_LENGTH, 'Must be at least ' + MIN_JWT_SECRET_LENGTH + ' characters')
+            .optional(),
 
         // CORS (HTTP API): comma-separated origins
         CORS_ORIGIN: z.string().default('http://localhost:4300'),
@@ -40,8 +51,12 @@ const envSchema = z
         if (value.NODE_ENV === 'production' && !value.DATABASE_URL) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['DATABASE_URL'], message: 'Required in production' });
         }
+
+        if (value.NODE_ENV === 'production' && !value.JWT_SECRET) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['JWT_SECRET'], message: 'Required in production' });
+        }
     })
-    .transform((value) => ({ ...value, DATABASE_URL: value.DATABASE_URL ?? DEV_DATABASE_URL }));
+    .transform((value) => ({ ...value, DATABASE_URL: value.DATABASE_URL ?? DEV_DATABASE_URL, JWT_SECRET: value.JWT_SECRET ?? DEV_JWT_SECRET }));
 
 export type Env = z.infer<typeof envSchema>;
 

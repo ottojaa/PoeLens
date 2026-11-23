@@ -10,14 +10,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runCycle } from '../collector/runtime.js';
 import { createPoeNinjaPoe2Adapter } from '../collector/sources/poe-ninja/poe2.js';
 import { createPgCollectorStore } from '../collector/store-pg.js';
+import { bearer, seedUser, signIn } from '../testing/auth-helpers.js';
 import { buildTestApp } from '../testing/build-app.js';
 import { FakeNinja } from '../testing/fake-ninja.js';
 import { createTestDatabase, SKIP_DB_TESTS, type TestDatabase } from '../testing/test-database.js';
 
-// Under NODE_ENV=test the price routes are open: the production refusal is covered in prices-access.test.ts.
-describe.skipIf(SKIP_DB_TESTS)('price routes in test mode', () => {
+// The routes need a signed-in user: the refusal without one is covered in prices-access.test.ts.
+describe.skipIf(SKIP_DB_TESTS)('price routes for a signed-in user', () => {
     let test: TestDatabase;
     let server: Awaited<ReturnType<typeof buildTestApp>>;
+    let accessToken: string;
 
     beforeAll(async () => {
         test = await createTestDatabase();
@@ -29,6 +31,8 @@ describe.skipIf(SKIP_DB_TESTS)('price routes in test mode', () => {
         });
         process.env.DATABASE_URL = test.url;
         server = await buildTestApp();
+        await seedUser(test.db, { email: 'reader@example.com' });
+        accessToken = (await signIn(server, 'reader@example.com')).accessToken;
     });
 
     afterAll(async () => {
@@ -37,7 +41,7 @@ describe.skipIf(SKIP_DB_TESTS)('price routes in test mode', () => {
     });
 
     async function get(url: string) {
-        const res = await server.inject({ method: 'GET', url });
+        const res = await server.inject({ method: 'GET', url, headers: bearer(accessToken) });
 
         return { status: res.statusCode, body: res.json() };
     }
