@@ -34,7 +34,7 @@ See [CLAUDE.md](CLAUDE.md) for the conventions.
 
 ## Production
 
-PoeLens runs on the home server next to reverie, the same way: host nginx and certbot in front, Docker Compose for the API and its database, and deploys over SSH. Nothing here runs by itself: each step below is run by hand on the server (or in GitHub) once.
+PoeLens runs on the home server next to reverie, the same way: host nginx and certbot in front, Docker Compose for the API and its database, and deploys over SSH. Every push to `main` deploys (see "Deploying from GitHub" below). The setup steps are each run once, by hand, on the server (or in GitHub).
 
 | Piece                    | Where                                                                                                               |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
@@ -108,7 +108,7 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
 
     **Space:** a dump is about as large as the database. Check it with `scripts/db.sh -c "SELECT pg_size_pretty(pg_database_size(current_database()))"`. The backup directory then needs roughly 21 times that (14 daily and 7 pre-deploy dumps), and the raw archive grows by a few GB a year, so give it tens of GB. A dump on the same disk as the database volume does not survive that disk dying, which is why `BACKUP_DIR` points at the NAS.
 
-7. **Deploying from GitHub (optional).** A key that can do nothing but deploy:
+7. **Deploying from GitHub.** A key that can do nothing but deploy:
 
     ```sh
     ssh-keygen -t ed25519 -N '' -C poelens-deploy -f ~/poelens-deploy   # on any machine; keep the private half secret
@@ -120,11 +120,11 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
     command="bash /opt/poelens/scripts/deploy.sh",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-ed25519 AAAA... poelens-deploy
     ```
 
-    In the repo's Settings, Secrets and variables, Actions, add: `SSH_HOST` (the server's address as GitHub reaches it), `SSH_PORT` (`22` unless changed), `SSH_USER` (the user above) and `SSH_PRIVATE_KEY` (the whole private key file). Delete the local key files afterwards. Then Actions, Deploy, Run workflow (or `gh workflow run deploy.yml`) deploys `main`. The workflow runs only when started by hand; to deploy on every merge, add `push: { branches: [main] }` under `on:` in `.github/workflows/deploy.yml`.
+    In the repo's Settings, Secrets and variables, Actions, add: `SSH_HOST` (the server's address as GitHub reaches it), `SSH_PORT` (`22` unless changed), `SSH_USER` (the user above) and `SSH_PRIVATE_KEY` (the whole private key file). Delete the local key files afterwards. From then on every push to `main` deploys it, and Actions, Deploy, Run workflow (or `gh workflow run deploy.yml`) re-deploys `main` by hand. The script takes a lock (`/opt/poelens/deploy.lock`), so a deploy started while another is running stops with a message instead of racing it.
 
 ### Everyday deploys
 
-Merge to `main`, then run `bash /opt/poelens/scripts/deploy.sh` on the server (or the workflow). In order, it:
+Merging to `main` deploys: the workflow runs `bash /opt/poelens/scripts/deploy.sh` on the server. To re-deploy without a new commit, use Run workflow or run that script on the server. In order, it:
 
 1. resets the checkout to `origin/main` and builds the images (the running site is untouched);
 2. dumps the database (`poelens-predeploy-*`), aborting the deploy if the dump fails;
