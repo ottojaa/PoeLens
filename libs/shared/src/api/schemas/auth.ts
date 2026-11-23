@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /** Passwords need this many characters and no composition rules. */
-export const MIN_PASSWORD_LENGTH = 12;
+export const MIN_PASSWORD_LENGTH = 8;
 
 /** bcrypt ignores everything past 72 bytes, so a longer password would be silently weaker than it looks. */
 export const MAX_PASSWORD_BYTES = 72;

@@ -143,9 +143,9 @@ describe.skipIf(SKIP_DB_TESTS)('invites and the first admin', () => {
     it('rejects a weak password and a malformed email without spending the invite', async () => {
         const { token } = await createInvite();
 
-        expect((await register(token, 'weak@example.com', 'short')).statusCode).toBe(400);
+        expect((await register(token, 'weak@example.com', 'a'.repeat(7))).statusCode).toBe(400);
         expect((await register(token, 'not-an-email')).statusCode).toBe(400);
-        expect((await register(token, 'ok@example.com')).statusCode).toBe(200);
+        expect((await register(token, 'ok@example.com', 'a'.repeat(8))).statusCode).toBe(200);
     });
 
     it('keeps invite administration from members', async () => {
