@@ -62,11 +62,12 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
     cp .env.production.example .env.production
     chmod 600 .env.production
     sed -i "s/CHANGE_ME/$(openssl rand -hex 24)/g" .env.production   # one password, in POSTGRES_PASSWORD and DATABASE_URL
+    sed -i "s/^JWT_SECRET=.*/JWT_SECRET=$(openssl rand -hex 32)/" .env.production   # signs the access tokens; the API will not start without it
     sudo mkdir -p /mnt/nas/poelens/backups && sudo chown "$USER": /mnt/nas/poelens/backups   # or the BACKUP_DIR you chose in the file
     findmnt -T /mnt/nas/poelens/backups                                 # must show the NAS, not `/`: otherwise the dumps share the database's disk
     ```
 
-    Check the file: `grep CHANGE_ME .env.production` prints nothing, and `CORS_ORIGIN`, `COLLECTOR_*` and `BACKUP_DIR` hold what you want. Every variable is described in the example file.
+    Check the file: `grep CHANGE_ME .env.production` prints nothing, `grep '^JWT_SECRET=.' .env.production` prints the line, and `CORS_ORIGIN`, `COLLECTOR_*` and `BACKUP_DIR` hold what you want. Every variable is described in the example file.
 
 3. **First deploy.** It builds the image (a few minutes), starts the database, applies the migrations, starts the backend and publishes the web files. Nothing is dumped, because no database exists yet:
 
@@ -75,6 +76,15 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
     ```
 
     The collector starts with the backend (`COLLECTOR_ENABLED=true`), so price history begins now. Follow it with `tail -f /opt/poelens/deploy.log`; afterwards `docker logs -f poelens-backend`, and check that the API answers: `curl -s http://127.0.0.1:3100/health`.
+
+    **Your admin account.** Nobody can sign up without an invite, and the first one comes from the server. Once the deploy has applied the migrations, run:
+
+    ```sh
+    cd /opt/poelens
+    docker compose -f docker-compose.prod.yml --env-file .env.production run --rm --no-deps backend node apps/backend/dist/apps/backend/src/services/auth/bootstrap-admin.js
+    ```
+
+    It prints a path such as `/invite/<token>`. Open it on the site (`https://poelens.com/invite/<token>`) and choose your email, name and password. The link works once and for 7 days; running the command again replaces it, and it refuses once an admin exists. From then on you invite friends from the Admin page, and issue a password-reset link there for anyone who forgets theirs.
 
 4. **nginx.** Install both configs, which listen on port 80 only:
 
