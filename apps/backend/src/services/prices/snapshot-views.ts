@@ -12,6 +12,7 @@ export async function getTable(db: Kysely<Database>, query: TableQuery): Promise
     const rows = await loadPriceRows(db, {
         unit: context.unit,
         rawIds: snapshots.map((snapshot) => snapshot.rawId),
+        times: snapshots.map((snapshot) => snapshot.time),
         includeLowConfidence: query.includeLowConfidence,
     });
 
@@ -31,6 +32,7 @@ export async function getLatest(db: Kysely<Database>, query: LatestQuery): Promi
     const rows = await loadPriceRows(db, {
         unit: context.unit,
         rawIds: snapshots.map((snapshot) => snapshot.rawId),
+        times: snapshots.map((snapshot) => snapshot.time),
         itemIds: query.items,
         includeLowConfidence: query.includeLowConfidence,
     });
@@ -52,6 +54,7 @@ export async function getMovers(db: Kysely<Database>, query: MoversQuery): Promi
     const rows = await loadPriceRows(db, {
         unit: context.unit,
         rawIds: snapshots.map((snapshot) => snapshot.rawId),
+        times: snapshots.map((snapshot) => snapshot.time),
         includeLowConfidence: query.includeLowConfidence,
     });
     const moved = rows

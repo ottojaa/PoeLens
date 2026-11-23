@@ -1,6 +1,8 @@
+import { Pool } from 'pg';
 import { env } from '../config/env.js';
 import { db } from '../db/kysely.js';
 import { createCollector } from './index.js';
+import { withCollectorLock } from './lock.js';
 import { reparseRaw } from './reparse-raw.js';
 
 const USAGE = 'Usage: reparse [--kind exchange|stash|leagues] [--category <type>] [--league <name>] [--from <ISO date>] [--to <ISO date>]';
@@ -37,15 +39,34 @@ async function main(): Promise<void> {
     }
 
     const collector = createCollector({ db, contact: env.COLLECTOR_CONTACT, leagues: env.COLLECTOR_LEAGUES });
-    const result = await reparseRaw(collector.adapter, collector.store, {
-        kind: readFlag(args, 'kind'),
-        category: readFlag(args, 'category'),
-        league: readFlag(args, 'league'),
-        from: readDate(args, 'from'),
-        to: readDate(args, 'to'),
-    });
+    const pool = new Pool({ connectionString: env.DATABASE_URL, max: 1 });
 
-    console.log(JSON.stringify(result, null, 2));
+    // An idle-client error would otherwise crash the process.
+    pool.on('error', () => undefined);
+
+    try {
+        // Under the scheduler's lock: a reparse interleaved with a live cycle could collide on new items and rewrite leagues.
+        const result = await withCollectorLock(pool, () =>
+            reparseRaw(collector.adapter, collector.store, {
+                kind: readFlag(args, 'kind'),
+                category: readFlag(args, 'category'),
+                league: readFlag(args, 'league'),
+                from: readDate(args, 'from'),
+                to: readDate(args, 'to'),
+            }),
+        );
+
+        if (!result.ran) {
+            console.error('A collector cycle is running; try again when it has finished');
+            process.exitCode = 1;
+
+            return;
+        }
+
+        console.log(JSON.stringify(result.value, null, 2));
+    } finally {
+        await pool.end();
+    }
 }
 
 main()

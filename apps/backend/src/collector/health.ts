@@ -64,7 +64,7 @@ export function toCollectorHealth(enabled: boolean, facts: CollectorRunFacts | n
 export async function probeCollectorRuns(source: string, game: string): Promise<CollectorRunFacts | null> {
     const rows = await probeQuery<RunRow & { last_success_at: Date | null }>(
         `SELECT status, started_at, finished_at, requests, parse_errors, fetch_errors, error,
-                max(finished_at) FILTER (WHERE status IN ('success', 'partial')) OVER () AS last_success_at
+                max(finished_at) FILTER (WHERE status = 'success') OVER () AS last_success_at
            FROM collector_runs
           WHERE source = $1 AND game = $2 AND finished_at IS NOT NULL
           ORDER BY started_at DESC

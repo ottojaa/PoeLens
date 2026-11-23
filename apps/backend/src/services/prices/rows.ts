@@ -15,6 +15,8 @@ export interface RowQuery {
     unit: Unit;
     /** The snapshots (raw responses) whose rows to read. */
     rawIds: number[];
+    /** The snapshots' fetch times. A price row's time is its snapshot's fetch time, so they let TimescaleDB skip every other chunk. */
+    times: Date[];
     /** Restrict to these items. */
     itemIds?: number[];
     includeLowConfidence: boolean;
@@ -84,6 +86,7 @@ export async function loadPriceRows(db: Kysely<Database>, query: RowQuery): Prom
     const column = sql.ref(`p.${UNIT_COLUMN[query.unit]}`);
     const refColumn = sql.ref(UNIT_COLUMN[query.unit]);
     const itemFilter = query.itemIds ? sql`AND p.item_id = ANY(${query.itemIds})` : sql``;
+    const times = query.times.map((time) => time.toISOString());
     const confidenceFilter = query.includeLowConfidence ? sql`` : sql`AND NOT p.low_confidence`;
     const { rows } = await sql<RowResult>`
         SELECT i.id AS item_id, i.name, i.base_type, i.category, i.icon,
@@ -94,7 +97,7 @@ export async function loadPriceRows(db: Kysely<Database>, query: RowQuery): Prom
           ${referenceJoin('h1', 'h1', refColumn)}
           ${referenceJoin('h24', 'h24', refColumn)}
           ${referenceJoin('d7', 'd7', refColumn)}
-         WHERE p.raw_id = ANY(${query.rawIds}) ${itemFilter} ${confidenceFilter}
+         WHERE p.time = ANY(${times}::timestamptz[]) AND p.raw_id = ANY(${query.rawIds}) ${itemFilter} ${confidenceFilter}
          ORDER BY ${column} DESC, i.name
          LIMIT ${MAX_ROWS}`.execute(db);
 

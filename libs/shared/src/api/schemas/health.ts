@@ -20,7 +20,7 @@ export const CollectorHealthSchema = z.object({
     status: CollectorStatusSchema,
     /** The newest cycle that finished, whatever its outcome. */
     lastRun: CollectorRunSummarySchema.nullable(),
-    /** When the newest cycle that did not fail finished. */
+    /** When the newest cycle that fully succeeded finished: one with failed requests or parse errors does not count, so views going stale shows. */
     lastSuccessAt: z.string().datetime().nullable(),
 });
 

@@ -129,6 +129,25 @@ describe.skipIf(SKIP_DB_TESTS)('the collector against TimescaleDB', () => {
         expect(collected.map((row) => row.league)).toEqual(['Forbidden Rites', 'HC Rise of the Abyssal', 'Rise of the Abyssal']);
     });
 
+    it('keeps the newest league current when an older leagues response is parsed again afterwards', async () => {
+        await cycle(0);
+        ninja.leagues = fixture('leagues-new-first-league.json');
+
+        const store = createPgCollectorStore(test.db);
+
+        await runCycle({ adapter: createPoeNinjaPoe2Adapter(), store, fetcher: ninja, now: () => new Date(Date.UTC(2026, 10, 23, 13, 0, 0)) });
+
+        const snapshot = () => test.db.selectFrom('leagues').select(['name', 'current', 'last_seen']).orderBy('name').execute();
+        const before = await snapshot();
+
+        // Only the older leagues response is in range, so it is the last one applied.
+        const result = await reparseRaw(adapter, store, { kind: 'leagues', to: new Date(Date.UTC(2026, 10, 23, 12, 30, 0)) });
+
+        expect(result.parsed).toBe(1);
+        expect(await snapshot()).toEqual(before);
+        expect(before.filter((league) => league.current).map((league) => league.name)).toEqual(['HC Rise of the Abyssal', 'Rise of the Abyssal']);
+    });
+
     it('reparse reproduces identical prices rows, and repairs rows a bad parse left behind', async () => {
         await cycle();
 

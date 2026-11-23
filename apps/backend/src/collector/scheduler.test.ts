@@ -113,6 +113,7 @@ describe.skipIf(SKIP_DB_TESTS)('the scheduler', () => {
             let clock = Date.UTC(2026, 10, 23, 12, 0, 0);
             let lastStart: Date | null = null;
             let calls = 0;
+            let loads = 0;
             const onError = vi.fn();
             const scheduler = startScheduler({
                 pool,
@@ -123,7 +124,11 @@ describe.skipIf(SKIP_DB_TESTS)('the scheduler', () => {
                     return runCycle(calls);
                 },
                 abandonStaleRuns: async () => 0,
-                loadLastStart: async () => lastStart,
+                loadLastStart: async () => {
+                    loads += 1;
+
+                    return lastStart;
+                },
                 onError,
                 now: () => clock,
             });
@@ -133,15 +138,19 @@ describe.skipIf(SKIP_DB_TESTS)('the scheduler', () => {
                 await vi.advanceTimersByTimeAsync(ms);
             };
 
-            return { scheduler, onError, advance, calls: () => calls };
+            // The next timer is set only after the cycle's lock is released and the last start is read again, which is the second load.
+            const nextIsScheduled = () => vi.waitFor(() => expect(loads).toBeGreaterThanOrEqual(2));
+
+            return { scheduler, onError, advance, calls: () => calls, nextIsScheduled };
         }
 
         it('runs the first cycle shortly after boot, then one interval after the last cycle began', async () => {
-            const { scheduler, advance, calls } = timedScheduler(async () => SUMMARY);
+            const { scheduler, advance, calls, nextIsScheduled } = timedScheduler(async () => SUMMARY);
 
             await advance(0);
             await advance(5 * SECOND);
             await vi.waitFor(() => expect(calls()).toBe(1));
+            await nextIsScheduled();
 
             await advance(CYCLE_INTERVAL_MS - SECOND);
             expect(calls()).toBe(1);
@@ -152,7 +161,7 @@ describe.skipIf(SKIP_DB_TESTS)('the scheduler', () => {
         });
 
         it('keeps scheduling after a cycle fails, and reports the failure', async () => {
-            const { scheduler, onError, advance, calls } = timedScheduler(async (call) => {
+            const { scheduler, onError, advance, calls, nextIsScheduled } = timedScheduler(async (call) => {
                 if (call === 1) throw new Error('boom');
 
                 return SUMMARY;
@@ -161,6 +170,7 @@ describe.skipIf(SKIP_DB_TESTS)('the scheduler', () => {
             await advance(0);
             await advance(5 * SECOND);
             await vi.waitFor(() => expect(onError).toHaveBeenCalledWith('Collector cycle failed', expect.any(Error)));
+            await nextIsScheduled();
 
             await advance(CYCLE_INTERVAL_MS);
             await vi.waitFor(() => expect(calls()).toBe(2));

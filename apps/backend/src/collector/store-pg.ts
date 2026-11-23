@@ -17,9 +17,34 @@ function chunk<T>(rows: T[]): T[][] {
 
 type Executor = Kysely<Database> | Transaction<Database>;
 
-/** Stores the leagues a response lists and moves `current` to the ones it names. Leagues missing from the list keep their row. */
+/** True when a leagues response newer than `seenAt` has already been applied, so this one is a replay of an older body. */
+async function hasNewerLeagues(trx: Executor, game: Game, seenAt: Date): Promise<boolean> {
+    const row = await trx
+        .selectFrom('leagues')
+        .select((eb) => eb.fn.max('last_seen').as('newest'))
+        .where('game', '=', game)
+        .executeTakeFirst();
+
+    return row?.newest != null && row.newest > seenAt;
+}
+
+/**
+ * Stores the leagues a response lists and moves `current` to the ones it names. Leagues missing from the list keep their
+ * row. A response older than one already applied (a reparse over a time range) only adds leagues it introduces, never
+ * moving `current` or `last_seen` backwards: the newest body answers 304 from then on and would not be applied again.
+ */
 async function upsertLeagues(trx: Executor, game: Game, leagues: LeagueFact[], seenAt: Date): Promise<void> {
     if (!leagues.length) return;
+
+    if (await hasNewerLeagues(trx, game, seenAt)) {
+        await trx
+            .insertInto('leagues')
+            .values(leagues.map((league) => ({ game, name: league.name, hardcore: league.hardcore, current: false, first_seen: seenAt, last_seen: seenAt })))
+            .onConflict((conflict) => conflict.columns(['game', 'name']).doNothing())
+            .execute();
+
+        return;
+    }
 
     const currentNames = leagues.filter((league) => league.current).map((league) => league.name);
 
@@ -221,6 +246,8 @@ export function createPgCollectorStore(db: Kysely<Database>): CollectorStore {
                 .where('kind', '=', key.kind)
                 .where('league', '=', key.league)
                 .where('category', '=', key.category)
+                // A row the write failed on (neither parsed nor rejected) is not a stored snapshot: its ETag must not hide a body never written.
+                .where((eb) => eb.or([eb('parser_version', 'is not', null), eb('parse_error', 'is not', null)]))
                 .orderBy('fetched_at', 'desc')
                 .orderBy('id', 'desc')
                 .limit(1)
