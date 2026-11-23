@@ -30,6 +30,17 @@ export default fp(async function (fastify: FastifyInstance) {
             });
         }
 
+        // Errors Fastify and its plugins raise for the client's own request (429 from the rate limit, 415, a malformed JSON body).
+        const clientStatus = error.statusCode;
+
+        if (clientStatus !== undefined && clientStatus >= 400 && clientStatus < 500) {
+            return reply.status(clientStatus).send({
+                statusCode: clientStatus,
+                error: error.code ?? 'REQUEST_REJECTED',
+                message: error.message,
+            });
+        }
+
         // Log unexpected errors
         fastify.log.error(error);
 

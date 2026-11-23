@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import Fastify from 'fastify';
+import { SERVER_OPTIONS } from '../app/server-options.js';
 
 const require = createRequire(__filename);
 
@@ -11,7 +12,7 @@ const require = createRequire(__filename);
  */
 export async function buildTestApp() {
     const { app } = require('../../dist/apps/backend/src/app/app.js') as typeof import('../app/app.js');
-    const server = Fastify();
+    const server = Fastify({ ...SERVER_OPTIONS });
 
     server.register(app);
     await server.ready();
