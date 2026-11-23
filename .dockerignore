@@ -1,0 +1,49 @@
+# Dependencies
+node_modules
+
+# Yarn Berry: keep releases/plugins (copied in Dockerfile); skip cache/state
+.yarn/cache
+.yarn/install-state.gz
+.yarn/unplugged
+
+# Git
+.git
+.gitignore
+
+# Build outputs
+dist
+apps/backend/dist
+apps/web/dist
+apps/web/dist-electron
+apps/web/release
+
+# Nx cache
+.nx/cache
+.nx/workspace-data
+
+# Environment files (managed on server, never in image)
+.env
+.env.*
+!.env.example
+
+# Editor/IDE
+.claude
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android app (not needed for backend image)
+apps/android
+
+# Logs
+*.log
+
+# Test files
+coverage
+
+# Temporary
+tmp
+*.timestamp*

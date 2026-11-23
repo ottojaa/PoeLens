@@ -1,0 +1,18 @@
+# Project Memories
+
+Persistent, project-level notes and gotchas worth remembering across sessions. Add an entry here for architectural knowledge or cross-file gotchas; use inline code comments for knowledge specific to a single line or function. (See the Memories Workflow section in `CLAUDE.md`.)
+
+Format each entry as a short dated bullet:
+
+- `YYYY-MM-DD` — <the gotcha / decision / non-obvious fact>.
+
+## Entries
+
+- `2026-11-23` — **Backend tests never go under `app/routes` or `app/plugins`.** Production autoloads every file in both folders and has no dev dependencies, so a test file there crash-loops the server (reverie hit this on 21 Nov 2026). `routes-autoload.test.ts` checks both folders and the autoload ignore pattern. Tests that boot the app use the built `dist` (`src/testing/build-app.ts`), because autoload imports natively and cannot load `.ts`; the backend `test` target therefore depends on `build`.
+- `2026-11-23` — **Build `@poelens/shared` before tests.** The backend imports its built `dist/`; a stale build fails with "X is not a function". `nx test` depends on `^build` (nx.json `targetDefaults`), but a hand-run `vitest` does not.
+- `2026-11-23` — **Electron ships only the compiled main and preload, and electron-builder bundles a package's `dependencies`.** `apps/web` keeps every renderer dependency in `devDependencies` (Vite bundles them for the hosted app), so the installer carries only Electron main and preload (`build.files` is the `dist-electron` folder). The desktop window loads the hosted app with `loadURL`; the URL comes from `app.isPackaged`, not an env var, so a dev run cannot load production by accident.
+- `2026-11-23` — **Yarn is not on PATH:** run `node .yarn/releases/yarn-4.17.1.cjs <args>`. `.yarnrc.yml` has `npmMinimalAgeGate: 14d`: a package version younger than 14 days is refused ("quarantined"), that is the age gate, not npm. `resolutions` pin the `nx`/`@nx/*` ecosystem to 22.4.0 (mismatched minors break the project graph). Workspace scripts only see the bins of their own workspace's dependencies, and `yarn.lock` was seeded from reverie so shared dependencies keep the versions known to work together.
+- `2026-11-23` — **`/health` has its own pg pool, not the app's.** `db/health-probe.ts` is a one-connection pool with a 1.5 s connect and query timeout, so `/health` answers "degraded" within about 2 s when Postgres is down or hangs. Putting those limits on the shared pool would cut off bulk writes and chart queries and make API calls fail whenever the pool is busy. Every pg `Pool` needs an `error` listener (an idle-client error otherwise crashes the process).
+- `2026-11-23` — **The backend esbuild output is nested:** `@nx/esbuild` with `bundle: false` emits to `apps/backend/dist/apps/backend/src/...` plus a `dist/main.js` shim, so the production migration runner is `node dist/apps/backend/src/db/migrate.js`. `config/env.ts` walks upward to find the repo-root `.env`, because `__dirname` differs between tsx runs and the build.
+- `2026-11-23` — **Do not add a `vitest.config.ts` next to `apps/web/vite.config.mts`:** the `@nx/vite` plugin would use it as the config for the inferred build and fail with "Could not resolve entry module index.html". The `test` block lives in `vite.config.mts`. The shared and backend projects have their own `vitest.config.ts`.
+- `2026-11-23` — **A production web build fails without `VITE_API_URL`** (`apps/web/vite.config.mts`; empty means same-origin). A bundle with the wrong API host only shows up as an API that looks down, so the build refuses instead of defaulting. Dev and tests default to `http://localhost:3100`. Pass it as a Docker build argument when the web image is added.
