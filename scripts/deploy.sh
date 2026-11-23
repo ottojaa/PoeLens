@@ -30,14 +30,15 @@ main() {
     "${COMPOSE[@]}" build backend
     extract_web
 
-    # 2. Dump the database from the running (old) container. A failed dump aborts the deploy with the old stack
-    #    untouched. The only skip is the first deploy, when no database container exists yet. A stopped container
-    #    is started first, so it can be dumped.
-    if [ -n "$(docker ps -aq --filter 'name=^poelens-postgres$')" ]; then
-        "${COMPOSE[@]}" up -d --wait postgres
+    # 2. Dump the database. A failed dump aborts the deploy before anything running has changed. The only skip is the
+    #    first deploy: no data volume yet. If the volume exists but its container is stopped or was removed, the
+    #    container is started from the existing definition (--no-recreate never replaces a running one) so it can be
+    #    dumped, rather than treating months of history as a first deploy.
+    if docker volume inspect poelens_postgres_data >/dev/null 2>&1; then
+        "${COMPOSE[@]}" up -d --wait --no-recreate postgres
         bash scripts/backup.sh predeploy 7
     else
-        echo "No poelens-postgres container: skipping the pre-deploy backup (first deploy)."
+        echo "No poelens_postgres_data volume: skipping the pre-deploy backup (first deploy)."
     fi
 
     # 3. Database up, then migrate BEFORE the new backend starts, so an enabled collector never polls against an old

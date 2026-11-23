@@ -63,6 +63,7 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
     chmod 600 .env.production
     sed -i "s/CHANGE_ME/$(openssl rand -hex 24)/g" .env.production   # one password, in POSTGRES_PASSWORD and DATABASE_URL
     sudo mkdir -p /mnt/nas/poelens/backups && sudo chown "$USER": /mnt/nas/poelens/backups   # or the BACKUP_DIR you chose in the file
+    findmnt -T /mnt/nas/poelens/backups                                 # must show the NAS, not `/`: otherwise the dumps share the database's disk
     ```
 
     Check the file: `grep CHANGE_ME .env.production` prints nothing, and `CORS_ORIGIN`, `COLLECTOR_*` and `BACKUP_DIR` hold what you want. Every variable is described in the example file.
