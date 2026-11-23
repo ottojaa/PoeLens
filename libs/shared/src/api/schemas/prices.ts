@@ -21,6 +21,7 @@ export const LeagueRefSchema = z.object({
 export const LeagueSchema = LeagueRefSchema.extend({
     game: GameSchema,
     firstSeen: z.string().datetime(),
+    /** When a leagues response that listed this league was last parsed. An unchanged response is not parsed again, so this does not move on every poll. */
     lastSeen: z.string().datetime(),
 });
 
