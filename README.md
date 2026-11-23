@@ -62,7 +62,7 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
     cp .env.production.example .env.production
     chmod 600 .env.production
     sed -i "s/CHANGE_ME/$(openssl rand -hex 24)/g" .env.production   # one password, in POSTGRES_PASSWORD and DATABASE_URL
-    mkdir -p /mnt/nas/poelens/backups                                   # or the BACKUP_DIR you chose in the file
+    sudo mkdir -p /mnt/nas/poelens/backups && sudo chown "$USER": /mnt/nas/poelens/backups   # or the BACKUP_DIR you chose in the file
     ```
 
     Check the file: `grep CHANGE_ME .env.production` prints nothing, and `CORS_ORIGIN`, `COLLECTOR_*` and `BACKUP_DIR` hold what you want. Every variable is described in the example file.
