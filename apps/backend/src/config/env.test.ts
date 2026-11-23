@@ -19,4 +19,20 @@ describe('parseEnv', () => {
         expect(() => parseEnv({ DATABASE_URL: 'not a url' })).toThrow();
         expect(() => parseEnv({ NODE_ENV: 'staging' })).toThrow();
     });
+
+    it('leaves the collector off, with the repo as contact and no league list, unless told otherwise', () => {
+        const env = parseEnv({});
+
+        expect(env.COLLECTOR_ENABLED).toBe(false);
+        expect(env.COLLECTOR_CONTACT).toBe('https://github.com/ottojaa/PoeLens');
+        expect(env.COLLECTOR_LEAGUES).toEqual([]);
+    });
+
+    it('reads the collector switch and a comma-separated league list', () => {
+        const env = parseEnv({ COLLECTOR_ENABLED: 'true', COLLECTOR_LEAGUES: ' Standard, HC Forbidden Rites ,' });
+
+        expect(env.COLLECTOR_ENABLED).toBe(true);
+        expect(env.COLLECTOR_LEAGUES).toEqual(['Standard', 'HC Forbidden Rites']);
+        expect(() => parseEnv({ COLLECTOR_ENABLED: 'yes' })).toThrow();
+    });
 });

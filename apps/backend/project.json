@@ -22,7 +22,7 @@
                 "format": ["cjs"],
                 "bundle": false,
                 "main": "apps/backend/src/main.ts",
-                "additionalEntryPoints": ["apps/backend/src/db/migrate.ts"],
+                "additionalEntryPoints": ["apps/backend/src/db/migrate.ts", "apps/backend/src/collector/collect.ts", "apps/backend/src/collector/reparse.ts"],
                 "tsConfig": "apps/backend/tsconfig.app.json",
                 "skipTypeCheck": true,
                 "esbuildOptions": {
@@ -85,6 +85,18 @@
             "executor": "nx:run-commands",
             "options": {
                 "command": "npx tsx apps/backend/src/db/migrate.ts down"
+            }
+        },
+        "collect": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx tsx apps/backend/src/collector/collect.ts"
+            }
+        },
+        "reparse": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx tsx apps/backend/src/collector/reparse.ts"
             }
         }
     }
