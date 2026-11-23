@@ -30,7 +30,7 @@ Files in `db/migrations/` named `NNN_description.ts`, run by `nx run @poelens/ba
 
 - **Every migration is reversible**: `down` undoes `up` (drop what you created). A migration that cannot be undone (dropping a column with data) says so in a comment and is split into expand now, contract later.
 - **Safe against production data**: assume the table has months of hourly snapshots. Add columns nullable or with a constant default, backfill in batches, then add the constraint. Create indexes on large tables with `CREATE INDEX CONCURRENTLY` (outside a transaction: set the migration up for it). Never rewrite a whole hypertable in one statement.
-- Deploy order is new code first, migrate after, so code must never depend on a column that a pending migration adds, and a migration must not drop what the running code still reads.
+- A deploy migrates before the new backend starts, so the previous backend runs against the new schema for a few seconds: a migration must not drop or rename anything the currently deployed code still reads (expand now, contract in a later release). New code may rely on the new schema.
 - Use `IF NOT EXISTS` / `IF EXISTS` where the statement allows, so a half-applied run can be repeated.
 - The migration runner has its own pool with no short timeouts.
 

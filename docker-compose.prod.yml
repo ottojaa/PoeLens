@@ -1,0 +1,62 @@
+# Production stack for the home server: the API and its TimescaleDB. nginx and certbot run on the host
+# (config/nginx), and scripts/deploy.sh drives this file. Always pass the env file so ${...} below resolves:
+#   docker compose -f docker-compose.prod.yml --env-file /opt/poelens/.env.production <command>
+# A fixed project name, so the data volume is always poelens_postgres_data whatever the checkout folder is called.
+name: poelens
+
+services:
+    backend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                VITE_API_URL: https://api.poelens.com
+        container_name: poelens-backend
+        # An absolute default so it works from any checkout. Override POELENS_ENV_FILE to point elsewhere, for example
+        # at .env.production.example to validate this file: POELENS_ENV_FILE=.env.production.example docker compose ... config
+        env_file:
+            - ${POELENS_ENV_FILE:-/opt/poelens/.env.production}
+        ports:
+            # Loopback only: host nginx proxies api.poelens.com here. Reverie's backend holds 3000.
+            - '127.0.0.1:3100:3100'
+        depends_on:
+            postgres:
+                condition: service_healthy
+        # Any 200 counts as healthy, never the body's status: a poe.ninja outage or a slow database makes /health say
+        # "degraded", and that must not fail a deploy. node:22-slim has no curl.
+        healthcheck:
+            test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3100/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+        restart: unless-stopped
+
+    # The same image as the dev database. No published port: reverie's Postgres owns host port 5432, and
+    # scripts/db.sh and scripts/backup.sh reach this one through docker exec.
+    postgres:
+        image: timescale/timescaledb:2.32.1-pg17
+        container_name: poelens-postgres
+        environment:
+            # Only what the database needs, never the rest of the env file. The :? makes a forgotten --env-file fail
+            # loudly instead of creating a database with an empty password.
+            POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the env file}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the env file}
+            POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the env file}
+            # The image tunes postgresql.conf for these once, when the data directory is first created; changing
+            # them later needs a manual edit (see the README). The defaults leave room for reverie on the same host.
+            TS_TUNE_MEMORY: ${TS_TUNE_MEMORY:-2GB}
+            TS_TUNE_NUM_CPUS: ${TS_TUNE_NUM_CPUS:-2}
+        # Postgres' default shared memory (64 MB) is too small for parallel queries over big chunks.
+        shm_size: 256mb
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+        restart: unless-stopped
+
+volumes:
+    postgres_data:
