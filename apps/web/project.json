@@ -70,6 +70,7 @@
         "serve:electron": {
             "executor": "nx:run-commands",
             "continuous": true,
+            "dependsOn": ["^build"],
             "options": {
                 "commands": ["vite --strictPort", "wait-on http://localhost:4300 && tsc -p electron/tsconfig.json && electron ."],
                 "cwd": "apps/web",

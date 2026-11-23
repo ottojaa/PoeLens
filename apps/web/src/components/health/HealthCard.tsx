@@ -58,7 +58,8 @@ export function HealthCard() {
                     </div>
                 )}
 
-                {data && (
+                {/* Query keeps the last data after a failed refetch; showing it beside the error would read as current. */}
+                {data && !isError && (
                     <dl className="divide-y">
                         <Row label="API">
                             <StatusBadge status={data.status} />
