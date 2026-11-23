@@ -1,0 +1,69 @@
+# compiled output
+dist
+dist-electron
+release
+tmp
+out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/coverage
+npm-debug.log
+yarn-error.log
+*.tsbuildinfo
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.nx/cache
+.nx/workspace-data
+
+vite.config.*.timestamp*
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# Android
+apps/android/.gradle/
+apps/android/build/
+apps/android/app/build/
+apps/android/local.properties
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# Claude Code (local, per-machine state; memories/ is tracked as the shared project layer)
+.claude/settings.local.json
+.claude/worktrees/
+
+deploy.log
+
+# Yarn (Berry local state)
+.yarn/install-state.gz
+
+# Local docker-compose overrides (machine-specific port mappings etc.)
+docker-compose.override.yml
