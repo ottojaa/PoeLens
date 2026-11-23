@@ -4,8 +4,8 @@ import { issueBootstrapAdminInvite } from './index.js';
 /**
  * Issues the invite for the first admin and prints its path. Open `<the web app's origin><path>` and register there:
  * the same page friends use, so there is no second way to create an account and no password on the command line.
- * Dev: `nx run @poelens/backend:bootstrap-admin`. Production: `node dist/apps/backend/src/services/auth/bootstrap-admin.js`.
- * Run it again for a fresh link if the first one was lost or expired; it refuses once an admin exists.
+ * Dev: `nx run @poelens/backend:bootstrap-admin`. Production, in the image: `node apps/backend/dist/apps/backend/src/services/auth/bootstrap-admin.js`.
+ * Run it again for a fresh link if the first one was lost or expired; it refuses while an active admin exists.
  */
 async function main(): Promise<void> {
     const { invite, token } = await issueBootstrapAdminInvite(db);

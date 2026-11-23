@@ -84,7 +84,9 @@ Needs on the server: Docker with Compose v2 (`docker compose version`), git, ngi
     docker compose -f docker-compose.prod.yml --env-file .env.production run --rm --no-deps backend node apps/backend/dist/apps/backend/src/services/auth/bootstrap-admin.js
     ```
 
-    It prints a path such as `/invite/<token>`. Open it on the site (`https://poelens.com/invite/<token>`) and choose your email, name and password. The link works once and for 7 days; running the command again replaces it, and it refuses once an admin exists. From then on you invite friends from the Admin page, and issue a password-reset link there for anyone who forgets theirs.
+    It prints a path such as `/invite/<token>`. Open it on the site (`https://poelens.com/invite/<token>`) and choose your email, name and password. The link works once and for 7 days; running the command again replaces it, and it refuses while an active admin exists. From then on you invite friends from the Admin page, and issue a password-reset link there for anyone who forgets theirs.
+
+    If every admin is ever deactivated, the same command is the way back in: it issues a new admin invite. Register with an email that no deactivated account uses (they stay registered), then reactivate the old account from the Admin page.
 
 4. **nginx.** Install both configs, which listen on port 80 only:
 
