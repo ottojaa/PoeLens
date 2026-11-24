@@ -2,13 +2,13 @@ import { cn } from '@/lib/utils';
 import { TogglePop } from '@/motion/TogglePop';
 
 /** The star the design draws: outlined when not watched, filled and stroked in the accent when watched. */
-export function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
+export function StarIcon({ filled, size = 18, strokeWidth = 1.6, className }: { filled: boolean; size?: number; strokeWidth?: number; className?: string }) {
     return (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" className={className}>
             <path
                 d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"
                 fill={filled ? 'currentColor' : 'none'}
-                strokeWidth="1.6"
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
                 stroke="currentColor"
             />

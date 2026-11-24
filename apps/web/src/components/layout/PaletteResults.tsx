@@ -67,8 +67,8 @@ export function GoTo({
     return (
         <CommandGroup heading="Go to">
             {watchlistCount !== undefined && (
-                <CommandItem value="watchlist" onSelect={onOpenWatchlist} className="gap-3">
-                    <StarIcon filled={false} />
+                <CommandItem value="watchlist" onSelect={onOpenWatchlist} className="gap-3.5">
+                    <StarIcon filled={false} size={20} strokeWidth={1.8} className="text-muted-foreground mx-2 size-5 shrink-0" />
                     <span className="flex-1">Watchlist</span>
                     <span className="text-muted-foreground text-xs">{watchlistCount === 1 ? '1 item' : `${watchlistCount} items`}</span>
                 </CommandItem>
