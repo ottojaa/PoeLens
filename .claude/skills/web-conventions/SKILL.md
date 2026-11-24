@@ -76,7 +76,7 @@ League switcher, unit toggle and category navigation are **controlled, presentat
 All animation goes through `src/motion/`; the numbers live in `tokens.ts` (seconds, for Motion) and `motion.css` (CSS variables, for Radix overlays), and `motion.test.ts` keeps the two equal.
 
 - **Page transitions** (`PageTransition`): a `motion.div` keyed on the matched route fades in and rises 8px over 180ms. Enter only; no `AnimatePresence` exit (it would hold the old page on screen).
-- **`AnimatedNumber`**: counts over 400ms through `animate()`, writing the text node directly (no re-render per frame), and underlines itself once in the accent colour on change. Screen readers get the final value only.
+- **`AnimatedNumber`**: counts over 400ms through a MotionValue (an interrupted count continues from the number on screen), writing the text node directly (no re-render per frame), and underlines itself once in the accent colour when the value changes; a re-render with the same value does nothing. Screen readers get the final value only.
 - **`AnimatedList`**: layout animation for **short lists only** (`MAX_ANIMATED_ITEMS`, 50); layout measures every item on every render, so the economy table must never use it.
 - **`TogglePop`**: the spring a toggle's icon pops with.
 - **Overlays** (Dialog, Sheet, DropdownMenu) animate in CSS through `tw-animate-css` with `duration-(--motion-...)` and `ease-(--ease-out)`. The palette fades in from 98% over 140ms.

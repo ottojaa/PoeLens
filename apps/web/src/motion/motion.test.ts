@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { motionValue } from 'motion/react';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { AnimatedList, canAnimateLayout, MAX_ANIMATED_ITEMS } from './AnimatedList';
 import { AnimatedNumber } from './AnimatedNumber';
-import { countTo } from './number';
+import { countTo, hasChanged } from './number';
 import { DURATION } from './tokens';
 
 // Motion's frame loop reads requestAnimationFrame when it loads, and node has none, so this runs before the imports.
@@ -39,25 +40,62 @@ describe('AnimatedNumber', () => {
     });
 });
 
+describe('hasChanged', () => {
+    it('is false on the first render and for the same value, true for a new one', () => {
+        expect(hasChanged(null, 5)).toBe(false);
+        expect(hasChanged(5, 5)).toBe(false);
+        expect(hasChanged(5, 6)).toBe(true);
+    });
+});
+
 describe('countTo', () => {
     it('jumps straight to the value when motion is reduced', () => {
-        const steps: string[] = [];
+        const value = motionValue(1);
 
-        countTo({ from: 1, to: 9, format: String, instant: true, onUpdate: (text) => steps.push(text) });
+        countTo(value, 9, true);
 
-        expect(steps).toEqual(['9']);
+        expect(value.get()).toBe(9);
     });
 
     it('counts through values in between and ends on the target', async () => {
-        const steps: string[] = [];
+        const value = motionValue(0);
+        const seen: number[] = [];
 
         await new Promise<void>((resolve) => {
-            countTo({ from: 0, to: 100, format: (value) => value.toFixed(0), instant: false, onUpdate: (text) => steps.push(text), onDone: resolve });
+            value.on('change', (latest) => {
+                seen.push(latest);
+
+                if (latest === 100) resolve();
+            });
+            countTo(value, 100, false);
         });
 
-        expect(steps.at(-1)).toBe('100');
-        expect(steps.length).toBeGreaterThan(2);
-        expect(steps.some((text) => Number(text) > 0 && Number(text) < 100)).toBe(true);
+        expect(seen.at(-1)).toBe(100);
+        expect(seen.some((latest) => latest > 0 && latest < 100)).toBe(true);
+    });
+
+    it('continues from the number on screen when a count is interrupted', async () => {
+        const value = motionValue(0);
+        const stop = countTo(value, 100, false);
+
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        stop();
+
+        const onScreen = value.get();
+
+        expect(onScreen).toBeGreaterThan(0);
+        expect(onScreen).toBeLessThan(100);
+
+        const seen: number[] = [];
+
+        value.on('change', (latest) => seen.push(latest));
+        const stopAgain = countTo(value, 50, false);
+
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        stopAgain();
+
+        // The first step moves toward 50 from where the count stopped, not from the old target of 100.
+        expect(Math.abs(seen[0]! - onScreen)).toBeLessThan(30);
     });
 });
 

@@ -12,7 +12,7 @@ const noop = () => undefined;
 
 export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; onOpenSearch: () => void }) {
     return (
-        <header className="bg-card sticky top-0 z-30 min-h-(--header-height) flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-3 md:px-6">
+        <header className="bg-card sticky top-0 z-30 min-h-(--header-height) flex flex-wrap items-center gap-x-4 gap-y-2 border-b md:flex-nowrap px-4 py-3 md:px-6">
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu" onClick={onOpenMenu}>
                 <Menu />
             </Button>
@@ -26,17 +26,17 @@ export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; o
                 type="button"
                 variant="outline"
                 onClick={onOpenSearch}
-                className="bg-card text-muted-foreground ml-auto h-10 justify-start gap-2.5 rounded-[10px] px-3.5 font-normal md:ml-0 md:max-w-[520px] md:flex-1"
+                className="bg-card text-muted-foreground ml-auto h-10 min-w-0 justify-start gap-2.5 rounded-[10px] px-3.5 font-normal md:ml-0 md:max-w-[520px] md:flex-1"
             >
                 <Search className="size-4 shrink-0" aria-hidden="true" />
-                <span className="hidden flex-1 text-left md:inline">Search every currency and item</span>
+                <span className="hidden flex-1 truncate text-left md:inline">Search every currency and item</span>
                 <span className="sr-only md:hidden">Search</span>
                 <kbd className="border-input hidden rounded-md border px-1.5 py-0.5 font-sans text-xs sm:inline">⌘K</kbd>
             </Button>
-            <div className="hidden items-center gap-2 lg:ml-auto lg:flex">
+            <div className="hidden shrink-0 items-center gap-2 lg:ml-auto lg:flex">
                 <UnitToggle value={DEFAULT_UNIT.poe2} onChange={noop} disabled />
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1 md:ml-auto lg:ml-0">
                 <ThemeToggle />
                 <AccountMenu />
             </div>

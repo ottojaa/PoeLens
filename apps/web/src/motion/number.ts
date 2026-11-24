@@ -1,38 +1,25 @@
-import { animate } from 'motion/react';
+import { animate, type MotionValue } from 'motion/react';
 import { DURATION, EASE_OUT } from './tokens';
 
 export type NumberFormatter = (value: number) => string;
 
-/**
- * Counts from one number to another, calling `onUpdate` with each step's text and `onDone` once at the end. With
- * `instant` it jumps straight to the target. Returns a function that stops the count.
- */
-export function countTo(options: {
-    from: number;
-    to: number;
-    format: NumberFormatter;
-    instant: boolean;
-    onUpdate: (text: string) => void;
-    onDone?: () => void;
-}): () => void {
-    const { from, to, format, instant, onUpdate, onDone } = options;
+/** A number only counts and flashes when it is shown before and has a different value now. */
+export function hasChanged(previous: number | null, next: number): previous is number {
+    return previous !== null && previous !== next;
+}
 
-    if (instant || from === to) {
-        onUpdate(format(to));
-        onDone?.();
+/**
+ * Moves a MotionValue to `to` over the number duration, starting from wherever it is now, so a count interrupted
+ * half way continues from the number on screen. With `instant` it jumps. Returns a function that stops the count.
+ */
+export function countTo(value: MotionValue<number>, to: number, instant: boolean): () => void {
+    if (instant) {
+        value.jump(to);
 
         return () => undefined;
     }
 
-    const controls = animate(from, to, {
-        duration: DURATION.number,
-        ease: EASE_OUT,
-        onUpdate: (value) => onUpdate(format(value)),
-        onComplete: () => {
-            onUpdate(format(to));
-            onDone?.();
-        },
-    });
+    const controls = animate(value, to, { duration: DURATION.number, ease: EASE_OUT });
 
     return () => controls.stop();
 }
