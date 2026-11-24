@@ -1496,7 +1496,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dnd-kit/dom@npm:^0.5.3":
+"@dnd-kit/dom@npm:0.5.3, @dnd-kit/dom@npm:^0.5.3":
   version: 0.5.3
   resolution: "@dnd-kit/dom@npm:0.5.3"
   dependencies:
@@ -3912,6 +3912,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@poelens/web@workspace:apps/web"
   dependencies:
+    "@dnd-kit/dom": "npm:0.5.3"
     "@dnd-kit/react": "npm:0.5.3"
     "@fontsource/geist": "npm:^5.3.0"
     "@poelens/shared": "workspace:*"
@@ -3928,6 +3929,7 @@ __metadata:
     electron: "npm:^40.0.0"
     electron-builder: "npm:^26.4.0"
     happy-dom: "npm:^21"
+    immer: "npm:^11.2.9"
     lucide-react: "npm:^0.562.0"
     motion: "npm:^14.11.1"
     radix-ui: "npm:^1.4.3"

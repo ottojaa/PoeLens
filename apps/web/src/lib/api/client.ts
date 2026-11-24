@@ -18,6 +18,8 @@ export class ApiError extends Error {
         path: string,
         readonly code: string | null,
         readonly serverMessage: string | null,
+        /** The error body's `details`, for errors that carry data (a stale save carries the stored dashboard). */
+        readonly details: unknown = undefined,
     ) {
         super('API request failed: ' + status + ' ' + path);
         this.name = 'ApiError';
@@ -33,6 +35,7 @@ async function toApiError(response: Response, path: string): Promise<ApiError> {
         path,
         typeof fields['error'] === 'string' ? fields['error'] : null,
         typeof fields['message'] === 'string' ? fields['message'] : null,
+        fields['details'],
     );
 }
 
