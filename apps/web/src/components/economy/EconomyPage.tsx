@@ -28,7 +28,6 @@ function toSourceLabel(category: Category): string {
     return category.endpoint === 'stash' ? 'Listed in stashes' : 'Currency exchange';
 }
 
-/** Writes the economy view into the URL, leaving out whatever equals the default so a plain view keeps a plain URL. */
 /** The line under the title: where the prices come from, how fresh they are and the exchange rates between the units. */
 function toMeta(category: Category, rows: readonly TableRow[] | undefined, rates: Rates | undefined): string {
     if (!rows) return 'Loading prices';
@@ -38,6 +37,7 @@ function toMeta(category: Category, rows: readonly TableRow[] | undefined, rates
     return [toSourceLabel(category), asOf && `updated ${formatAgo(asOf)}`, rates && formatRates(rates)].filter(Boolean).join(' · ');
 }
 
+/** Writes the economy view into the URL, leaving out whatever equals the default so a plain view keeps a plain URL. */
 function useViewNavigation(view: EconomyView) {
     const navigate = useNavigate();
 

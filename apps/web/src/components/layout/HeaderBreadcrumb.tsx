@@ -19,14 +19,14 @@ export function BreadcrumbProvider({ children }: { children: ReactNode }) {
 export function BreadcrumbSlot() {
     const slot = useContext(SlotContext);
 
-    return <div ref={slot?.setElement} className="order-last min-w-0 basis-full empty:hidden xl:order-none xl:max-w-80 xl:basis-auto xl:shrink" />;
+    return <div ref={slot?.setElement} className="order-last min-w-0 basis-full empty:hidden md:order-none md:max-w-80 md:basis-auto md:shrink" />;
 }
 
-/** Renders its children in the header's breadcrumb slot. */
-export function HeaderBreadcrumb({ children }: { children: ReactNode }) {
+/** Renders its children in the header's breadcrumb slot; takes `enabled={false}` to render nothing there. */
+export function HeaderBreadcrumb({ children, enabled = true }: { children: ReactNode; enabled?: boolean }) {
     const element = useContext(SlotContext)?.element;
 
-    if (!element) return null;
+    if (!enabled || !element) return null;
 
     return createPortal(children, element);
 }

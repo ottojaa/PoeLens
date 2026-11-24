@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api/client';
 import { useHistory, useLatest } from '@/lib/api/prices';
 import { type Range } from '@/lib/economy/search-params';
+import { useMediaQuery } from '@/lib/use-media-query';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { HeaderBreadcrumb } from '@/components/layout/HeaderBreadcrumb';
 import { HistoryCard } from './HistoryCard';
@@ -28,27 +29,32 @@ function toLeagueLabel(league: LeagueRef): string {
     return `${league.name} (${league.hardcore ? 'hardcore' : 'softcore'})`;
 }
 
+/** Between md and xl the header has no room for the trail and must stay one row high (the sidebar sticks below it), so the trail sits above the title instead. */
+const NARROW_DESKTOP = '(min-width: 768px) and (max-width: 1279px)';
+
 function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel: string }) {
+    const isInline = useMediaQuery(NARROW_DESKTOP);
+    const trail = (
+        <nav aria-label="Breadcrumb" className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-sm whitespace-nowrap">
+            <Link to="/" className="hover:text-foreground rounded-sm underline-offset-4 hover:underline">
+                Economy
+            </Link>
+            <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+            <Link to="/economy/$category" params={{ category: item.category }} className="hover:text-foreground rounded-sm underline-offset-4 hover:underline">
+                {categoryLabel}
+            </Link>
+            <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+            <span className="text-foreground truncate" aria-current="page">
+                {item.name}
+            </span>
+        </nav>
+    );
+
     return (
-        <HeaderBreadcrumb>
-            <nav aria-label="Breadcrumb" className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-sm whitespace-nowrap">
-                <Link to="/" className="hover:text-foreground rounded-sm underline-offset-4 hover:underline">
-                    Economy
-                </Link>
-                <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
-                <Link
-                    to="/economy/$category"
-                    params={{ category: item.category }}
-                    className="hover:text-foreground rounded-sm underline-offset-4 hover:underline"
-                >
-                    {categoryLabel}
-                </Link>
-                <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="text-foreground truncate" aria-current="page">
-                    {item.name}
-                </span>
-            </nav>
-        </HeaderBreadcrumb>
+        <>
+            <HeaderBreadcrumb enabled={!isInline}>{trail}</HeaderBreadcrumb>
+            {isInline && trail}
+        </>
     );
 }
 
@@ -126,7 +132,6 @@ function HistoryError({ error, onRetry }: { error: unknown; onRetry: () => void 
 function ItemSkeleton() {
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6" aria-busy="true" aria-label="Loading item">
-            <Skeleton className="h-4 w-48" />
             <div className="flex items-center gap-4">
                 <Skeleton className="size-[60px] rounded-2xl" />
                 <Skeleton className="h-8 w-64" />

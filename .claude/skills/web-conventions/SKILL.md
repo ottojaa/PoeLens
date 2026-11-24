@@ -51,6 +51,7 @@ Every data view handles loading (Skeleton), error (message and retry) and the lo
 
 - Use shadcn components from `components/ui/`; install missing ones first: `npx shadcn@latest add <component>`
 - **Never use native `<button>`, `<input>` or `<textarea>`**: use `Button`, `Input`, `Textarea`. Icon-only buttons need an `aria-label`.
+- The one native form control allowed is `<select>` for the phone sort picker (`EconomyCards`): the operating system's own picker beats a dropdown menu on a phone.
 - Functional components only; extract reusable logic into hooks
 - The footer carries the GGG notice and the poe.ninja credit on every page
 
