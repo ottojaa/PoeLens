@@ -26,7 +26,7 @@ export function LeagueSwitcher({ leagues, value, onChange }: { leagues: readonly
                         aria-label={selected ? `League: ${selected.name}` : 'League'}
                         className="bg-card h-10 max-w-60 rounded-full px-3.5 font-normal disabled:opacity-60 lg:max-w-none"
                     >
-                        <span className="bg-primary size-2 rounded-full" aria-hidden="true" />
+                        <span className="bg-primary size-2 shrink-0 rounded-full" aria-hidden="true" />
                         <span className="truncate">{selected ? selected.name : 'League'}</span>
                         {selected && <span className="text-muted-foreground shrink-0">· {toModeLabel(selected)}</span>}
                         <ChevronDown className="text-muted-foreground size-3.5" aria-hidden="true" />
