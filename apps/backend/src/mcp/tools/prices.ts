@@ -153,6 +153,7 @@ function registerGetPriceHistory(server: McpServer, ctx: ToolContext) {
                 });
                 const history = await getHistory(ctx.db, query, now);
                 const rows = history.points.map((point) => `${point.time.slice(0, 16).replace('T', ' ')} UTC  ${formatNumber(point.price)} ${history.unit}`);
+                // An item that fell out of its category's newest snapshot has no latest row, but may still have history.
                 const { rows: latest } = await getItemRows(ctx.db, {
                     game: args.game,
                     league: league.name,
@@ -168,7 +169,7 @@ function registerGetPriceHistory(server: McpServer, ctx: ToolContext) {
                             game: history.game,
                             league: history.league,
                             unit: history.unit,
-                            asOf: newestAsOf(latest),
+                            asOf: newestAsOf(latest) ?? history.points.at(-1)?.time ?? null,
                             now,
                             extra: `${history.bucket === 'hour' ? 'hourly' : 'daily'} points, last ${args.days} d`,
                         }),

@@ -74,7 +74,10 @@ function SecretView({ created, onClose }: { created: CreateApiTokenResponse; onC
                 Anyone with this token can read your prices and change your watchlist as you. Keep it out of screenshots and shared files.
             </p>
             <CopyBlock label="Claude Code" text={toClaudeCodeCommand(url, created.secret)} />
-            <CopyBlock label="Claude Desktop (claude_desktop_config.json, needs Node.js)" text={toDesktopConfig(url, created.secret)} />
+            <CopyBlock
+                label="Claude Desktop (claude_desktop_config.json, needs Node.js; the mcp-remote version is pinned on purpose)"
+                text={toDesktopConfig(url, created.secret)}
+            />
             <DialogFooter>
                 <Button type="button" onClick={onClose}>
                     I have copied it

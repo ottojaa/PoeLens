@@ -1,3 +1,10 @@
+/**
+ * The `mcp-remote` release the Desktop snippet runs. It is pinned on purpose: the package is started on the user's
+ * machine with their token in its environment, so a new release must not run there unreviewed. Move it to a release
+ * that is at least 14 days old (the age the repo's package gate uses).
+ */
+export const MCP_REMOTE_VERSION = '0.16.5';
+
 /** The command that adds PoeLens to Claude Code. */
 export function toClaudeCodeCommand(url: string, secret: string): string {
     return `claude mcp add --transport http poelens ${url} --header "Authorization: Bearer ${secret}"`;
@@ -13,7 +20,7 @@ export function toDesktopConfig(url: string, secret: string): string {
         mcpServers: {
             poelens: {
                 command: 'npx',
-                args: ['-y', 'mcp-remote', url, '--transport', 'http-only', '--header', 'Authorization:${AUTH_HEADER}'],
+                args: ['-y', `mcp-remote@${MCP_REMOTE_VERSION}`, url, '--transport', 'http-only', '--header', 'Authorization:${AUTH_HEADER}'],
                 env: { AUTH_HEADER: 'Bearer ' + secret },
             },
         },

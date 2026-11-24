@@ -230,6 +230,32 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
             expect(answer.text).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC/);
         });
 
+        it('dates the history of an item that left the newest snapshot by its newest point, not "no prices yet"', async () => {
+            const divine = await itemId('Divine Orb');
+            const earlier = await test.db.selectFrom('prices').selectAll().where('item_id', '=', divine).orderBy('time').executeTakeFirstOrThrow();
+            const gone = await test.db
+                .insertInto('items')
+                .values({ game: 'poe2', name: 'Zzyzx Relic', category: 'Currency' })
+                .returning('id')
+                .executeTakeFirstOrThrow();
+
+            try {
+                await test.db
+                    .insertInto('prices')
+                    .values({ ...earlier, item_id: gone.id })
+                    .execute();
+
+                const answer = await ask(await connect(), 'get_price_history', { item: 'Zzyzx Relic', days: 7 });
+
+                expect(answer.isError).toBe(false);
+                expect(answer.text).not.toContain('no prices yet');
+                expect(answer.text).toMatch(/prices \d+ h ago/);
+            } finally {
+                await test.db.deleteFrom('prices').where('item_id', '=', gone.id).execute();
+                await test.db.deleteFrom('items').where('id', '=', gone.id).execute();
+            }
+        });
+
         it('names the risers and fallers of a group, ranked in the default unit', async () => {
             const client = await connect();
             const all = await ask(client, 'get_top_movers', { window: '24h' });

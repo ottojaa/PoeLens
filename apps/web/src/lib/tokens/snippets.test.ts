@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toClaudeCodeCommand, toDesktopConfig } from './snippets';
+import { MCP_REMOTE_VERSION, toClaudeCodeCommand, toDesktopConfig } from './snippets';
 
 const URL = 'https://api.poelens.com/mcp';
 const SECRET = 'pl_' + 'a'.repeat(43);
@@ -16,8 +16,9 @@ describe('token snippets', () => {
         const server = config.mcpServers.poelens;
 
         expect(server.command).toBe('npx');
-        expect(server.args).toEqual(['-y', 'mcp-remote', URL, '--transport', 'http-only', '--header', 'Authorization:${AUTH_HEADER}']);
+        expect(server.args).toEqual(['-y', 'mcp-remote@0.16.5', URL, '--transport', 'http-only', '--header', 'Authorization:${AUTH_HEADER}']);
         expect(server.args.some((arg) => arg.includes(' '))).toBe(false);
+        expect(MCP_REMOTE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
         expect(server.env).toEqual({ AUTH_HEADER: 'Bearer ' + SECRET });
         expect(server.args.join(' ')).not.toContain(SECRET);
     });
