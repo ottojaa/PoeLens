@@ -79,7 +79,7 @@ export function formatPriceLine(row: PriceRow, now: Date): string {
 
     if (row.lowConfidence) details.push('LOW CONFIDENCE: very few listings, treat the price as a rough guess');
 
-    return `${row.item.name} (id ${row.item.id}): ${price}${inDivine} | ${details.filter(Boolean).join(', ')}`;
+    return `${describeItem(row.item)}: ${price}${inDivine} | ${details.filter(Boolean).join(', ')}`;
 }
 
 /** The lines that say what an item text could not resolve to, in a read or a write. */

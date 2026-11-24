@@ -9,7 +9,8 @@ import { describeItem, formatPriceLine, formatUnresolved, header, newestAsOf, wi
 import { resolveLeagueArg } from '../leagues.js';
 import { resolveItem } from '../resolve-item.js';
 
-const WRITE = { readOnlyHint: false, idempotentHint: true, destructiveHint: false, openWorldHint: false } as const;
+/** Adding is additive; removing deletes an entry, which the spec's destructive hint is for. */
+const WRITE = { readOnlyHint: false, idempotentHint: true, openWorldHint: false } as const;
 
 /** How far an item moved over a day, for ordering: no known change sorts last. */
 function movement(row: WatchlistRow): number {
@@ -82,7 +83,7 @@ function registerWrite(server: McpServer, ctx: ToolContext, kind: 'watch' | 'unw
                 item: z.string().trim().min(1).max(100).describe('The exact item name, or its numeric item id.'),
                 game: GameSchema.default('poe2').describe('Which game the item is from.'),
             },
-            annotations: WRITE,
+            annotations: { ...WRITE, destructiveHint: !adding },
         },
         (args) =>
             runTool(async () => {

@@ -22,6 +22,8 @@ export const readDefaults = {
         .min(1)
         .max(100)
         .default('current')
-        .describe('"current" (the current softcore challenge league, the default), or an exact league name such as a hardcore league.'),
+        .describe(
+            '"current" (the current softcore challenge league, the default), "hardcore" (the current hardcore challenge league), or an exact league name.',
+        ),
     unit: UnitChoiceSchema.default('auto').describe('"auto" (default) shows each price in the unit it reads best in; or divine, exalted or chaos.'),
 };

@@ -39,7 +39,6 @@ describe('/mcp without a well-shaped API token', () => {
         'Bearer ' + 'a'.repeat(46),
         'Basic cGxfeA==',
         'Bearer pl_' + 'A'.repeat(43) + 'x',
-        'bearer pl_' + 'A'.repeat(43),
         // The shape of a session JWT.
         'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.c2lnbmF0dXJl',
     ];

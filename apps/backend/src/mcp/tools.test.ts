@@ -146,6 +146,9 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
         for (const name of ['watch_item', 'unwatch_item']) {
             expect(byName.get(name)?.annotations).toMatchObject({ readOnlyHint: false, idempotentHint: true });
         }
+
+        expect(byName.get('watch_item')?.annotations).toMatchObject({ destructiveHint: false });
+        expect(byName.get('unwatch_item')?.annotations).toMatchObject({ destructiveHint: true });
     });
 
     describe('reads', () => {
@@ -154,8 +157,8 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
 
             expect(answer.isError).toBe(false);
             expect(answer.text).toContain('Path of Exile 2 · Forbidden Rites · unit: auto');
-            expect(answer.text).toMatch(/Divine Orb \(id \d+\): 1\.00 div \| 24h \+100\.0%/);
-            expect(answer.text).toMatch(/Orb of Annulment \(id \d+\): .* c = .* div/);
+            expect(answer.text).toMatch(/Divine Orb \(Currency, id \d+\): 1\.00 div \| 24h \+100\.0%/);
+            expect(answer.text).toMatch(/Orb of Annulment \(Currency, id \d+\): .* c = .* div/);
             expect(occurrences(answer.text, POE_NINJA_ATTRIBUTION)).toBe(1);
         });
 
@@ -164,7 +167,7 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
             const answer = await ask(await connect(), 'get_prices', { items: ['divine orb', String(id)], unit: 'exalted' });
 
             expect(answer.text).toContain('unit: exalted');
-            expect(occurrences(answer.text, 'Divine Orb (id ' + id + ')')).toBe(2);
+            expect(occurrences(answer.text, 'Divine Orb (Currency, id ' + id + '): ')).toBe(2);
         });
 
         it('takes a clearly best search hit for a read, and says "did you mean" when there is none', async () => {
@@ -183,7 +186,7 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
             expect(answer.text).toContain('More than one item is named "Twin Orb"');
             expect(answer.text).toMatch(/Twin Orb \(Currency, id \d+\)/);
             expect(answer.text).toMatch(/Twin Orb \(Fragments, id \d+\)/);
-            expect(answer.text).toMatch(/Divine Orb \(id \d+\): 1\.00 div/);
+            expect(answer.text).toMatch(/Divine Orb \(Currency, id \d+\): 1\.00 div/);
         });
 
         it('says an item has no price when it is not in the latest snapshot', async () => {
@@ -201,10 +204,20 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
             expect(answer.text).toContain('Forbidden Rites (current)');
         });
 
+        it('takes "hardcore" for the current hardcore league and marks it in the list of leagues', async () => {
+            const client = await connect();
+            const answer = await ask(client, 'get_prices', { items: ['Divine Orb'], league: 'hardcore' });
+            const unknown = await ask(client, 'get_prices', { items: ['Divine Orb'], league: 'Nowhere' });
+
+            expect(answer.text).toContain('HC Forbidden Rites (hardcore)');
+            expect(unknown.text).toContain('HC Forbidden Rites (current hardcore)');
+            expect(unknown.text).toContain('Forbidden Rites (current)');
+        });
+
         it('searches with typos, and prices what it finds', async () => {
             const answer = await ask(await connect(), 'search_items', { query: 'divne', limit: 3 });
 
-            expect(answer.text.split('\n')[1]).toMatch(/^Divine Orb \(id \d+\)/);
+            expect(answer.text.split('\n')[1]).toMatch(/^Divine Orb \(Currency, id \d+\): /);
         });
 
         it('summarises a history and lists its points', async () => {
@@ -213,6 +226,7 @@ describe.skipIf(SKIP_DB_TESTS)('the MCP tools, through the SDK client against th
             expect(answer.isError).toBe(false);
             expect(answer.text).toMatch(/Divine Orb \(Currency, id \d+\): .* -> .* \(\+100\.0%\), low .*, high /);
             expect(answer.text).toContain('daily points, last 7 d');
+            expect(answer.text).toMatch(/prices (just now|\d+ min ago)/);
             expect(answer.text).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC/);
         });
 

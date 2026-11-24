@@ -153,7 +153,14 @@ function registerGetPriceHistory(server: McpServer, ctx: ToolContext) {
                 });
                 const history = await getHistory(ctx.db, query, now);
                 const rows = history.points.map((point) => `${point.time.slice(0, 16).replace('T', ' ')} UTC  ${formatNumber(point.price)} ${history.unit}`);
-                const lastPoint = history.points[history.points.length - 1];
+                const { rows: latest } = await getItemRows(ctx.db, {
+                    game: args.game,
+                    league: league.name,
+                    unit: args.unit,
+                    itemIds: [resolution.item.id],
+                    includeLowConfidence: true,
+                    sparkline: false,
+                });
 
                 return textResult(
                     withCredit([
@@ -161,7 +168,7 @@ function registerGetPriceHistory(server: McpServer, ctx: ToolContext) {
                             game: history.game,
                             league: history.league,
                             unit: history.unit,
-                            asOf: lastPoint?.time ?? null,
+                            asOf: newestAsOf(latest),
                             now,
                             extra: `${history.bucket === 'hour' ? 'hourly' : 'daily'} points, last ${args.days} d`,
                         }),

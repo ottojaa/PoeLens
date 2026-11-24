@@ -3,8 +3,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { db } from '../db/kysely.js';
 import { authenticateApiToken } from '../services/api-tokens/index.js';
 
-/** The shape of a PoeLens API token in a header. Anything else (a session JWT, garbage) is refused before the database is asked. */
-const TOKEN_HEADER = /^Bearer (pl_[A-Za-z0-9_-]{43})$/;
+/** The shape of a PoeLens API token in a header (the scheme's case is free, as HTTP says; the token's is not). Anything else (a session JWT, garbage) is refused before the database is asked. */
+const TOKEN_HEADER = /^[Bb][Ee][Aa][Rr][Ee][Rr] (pl_[A-Za-z0-9_-]{43})$/;
 
 /** How many calls one token may make in a window: a model working through a question makes a handful. */
 export const TOKEN_RATE_LIMIT = { max: 120, timeWindow: '1 minute' } as const;

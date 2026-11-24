@@ -184,6 +184,17 @@ describe.skipIf(SKIP_DB_TESTS)('API tokens over HTTP', () => {
 
             expect(list.json().tokens[0].lastUsedAt).toEqual(expect.any(String));
         });
+
+        it('takes the Bearer scheme in any case, but the token as it is', async () => {
+            const { session } = await member('scheme');
+            const { secret } = await mint(session.accessToken);
+            const call = (authorization: string) =>
+                server.inject({ method: 'POST', url: '/mcp', headers: { ...MCP_HEADERS, authorization, 'x-forwarded-for': freshIp() }, payload: INITIALIZE });
+
+            expect((await call('bearer ' + secret)).statusCode).toBe(200);
+            expect((await call('BEARER ' + secret)).statusCode).toBe(200);
+            expect((await call('Bearer ' + secret.toUpperCase())).statusCode).toBe(401);
+        });
     });
 
     describe('ending a token', () => {
