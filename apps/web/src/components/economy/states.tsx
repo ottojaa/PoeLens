@@ -67,6 +67,15 @@ export function NoDataState({ league }: { league: string | undefined }) {
     );
 }
 
+/** An item the collector has no price for in this league, such as one seen only in another league. */
+export function NoItemPriceState({ league }: { league: string }) {
+    return (
+        <StateBox icon={<SearchX className="size-6" aria-hidden="true" />} title={`No price in ${league} right now`}>
+            <p>This item has not been priced in this league. Pick another league from the league menu.</p>
+        </StateBox>
+    );
+}
+
 /** Rows exist, but the filters hide all of them. */
 export function NoMatchState({ onClear }: { onClear: () => void }) {
     return (

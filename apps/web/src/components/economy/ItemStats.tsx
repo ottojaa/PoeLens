@@ -12,6 +12,8 @@ export interface ShownPrice {
     row: PriceRow;
     /** Item, league and unit of the answer: a new one remounts the number instead of counting from the old one. */
     key: string;
+    /** The league the answer is for, which can lag the URL while a new league loads. */
+    leagueName: string;
 }
 
 const BIG_NUMBER = 'font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]';

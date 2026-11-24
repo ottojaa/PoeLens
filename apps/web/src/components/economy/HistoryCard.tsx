@@ -1,4 +1,4 @@
-import type { HistoryResponse, Unit } from '@poelens/shared';
+import type { HistoryResponse } from '@poelens/shared';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -50,14 +50,12 @@ function NoticeLine({ notice }: { notice: HistoryNotice }) {
 export function HistoryCard({
     history,
     itemName,
-    unit,
     range,
     onRange,
 }: {
     /** Undefined while the answer for this item, league and range loads. */
     history: HistoryResponse | undefined;
     itemName: string;
-    unit: Unit;
     range: Range;
     onRange: (range: Range) => void;
 }) {
@@ -74,7 +72,12 @@ export function HistoryCard({
             <NoticeLine notice={notice} />
             {!history && <Skeleton className="h-72 w-full" />}
             {drawsLine && (
-                <HistoryChart points={points} bucket={history.bucket} unit={unit} label={`${itemName} price in ${unit} over ${RANGE_LABELS[range]}`} />
+                <HistoryChart
+                    points={points}
+                    bucket={history.bucket}
+                    unit={history.unit}
+                    label={`${itemName} price in ${history.unit} over ${RANGE_LABELS[range]}`}
+                />
             )}
         </Card>
     );

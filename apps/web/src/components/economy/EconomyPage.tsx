@@ -17,7 +17,7 @@ import type { SortKey } from '@/lib/economy/columns';
 
 /** A category's own label for what its liquidity column counts. */
 function toLiquidityLabel(category: Category): string {
-    return category?.endpoint === 'stash' ? 'Listings' : 'Volume';
+    return category.endpoint === 'stash' ? 'Listings' : 'Volume';
 }
 
 /** Writes the economy view into the URL, leaving out whatever equals the default so a plain view keeps a plain URL. */

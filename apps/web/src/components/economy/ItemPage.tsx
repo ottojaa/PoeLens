@@ -9,7 +9,7 @@ import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { HistoryCard } from './HistoryCard';
 import { ItemIcon } from './ItemIcon';
 import { ItemStats, type ShownPrice } from './ItemStats';
-import { ErrorState } from './states';
+import { ErrorState, NoItemPriceState } from './states';
 
 type LatestQuery = ReturnType<typeof useLatest>;
 
@@ -19,7 +19,7 @@ function toShownPrice(query: LatestQuery, itemId: number): ShownPrice | undefine
 
     if (!query.data || !row) return undefined;
 
-    return { row, key: `${itemId}:${query.data.league.name}:${query.data.unit}` };
+    return { row, key: `${itemId}:${query.data.league.name}:${query.data.unit}`, leagueName: query.data.league.name };
 }
 
 function ItemHeading({ item, leagueName }: { item: ItemRef; leagueName: string | undefined }) {
@@ -71,6 +71,10 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     if (leagues && !league && scope.league !== 'current') return <UnknownLeague name={scope.league} />;
 
+    const priced = byUnit[scope.unit];
+
+    if (priced.data && !priced.isPlaceholderData && priced.data.unlisted.includes(itemId)) return <NoItemPriceState league={priced.data.league.name} />;
+
     if (history.isError && !answer) return <HistoryError error={history.error} onRetry={() => void history.refetch()} />;
 
     if (!item) return <ItemSkeleton />;
@@ -80,9 +84,9 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
-            <ItemHeading item={item} leagueName={league?.name} />
+            <ItemHeading item={item} leagueName={answer?.league.name ?? shown?.leagueName} />
             <ItemStats shown={shown} unit={scope.unit} prices={prices} />
-            <HistoryCard history={answer} itemName={item.name} unit={scope.unit} range={range} onRange={setRange} />
+            <HistoryCard history={answer} itemName={item.name} range={range} onRange={setRange} />
         </div>
     );
 }
