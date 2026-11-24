@@ -1,8 +1,7 @@
 import type { ItemRef, Liquidity, PriceChange, PriceRow, Unit } from '@poelens/shared';
 import { sql, type Kysely, type RawBuilder } from 'kysely';
 import type { Database } from '../../db/schema.js';
-
-const UNIT_COLUMN: Record<Unit, string> = { divine: 'divine', exalted: 'exalted', chaos: 'chaos' };
+import { UNIT_COLUMN } from './series.js';
 
 const SECONDS = { h1: 3_600, h24: 86_400, d7: 604_800 } as const;
 

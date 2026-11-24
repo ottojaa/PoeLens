@@ -153,6 +153,52 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
             expect((await table({ league: 'HC Forbidden Rites' })).rows).toEqual([]);
             await expect(table({ league: 'Nowhere' })).rejects.toBeInstanceOf(NotFoundError);
         });
+
+        describe('sparklines', () => {
+            const sparkline = async (name: string, query: Record<string, string> = {}) => {
+                const response = await table({ sparkline: 'true', ...query });
+
+                return response.rows.find((row) => row.item.name === name)?.sparkline;
+            };
+
+            it('leaves the field out unless asked, so the old shape is unchanged', async () => {
+                const response = await table({});
+
+                expect(response.rows.every((row) => !('sparkline' in row))).toBe(true);
+            });
+
+            it('holds the last 7 UTC days of daily prices, without low-confidence points or older days', async () => {
+                // Divine Orb has a point 7 days back (outside the window), one a day back, a low-confidence one a day back, and now.
+                expect(await sparkline('Divine Orb')).toEqual([222.95, 445.9]);
+            });
+
+            it('is in the requested unit', async () => {
+                expect(await sparkline('Divine Orb', { unit: 'divine' })).toEqual([0.5, 1]);
+            });
+
+            it('has the points history returns for the same days, for items with a long and a short history', async () => {
+                for (const name of ['Divine Orb', 'Exalted Orb']) {
+                    const item = await itemId(name);
+                    const response = await getHistory(
+                        test.db,
+                        HistoryQuerySchema.parse({
+                            game: 'poe2',
+                            item: String(item),
+                            bucket: 'day',
+                            from: '2026-11-17T00:00:00.000Z',
+                            to: '2026-11-24T00:00:00.000Z',
+                        }),
+                    );
+
+                    expect(await sparkline(name)).toEqual(response.points.map((point) => point.price));
+                }
+            });
+
+            it('has a single point for an item with one day of history, and none for an item that only has low-confidence prices', async () => {
+                expect(await sparkline('Exalted Orb')).toHaveLength(1);
+                expect(await sparkline("Yaomac's Orb of Sacrifice", { includeLowConfidence: 'true' })).toEqual([]);
+            });
+        });
     });
 
     describe('latest', () => {

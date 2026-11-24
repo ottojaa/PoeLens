@@ -1,17 +1,11 @@
-import { MAX_HISTORY_POINTS, NotFoundError, ValidationError, type HistoryBucket, type HistoryQuery, type HistoryResponse, type Unit } from '@poelens/shared';
-import { sql, type Kysely } from 'kysely';
+import { MAX_HISTORY_POINTS, NotFoundError, ValidationError, type HistoryBucket, type HistoryQuery, type HistoryResponse } from '@poelens/shared';
+import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import { resolveContext } from './context.js';
-
-const HOUR_MS = 3_600_000;
-const DAY_MS = 24 * HOUR_MS;
-
-const BUCKET_MS: Record<HistoryBucket, number> = { hour: HOUR_MS, day: DAY_MS };
+import { BUCKET_MS, DAY_MS, loadBucketedPrices } from './series.js';
 
 /** How far back a history reaches when the request names no start. */
 const DEFAULT_SPAN_MS: Record<HistoryBucket, number> = { hour: 7 * DAY_MS, day: 90 * DAY_MS };
-
-const UNIT_COLUMN: Record<Unit, string> = { divine: 'divine', exalted: 'exalted', chaos: 'chaos' };
 
 interface Range {
     from: Date;
@@ -31,13 +25,6 @@ function toRange(query: HistoryQuery, now: Date): Range {
     return { from, to };
 }
 
-interface PointRow {
-    bucket: Date;
-    price: number;
-    low: number;
-    high: number;
-}
-
 /** The price series of one item, bucketed by hour or day: the last price in each bucket, with its low and high. */
 export async function getHistory(db: Kysely<Database>, query: HistoryQuery, now: Date = new Date()): Promise<HistoryResponse> {
     const context = await resolveContext(db, query);
@@ -51,16 +38,16 @@ export async function getHistory(db: Kysely<Database>, query: HistoryQuery, now:
 
     if (!item) throw new NotFoundError('Item', String(query.item));
 
-    const column = sql.ref(UNIT_COLUMN[context.unit]);
-    const interval = query.bucket === 'hour' ? sql`interval '1 hour'` : sql`interval '1 day'`;
-    const confidenceFilter = query.includeLowConfidence ? sql`` : sql`AND NOT low_confidence`;
-    const { rows } = await sql<PointRow>`
-        SELECT time_bucket(${interval}, time) AS bucket, last(${column}, time) AS price, min(${column}) AS low, max(${column}) AS high
-          FROM prices
-         WHERE game = ${context.game} AND league = ${context.league.name} AND item_id = ${item.id}
-           AND time >= ${range.from} AND time < ${range.to} ${confidenceFilter}
-         GROUP BY bucket
-         ORDER BY bucket`.execute(db);
+    const points = await loadBucketedPrices(db, {
+        game: context.game,
+        league: context.league.name,
+        unit: context.unit,
+        bucket: query.bucket,
+        itemIds: [item.id],
+        from: range.from,
+        to: range.to,
+        includeLowConfidence: query.includeLowConfidence,
+    });
 
     return {
         ...context,
@@ -68,6 +55,6 @@ export async function getHistory(db: Kysely<Database>, query: HistoryQuery, now:
         bucket: query.bucket,
         from: range.from.toISOString(),
         to: range.to.toISOString(),
-        points: rows.map((row) => ({ time: row.bucket.toISOString(), price: row.price, low: row.low, high: row.high })),
+        points: points.map((point) => ({ time: point.bucket.toISOString(), price: point.price, low: point.low, high: point.high })),
     };
 }

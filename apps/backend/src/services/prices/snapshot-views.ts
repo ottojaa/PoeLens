@@ -4,8 +4,12 @@ import type { Database } from '../../db/schema.js';
 import { resolveContext } from './context.js';
 import { loadPriceRows } from './rows.js';
 import { loadLatestSnapshots } from './snapshots.js';
+import { loadSparklines } from './sparklines.js';
 
-/** One category's latest prices, most valuable first. A category with no data yet answers with no rows. */
+/**
+ * One category's latest prices, most valuable first. A category with no data yet answers with no rows. With
+ * `sparkline`, each row also carries its last week of daily prices (fewer than two points when it has no history yet).
+ */
 export async function getTable(db: Kysely<Database>, query: TableQuery): Promise<TableResponse> {
     const context = await resolveContext(db, query);
     const snapshots = await loadLatestSnapshots(db, context.game, context.league.name, [query.category]);
@@ -15,8 +19,19 @@ export async function getTable(db: Kysely<Database>, query: TableQuery): Promise
         times: snapshots.map((snapshot) => snapshot.time),
         includeLowConfidence: query.includeLowConfidence,
     });
+    const latest = snapshots[0]?.time;
 
-    return { ...context, category: query.category, rows };
+    if (!query.sparkline || !latest) return { ...context, category: query.category, rows };
+
+    const sparklines = await loadSparklines(db, {
+        game: context.game,
+        league: context.league.name,
+        unit: context.unit,
+        itemIds: rows.map((row) => row.item.id),
+        latest,
+    });
+
+    return { ...context, category: query.category, rows: rows.map((row) => ({ ...row, sparkline: sparklines.get(row.item.id) ?? [] })) };
 }
 
 /** The latest price of specific items (a watchlist). Items missing from their category's newest snapshot come back as `unlisted`. */
