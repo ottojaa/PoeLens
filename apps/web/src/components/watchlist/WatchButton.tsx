@@ -25,7 +25,7 @@ export function WatchButton({ ready, watched, onToggle }: { ready: boolean; watc
             )}
         >
             <TogglePop key={String(ready)} state={watched}>
-                <StarIcon filled={watched} strokeWidth={watched ? 0 : 1.6} />
+                <StarIcon filled={watched} strokeWidth={watched ? 0 : 1.6} className={watched ? undefined : 'text-muted-foreground'} />
             </TogglePop>
             {toLabel(ready, watched)}
         </button>

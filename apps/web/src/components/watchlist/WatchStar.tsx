@@ -39,7 +39,7 @@ export function WatchStar({
             onClick={() => onToggle(!watched)}
             className={cn(
                 'focus-visible:ring-ring/50 grid size-8 shrink-0 cursor-pointer place-items-center rounded-md outline-none focus-visible:ring-[3px]',
-                watched ? 'text-primary' : 'text-input',
+                watched ? 'text-primary' : 'text-muted-foreground',
                 className,
             )}
         >
