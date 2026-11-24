@@ -1,4 +1,4 @@
-import type { Panel } from '@poelens/shared';
+import type { Panel, TableBlock } from '@poelens/shared';
 import { describe, expect, it } from 'vitest';
 import { toDataBody, toDataKey } from './dashboards';
 
@@ -64,7 +64,7 @@ describe('dashboard data key', () => {
 
 describe('dashboard data key of the data blocks', () => {
     it("ignores a table's columns and every data block's name, and changes with its settings", () => {
-        const table = {
+        const table: TableBlock = {
             id: 't',
             type: 'table',
             v: 1,
@@ -76,7 +76,7 @@ describe('dashboard data key of the data blocks', () => {
             hideLowConfidence: true,
             columns: ['d7'],
             limit: 10,
-        } as const;
+        };
         const base = keyOf([panel({ blocks: [table] })]);
 
         expect(keyOf([panel({ blocks: [{ ...table, columns: ['h1', 'trend'], name: 'Mine' }] })])).toBe(base);

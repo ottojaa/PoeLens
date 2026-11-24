@@ -14,7 +14,7 @@ export function RankedRow({ row, note, children }: { row: PriceRow; note?: strin
         <ItemLink item={row.item} className="flex min-h-10 items-center gap-2.5">
             <ItemIcon item={row.item} size="xs" />
             <span className="flex min-w-0 flex-1 flex-col gap-px">
-                <span className="truncate text-[13px] font-semibold">{row.item.name}</span>
+                <span className="line-clamp-2 text-[13px] leading-tight font-semibold">{row.item.name}</span>
                 <span className="text-muted-foreground flex items-center gap-1 truncate text-xs">
                     {formatPrice(row.price)}
                     <UnitMark unit={row.unit} />

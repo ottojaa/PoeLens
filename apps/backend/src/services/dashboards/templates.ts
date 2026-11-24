@@ -20,11 +20,11 @@ function buildChasePanel(ids: ReadonlyMap<string, number>): Panel {
 
     if (chart?.id !== undefined) blocks.push({ id: 'chase-chart', v: 1, type: 'chart', item: chart.id, quote: null, range: '7d' });
 
-    return toPanel('chase', 'Chase uniques', { w: 4, h: 22 }, blocks);
+    return toPanel('chase', 'Chase uniques', { w: 4, h: 13 }, blocks);
 }
 
 function buildRisingPanel(): Panel {
-    return toPanel('rising', 'Rising fast', { w: 4, h: 14 }, [
+    return toPanel('rising', 'Rising fast', { w: 4, h: 10 }, [
         {
             id: 'rising-screener',
             v: 1,

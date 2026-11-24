@@ -12,39 +12,48 @@ import { UnitMark } from './UnitMark';
 
 const CHANGE_KEY = { h1: 'h1', h24: 'h24', d7: 'd7' } as const;
 
-/** Trend and listings give way first when the panel is narrow; the changes stay. */
+/** Trend and listings give way first when the panel is narrow, so the item's name keeps room; the changes stay. */
 const COLUMN_CLASS: Record<OptionalColumn, string> = {
-    h1: 'w-20 shrink-0 text-right',
-    h24: 'w-20 shrink-0 text-right',
-    d7: 'w-20 shrink-0 text-right',
-    trend: 'hidden w-[70px] shrink-0 justify-end @min-[420px]:flex',
-    liquidity: 'hidden w-[70px] shrink-0 text-right @min-[520px]:block',
+    h1: 'w-16 shrink-0 text-right',
+    h24: 'w-16 shrink-0 text-right',
+    d7: 'w-16 shrink-0 text-right',
+    trend: 'hidden w-[70px] shrink-0 justify-end @min-[560px]:flex',
+    liquidity: 'hidden w-[70px] shrink-0 text-right @min-[660px]:block',
 };
 
-function Cell({ column, row }: { column: OptionalColumn; row: TableRow }) {
+/** The first change column gives way below 300px and the others below 420px, so a narrow panel keeps the item's name readable. */
+function toColumnClass(column: OptionalColumn, index: number): string {
+    const isChange = column === 'h1' || column === 'h24' || column === 'd7';
+
+    return cn(COLUMN_CLASS[column], isChange && (index > 0 ? 'hidden @min-[420px]:block' : 'hidden @min-[300px]:block'));
+}
+
+function Cell({ column, index, row }: { column: OptionalColumn; index: number; row: TableRow }) {
     if (column === 'trend')
         return (
-            <span className={COLUMN_CLASS.trend}>
+            <span className={toColumnClass(column, index)}>
                 <Sparkline points={row.sparkline} change={row.change.d7} width={64} height={22} />
             </span>
         );
 
     if (column === 'liquidity')
-        return <span className={cn(COLUMN_CLASS.liquidity, 'text-muted-foreground text-xs')}>{row.liquidity ? formatLiquidity(row.liquidity) : '—'}</span>;
+        return (
+            <span className={cn(toColumnClass(column, index), 'text-muted-foreground text-xs')}>{row.liquidity ? formatLiquidity(row.liquidity) : '—'}</span>
+        );
 
     return (
-        <span className={COLUMN_CLASS[column]}>
+        <span className={toColumnClass(column, index)}>
             <Change percent={row.change[CHANGE_KEY[column]]} className="text-[13px]" />
         </span>
     );
 }
 
-function HeaderCell({ column, block }: { column: OptionalColumn; block: TableBlock }) {
+function HeaderCell({ column, index, block }: { column: OptionalColumn; index: number; block: TableBlock }) {
     const Arrow = block.dir === 'asc' ? ArrowUp : ArrowDown;
     const sorted = block.sort === column;
 
     return (
-        <span className={cn(COLUMN_CLASS[column], sorted && 'text-foreground')}>
+        <span className={cn(toColumnClass(column, index), sorted && 'text-foreground')}>
             {sorted && <Arrow aria-label={block.dir === 'asc' ? 'ascending' : 'descending'} className="mr-0.5 inline size-3 align-[-1px]" />}
             {COLUMN_LABELS[column]}
         </span>
@@ -67,8 +76,8 @@ export function TableBlockView({ block, data }: { block: TableBlock; data: Table
             <div className={HEADER_CLASS} aria-hidden="true">
                 <span className="min-w-0 flex-1">Item</span>
                 <span className="w-[72px] shrink-0 text-right">Price</span>
-                {block.columns.map((column) => (
-                    <HeaderCell key={column} column={column} block={block} />
+                {block.columns.map((column, index) => (
+                    <HeaderCell key={column} column={column} index={index} block={block} />
                 ))}
             </div>
             {data.rows.length === 0 && <BlockMessage>No items match</BlockMessage>}
@@ -83,8 +92,8 @@ export function TableBlockView({ block, data }: { block: TableBlock; data: Table
                         {formatPrice(row.price)}
                         <UnitMark unit={row.unit} />
                     </span>
-                    {block.columns.map((column) => (
-                        <Cell key={column} column={column} row={row} />
+                    {block.columns.map((column, index) => (
+                        <Cell key={column} column={column} index={index} row={row} />
                     ))}
                 </ItemLink>
             ))}
