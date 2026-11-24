@@ -14,6 +14,7 @@ import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsAppearanceRouteImport } from './routes/settings.appearance'
 import { Route as ResetTokenRouteImport } from './routes/reset.$token'
 import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -42,6 +43,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
+  id: '/settings/appearance',
+  path: '/settings/appearance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetTokenRoute = ResetTokenRouteImport.update({
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/reset/$token': typeof ResetTokenRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/reset/$token': typeof ResetTokenRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/reset/$token': typeof ResetTokenRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/items/$itemId'
     | '/reset/$token'
+    | '/settings/appearance'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/items/$itemId'
     | '/reset/$token'
+    | '/settings/appearance'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/items/$itemId'
     | '/reset/$token'
+    | '/settings/appearance'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
   ResetTokenRoute: typeof ResetTokenRoute
+  SettingsAppearanceRoute: typeof SettingsAppearanceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -182,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/appearance': {
+      id: '/settings/appearance'
+      path: '/settings/appearance'
+      fullPath: '/settings/appearance'
+      preLoaderRoute: typeof SettingsAppearanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset/$token': {
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,
   ResetTokenRoute: ResetTokenRoute,
+  SettingsAppearanceRoute: SettingsAppearanceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

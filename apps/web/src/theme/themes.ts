@@ -1,12 +1,15 @@
+import { DEFAULT_THEME_ID, THEME_IDS, type ThemeId } from '@poelens/shared';
+
 /**
  * The theme registry. A theme is a CSS file (`<id>.css`) that defines every token below for light and dark; adding one
- * is a new file, an `@import` in `styles.css` and an entry here. Nothing outside `src/theme/` writes a colour or a font.
+ * is the id in `@poelens/shared` (what the API accepts), a new file, an `@import` in `styles.css` and a label here.
+ * Nothing outside `src/theme/` writes a colour or a font.
  */
-export const THEMES = [{ id: 'reverie', label: 'Reverie' }] as const;
+export { DEFAULT_THEME_ID, type ThemeId };
 
-export type ThemeId = (typeof THEMES)[number]['id'];
+const LABELS: Record<ThemeId, string> = { reverie: 'Reverie', slate: 'Slate', graphite: 'Graphite' };
 
-export const DEFAULT_THEME_ID: ThemeId = 'reverie';
+export const THEMES: readonly { id: ThemeId; label: string }[] = THEME_IDS.map((id) => ({ id, label: LABELS[id] }));
 
 /** Colour tokens: each is a hex value, defined once for light and once for dark. */
 export const COLOR_TOKENS = [
@@ -16,6 +19,7 @@ export const COLOR_TOKENS = [
     'card-foreground',
     'popover',
     'popover-foreground',
+    'panel',
     'primary',
     'primary-foreground',
     'secondary',

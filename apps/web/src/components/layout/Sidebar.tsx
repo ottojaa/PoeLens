@@ -79,7 +79,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 /** The sidebar beside the page from `md` up. */
 export function Sidebar() {
     return (
-        <aside className="bg-card sticky top-[var(--header-height)] hidden h-[calc(100svh-var(--header-height))] w-60 shrink-0 self-start overflow-y-auto border-r p-3 md:block">
+        <aside className="bg-panel sticky top-[var(--header-height)] hidden h-[calc(100svh-var(--header-height))] w-60 shrink-0 self-start overflow-y-auto border-r p-3 md:block">
             <SidebarNav />
         </aside>
     );

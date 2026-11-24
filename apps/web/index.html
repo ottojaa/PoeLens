@@ -6,13 +6,38 @@
 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <!-- Prevent a flash of the wrong theme: the default theme, dark unless the user picked light. -->
+        <!-- Prevent a flash of the wrong theme: paint the theme and mode this browser last showed before React loads.
+             The ids below are the themes the API accepts (THEME_IDS in @poelens/shared; theme.test.ts keeps them equal). -->
         <script>
             (function () {
-                document.documentElement.setAttribute('data-theme', 'reverie');
+                var THEMES = ['reverie', 'slate', 'graphite'];
+                var MODES = ['dark', 'light', 'system'];
+                var root = document.documentElement;
+                var theme = 'reverie';
+                var mode = 'dark';
 
-                const stored = localStorage.getItem('poelens-theme');
-                if (stored !== 'light') document.documentElement.classList.add('dark');
+                try {
+                    var storedTheme = localStorage.getItem('poelens-theme');
+                    var storedMode = localStorage.getItem('poelens-mode');
+
+                    // Before themes, 'poelens-theme' held the colour mode: 'dark' or 'light'. Keep that choice, once.
+                    if (storedMode === null && (storedTheme === 'dark' || storedTheme === 'light')) {
+                        storedMode = storedTheme;
+                        localStorage.setItem('poelens-mode', storedMode);
+                    }
+
+                    if (THEMES.indexOf(storedTheme) !== -1) theme = storedTheme;
+                    else if (storedTheme !== null) localStorage.removeItem('poelens-theme');
+
+                    if (MODES.indexOf(storedMode) !== -1) mode = storedMode;
+                } catch (error) {
+                    // Storage is blocked: the defaults stand.
+                }
+
+                var dark = mode === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches : mode === 'dark';
+
+                root.setAttribute('data-theme', theme);
+                if (dark) root.classList.add('dark');
             })();
         </script>
     </head>

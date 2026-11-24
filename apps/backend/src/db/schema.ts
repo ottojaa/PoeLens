@@ -96,6 +96,8 @@ export interface UsersTable {
     created_at: Generated<Date>;
     updated_at: Generated<Date>;
     last_login_at: Date | null;
+    /** The user's saved theme, mode and unit; read through `parsePreferences`, which drops stale values. */
+    preferences: Generated<unknown>;
 }
 
 export interface UserIdentitiesTable {

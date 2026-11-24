@@ -2404,6 +2404,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/inter-tight@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/inter-tight@npm:5.3.0"
+  checksum: 10c0/f0596f901a2a585fc4a3f23be8df152b993f93d93b1a7574b3ebf852f95f896c144d9a55ee9c00620a9d60dce78c1ae01c28fe4c476958aa330c31983da95366
+  languageName: node
+  linkType: hard
+
+"@fontsource/inter@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/inter@npm:5.3.0"
+  checksum: 10c0/568601c10c83601c23005f8cd7434499df6e007eaa22c4dabbb1dcae327cc8e4a148ece8d4a4edaa8bafc5d2371ea97a37d1cc91ffbed77a43e2d8c15a6e831b
+  languageName: node
+  linkType: hard
+
+"@fontsource/space-grotesk@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/space-grotesk@npm:5.3.0"
+  checksum: 10c0/6804603d339edb99e50419e951c153d6ab0c175cd1a3c5044341c5efa261dcae63aec2288d5dd4d698d82b44c9a23a34f065881055b08887de08df2769c9791a
+  languageName: node
+  linkType: hard
+
 "@hapi/address@npm:^5.1.1":
   version: 5.1.1
   resolution: "@hapi/address@npm:5.1.1"
@@ -3915,6 +3936,9 @@ __metadata:
     "@dnd-kit/dom": "npm:0.5.3"
     "@dnd-kit/react": "npm:0.5.3"
     "@fontsource/geist": "npm:^5.3.0"
+    "@fontsource/inter": "npm:^5.3.0"
+    "@fontsource/inter-tight": "npm:^5.3.0"
+    "@fontsource/space-grotesk": "npm:^5.3.0"
     "@poelens/shared": "workspace:*"
     "@tailwindcss/vite": "npm:^4.1.18"
     "@tanstack/react-query": "npm:^5.90.19"
