@@ -153,6 +153,21 @@ export interface ApiTokensTable {
     last_used_at: Date | null;
 }
 
+export interface DashboardsTable {
+    id: Generated<string>;
+    user_id: string;
+    game: string;
+    name: string;
+    /** Tab order within the user's game, from 0. */
+    position: number;
+    /** The panels as JSON text: node-postgres would turn a JS array into a Postgres array literal, so writes pass a string. */
+    panels: ColumnType<unknown, string, string>;
+    /** Counts saves; 0 is only ever the stored starter, before its first save. */
+    revision: Generated<number>;
+    created_at: Generated<Date>;
+    updated_at: Generated<Date>;
+}
+
 export interface Database {
     leagues: LeaguesTable;
     items: ItemsTable;
@@ -167,4 +182,5 @@ export interface Database {
     password_resets: PasswordResetsTable;
     watchlist_items: WatchlistItemsTable;
     api_tokens: ApiTokensTable;
+    dashboards: DashboardsTable;
 }
