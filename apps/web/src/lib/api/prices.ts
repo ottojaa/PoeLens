@@ -6,7 +6,7 @@ import {
     TableResponseSchema,
     type Game,
     type HistoryBucket,
-    type Unit,
+    type UnitChoice,
 } from '@poelens/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { fetchApi } from './client';
@@ -26,11 +26,11 @@ function toQuery(params: Record<string, string | number | boolean | undefined>):
     return '?' + query.toString();
 }
 
-/** What every price query is scoped to: the game, the league (`'current'` or a name) and the unit the prices are in. */
+/** What every price query is scoped to: the game, the league (`'current'` or a name) and the unit choice: `auto` puts each row in the unit its price reads best in. */
 export interface PriceScope {
     game: Game;
     league: string;
-    unit: Unit;
+    unit: UnitChoice;
 }
 
 export function useLeagues(game: Game) {
@@ -51,11 +51,12 @@ export function useTable(scope: PriceScope, category: string, includeLowConfiden
     });
 }
 
-/** The Currency category in one unit, without sparklines: what the exchange rates between units are read from. */
-export function useCurrencyRows(scope: PriceScope, unit: Unit) {
+/** The Currency category without sparklines, in the game's default unit: its Divine Orb row's `prices` are the exchange rates between units. */
+export function useCurrencyRows(scope: PriceScope) {
     return useQuery({
-        queryKey: ['currency-rows', scope.game, scope.league, unit],
-        queryFn: () => fetchApi('/prices/table' + toQuery({ ...scope, unit, category: 'Currency', includeLowConfidence: true }), TableResponseSchema),
+        queryKey: ['currency-rows', scope.game, scope.league],
+        queryFn: () =>
+            fetchApi('/prices/table' + toQuery({ ...scope, unit: 'exalted', category: 'Currency', includeLowConfidence: true }), TableResponseSchema),
         // No placeholder: another league's rates would sit in this league's meta line until its own arrive.
         refetchInterval: REFRESH_INTERVAL_MS,
     });

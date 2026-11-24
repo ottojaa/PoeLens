@@ -1,25 +1,29 @@
-import { DEFAULT_UNIT, NotFoundError, type Game, type League, type LeagueRef, type Unit } from '@poelens/shared';
+import { DEFAULT_UNIT, NotFoundError, type Game, type League, type LeagueRef, type UnitChoice } from '@poelens/shared';
 import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 
-/** What every price answer resolved: the game, the league `'current'` pointed at, and the unit prices are in. */
-export interface PriceContext {
+/** The game and the league a request means. */
+export interface LeagueContext {
     game: Game;
     league: LeagueRef;
-    unit: Unit;
+}
+
+/** What a row answer resolved: the league, and the unit asked for (`auto` stays `auto`). */
+export interface PriceContext extends LeagueContext {
+    unit: UnitChoice;
 }
 
 export interface ContextInput {
     game: Game;
     /** A league name, or `'current'` for the current challenge league. */
     league: string;
-    unit?: Unit;
+    unit?: UnitChoice;
 }
 
 const CURRENT = 'current';
 
-/** Resolves the league and unit a request means, so no caller ever has to know a league's name or a game's default unit. */
-export async function resolveContext(db: Kysely<Database>, input: ContextInput): Promise<PriceContext> {
+/** Resolves the league a request means, so no caller ever has to know a league's name. */
+export async function resolveLeague(db: Kysely<Database>, input: Pick<ContextInput, 'game' | 'league'>): Promise<LeagueContext> {
     const query = db.selectFrom('leagues').select(['name', 'current', 'hardcore']).where('game', '=', input.game);
     const row =
         input.league === CURRENT
@@ -28,7 +32,12 @@ export async function resolveContext(db: Kysely<Database>, input: ContextInput):
 
     if (!row) throw new NotFoundError('League', input.league);
 
-    return { game: input.game, league: row, unit: input.unit ?? DEFAULT_UNIT[input.game] };
+    return { game: input.game, league: row };
+}
+
+/** Resolves the league and unit a request means, so no caller ever has to know a game's default unit either. */
+export async function resolveContext(db: Kysely<Database>, input: ContextInput): Promise<PriceContext> {
+    return { ...(await resolveLeague(db, input)), unit: input.unit ?? DEFAULT_UNIT[input.game] };
 }
 
 /** Every league seen for a game: the current challenge league and its hardcore version first. */

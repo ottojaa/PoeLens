@@ -28,11 +28,11 @@ describe('Header unit picker', () => {
     document.body.innerHTML = renderToString(createElement(Header, { onOpenMenu: () => undefined, onOpenSearch: () => undefined }));
     const group = document.querySelector('[role="group"][aria-label="Price unit"]');
 
-    it('offers all three units, announcing the chosen one', () => {
+    it('offers Auto first and then the three units, announcing the chosen one', () => {
         const buttons = Array.from(group?.querySelectorAll('button') ?? []);
 
-        expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(['divine', 'exalted', 'chaos']);
-        expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false']);
+        expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(['auto', 'divine', 'exalted', 'chaos']);
+        expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual(['false', 'false', 'true', 'false']);
     });
 
     it('is never hidden at any width: no ancestor hides it, under any breakpoint', () => {

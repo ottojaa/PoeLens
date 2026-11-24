@@ -80,7 +80,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 <Command shouldFilter={false} loop>
                     <CommandInput value={text} onValueChange={setText} placeholder="Search every currency and item" />
                     <CommandList>
-                        {matches.length > 0 && <BestMatches matches={matches} prices={prices} unit={scope.unit} onOpen={openItem} />}
+                        {matches.length > 0 && <BestMatches matches={matches} prices={prices} onOpen={openItem} />}
                         {categories.length > 0 && <GoToCategories categories={categories} onOpen={openCategory} />}
                         {matches.length === 0 && categories.length === 0 && !searching && <CommandEmpty>Nothing matches “{needle}”.</CommandEmpty>}
                         {matches.length === 0 && searching && (

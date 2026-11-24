@@ -1,4 +1,4 @@
-import type { TableRow, Unit } from '@poelens/shared';
+import type { TableRow } from '@poelens/shared';
 import { Link } from '@tanstack/react-router';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -22,7 +22,7 @@ function Labelled({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-function Card({ row, unit, scopeKey, liquidityLabel }: { row: TableRow; unit: Unit; scopeKey: string; liquidityLabel: string }) {
+function Card({ row, scopeKey, liquidityLabel }: { row: TableRow; scopeKey: string; liquidityLabel: string }) {
     return (
         <li className="border-t first:border-t-0">
             <Link
@@ -37,8 +37,8 @@ function Card({ row, unit, scopeKey, liquidityLabel }: { row: TableRow; unit: Un
                         <span className="text-muted-foreground truncate text-xs">{row.item.baseType ?? row.item.category}</span>
                     </span>
                     <span className="shrink-0 text-right font-semibold">
-                        <AnimatedNumber key={scopeKey} value={row.price} format={formatPrice} />
-                        <span className="text-muted-foreground ml-1 font-medium">{UNIT_SHORT[unit]}</span>
+                        <AnimatedNumber key={`${scopeKey}:${row.unit}`} value={row.price} format={formatPrice} />
+                        <span className="text-muted-foreground ml-1 font-medium">{UNIT_SHORT[row.unit]}</span>
                         {row.lowConfidence && (
                             <Badge
                                 variant="outline"
@@ -70,11 +70,11 @@ function Card({ row, unit, scopeKey, liquidityLabel }: { row: TableRow; unit: Un
 }
 
 /** The phone layout of the price list: one tappable card per item instead of a table. */
-export function EconomyCards({ rows, unit, scopeKey, liquidityLabel }: { rows: readonly TableRow[]; unit: Unit; scopeKey: string; liquidityLabel: string }) {
+export function EconomyCards({ rows, scopeKey, liquidityLabel }: { rows: readonly TableRow[]; scopeKey: string; liquidityLabel: string }) {
     return (
         <ul>
             {rows.map((row) => (
-                <Card key={row.item.id} row={row} unit={unit} scopeKey={scopeKey} liquidityLabel={liquidityLabel} />
+                <Card key={row.item.id} row={row} scopeKey={scopeKey} liquidityLabel={liquidityLabel} />
             ))}
         </ul>
     );

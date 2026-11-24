@@ -1,15 +1,15 @@
-import type { Category, PriceRow, SearchResponse, Unit } from '@poelens/shared';
+import type { Category, PriceRow, SearchResponse } from '@poelens/shared';
 import { Change } from '@/components/economy/Change';
 import { ItemIcon } from '@/components/economy/ItemIcon';
 import { CommandGroup, CommandItem } from '@/components/ui/command';
 import { UNIT_SHORT } from '@/lib/economy/units';
 import { formatPrice } from '@/lib/format';
 
-function PriceAndChange({ row, unit }: { row: PriceRow; unit: Unit }) {
+function PriceAndChange({ row }: { row: PriceRow }) {
     return (
         <span className="flex shrink-0 items-baseline gap-3 text-sm">
             <span className="font-semibold">
-                {formatPrice(row.price)} <span className="text-muted-foreground font-medium">{UNIT_SHORT[unit]}</span>
+                {formatPrice(row.price)} <span className="text-muted-foreground font-medium">{UNIT_SHORT[row.unit]}</span>
             </span>
             <Change percent={row.change.d7} />
         </span>
@@ -20,12 +20,10 @@ function PriceAndChange({ row, unit }: { row: PriceRow; unit: Unit }) {
 export function BestMatches({
     matches,
     prices,
-    unit,
     onOpen,
 }: {
     matches: SearchResponse['results'];
     prices: ReadonlyMap<number, PriceRow>;
-    unit: Unit;
     onOpen: (itemId: number) => void;
 }) {
     return (
@@ -40,7 +38,7 @@ export function BestMatches({
                             <span className="truncate font-semibold">{item.name}</span>
                             <span className="text-muted-foreground truncate text-xs">{item.baseType ?? item.category}</span>
                         </span>
-                        {row && <PriceAndChange row={row} unit={unit} />}
+                        {row && <PriceAndChange row={row} />}
                     </CommandItem>
                 );
             })}

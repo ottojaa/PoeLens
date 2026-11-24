@@ -53,6 +53,18 @@ describe.skipIf(SKIP_DB_TESTS)('price routes for a signed-in user', () => {
         expect(status).toBe(200);
         expect(parsed).toMatchObject({ game: 'poe2', league: { name: 'Forbidden Rites', current: true }, unit: 'exalted' });
         expect(parsed.rows).toHaveLength(11);
+        expect(parsed.rows[0]).toMatchObject({
+            unit: 'exalted',
+            prices: { divine: expect.any(Number), exalted: expect.any(Number), chaos: expect.any(Number) },
+        });
+    });
+
+    it('answers Auto with each row in its own unit', async () => {
+        const parsed = TableResponseSchema.parse((await get('/prices/table?game=poe2&category=Currency&unit=auto&sparkline=true')).body);
+
+        expect(parsed.unit).toBe('auto');
+        expect(new Set(parsed.rows.map((row) => row.unit))).toEqual(new Set(['divine', 'chaos', 'exalted']));
+        expect((await get('/prices/movers?game=poe2&unit=auto')).status).toBe(400);
     });
 
     it('adds a sparkline to each row only when asked, and the response schema does not strip it', async () => {
