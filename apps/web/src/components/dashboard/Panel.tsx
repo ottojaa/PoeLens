@@ -80,7 +80,9 @@ export function Panel({
             <div className="flex min-h-[30px] shrink-0 items-center gap-2 pt-2.5 pr-2 pb-1 pl-4">
                 <h2 className="m-0 min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight">{panel.title}</h2>
                 {panel.hideOnPhone && mode !== 'view' && (
-                    <span className="border-input text-muted-foreground shrink-0 rounded-full border px-1.5 text-[11px] font-semibold">Hidden on phone</span>
+                    <span className="border-input text-muted-foreground max-w-[45%] min-w-0 truncate rounded-full border px-1.5 text-[11px] font-semibold">
+                        Hidden on phone
+                    </span>
                 )}
                 {panel.unit && <UnitPill unit={panel.unit} />}
                 <PanelMenu title={panel.title} onEditContent={onEditContent} />

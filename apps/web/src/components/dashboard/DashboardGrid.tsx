@@ -1,13 +1,13 @@
 import { GRID_COLUMNS, GRID_GAP_PX, GRID_ROW_PX, phoneOrder, type BlockData, type Panel as PanelModel } from '@poelens/shared';
 import { useMemo, useRef } from 'react';
 import { moveByPixels, resizeByPixels, toColumnWidth } from '@/lib/dashboard/geometry';
-import { useMediaQuery } from '@/lib/use-media-query';
 import { GridPanel } from '@/motion/GridPanel';
 import { PanelGestures, type GestureHandlers } from './dnd';
 import { PanelBar, ResizeHandle } from './edit/PanelChrome';
 import { Panel, type PanelMode } from './Panel';
 import { useElementWidth } from './use-grid-width';
 import { usePanelKeyboard } from './use-panel-keyboard';
+import { useWideGrid } from './use-wide-grid';
 
 function HiddenOnPhone({ panels }: { panels: readonly PanelModel[] }) {
     if (panels.length === 0) return null;
@@ -41,7 +41,7 @@ interface GridProps {
     onEditContent: (panelId: string) => void;
 }
 
-/** On a phone: one column in reading order, each panel as tall as its blocks, and the hidden ones named at the bottom. */
+/** Below 1024px: one column in reading order, each panel as tall as its blocks, and the hidden ones named at the bottom. */
 function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent }: GridProps) {
     const shown = phoneOrder(panels).filter((panel) => !panel.hideOnPhone);
 
@@ -65,7 +65,7 @@ function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent
     );
 }
 
-/** The 12-column grid on a tablet or desktop. In Layout mode its panels can be dragged, resized and moved from the keyboard. */
+/** The 12-column grid on a desktop. In Layout mode its panels can be dragged, resized and moved from the keyboard. */
 function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEditContent }: GridProps) {
     const { ref, width } = useElementWidth<HTMLDivElement>();
     const keyboard = usePanelKeyboard(panels, onLayout);
@@ -137,9 +137,9 @@ function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEdi
     );
 }
 
-/** The panels of a dashboard, as a grid from tablet width and as one stacked column on a phone. */
+/** The panels of a dashboard, as a grid from 1024px and as one stacked column below it. */
 export function DashboardGrid(props: GridProps) {
-    const isWide = useMediaQuery('(min-width: 768px)');
+    const isWide = useWideGrid();
 
     if (!isWide) return <PhoneStack {...props} />;
 

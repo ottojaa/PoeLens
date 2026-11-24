@@ -7,7 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData, useDashboards, useCreateDashboard, useDeleteDashboard, useReorderDashboards, useSaveDashboard } from '@/lib/api/dashboards';
 import { newPanel } from '@/lib/dashboard/editor';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
-import { useMediaQuery } from '@/lib/use-media-query';
 import { DashboardGrid } from './DashboardGrid';
 import { DashboardTabs } from './DashboardTabs';
 import { ConflictDialog } from './edit/ConflictDialog';
@@ -15,6 +14,7 @@ import { ContentSheet } from './edit/ContentSheet';
 import { EditBar } from './edit/EditBar';
 import { DeleteDialog, NameDialog } from './TabDialogs';
 import { useDashboardEditing } from './use-dashboard-editing';
+import { useWideGrid } from './use-wide-grid';
 
 type TabDialog = { kind: 'new' } | { kind: 'rename'; dashboard: Dashboard } | { kind: 'delete'; dashboard: Dashboard };
 
@@ -105,7 +105,7 @@ function EmptyDashboard({ onAdd }: { onAdd: () => void }) {
 
 function Dashboards({ list, reload }: { list: DashboardsResponse; reload: () => void }) {
     const { scope } = useEconomyContext();
-    const isWide = useMediaQuery('(min-width: 768px)');
+    const isWide = useWideGrid();
     const reorder = useReorderDashboards(GAME);
     const [activeId, setActiveId] = useState('');
     const [dialog, setDialog] = useState<TabDialog | undefined>(undefined);

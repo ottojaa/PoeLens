@@ -131,8 +131,8 @@ export function BlockRow({
     return (
         <li ref={ref} className={cn('flex flex-col gap-1.5', isDragging && 'opacity-60')}>
             <div className={cn('bg-card flex min-h-9 items-center gap-2 rounded-lg border py-0 pr-0.5 pl-2', open && 'border-primary')}>
-                <span ref={handleRef} aria-hidden="true" className="text-muted-foreground cursor-grab touch-none">
-                    <GripVertical className="size-4" />
+                <span ref={handleRef} aria-label={'Reorder ' + label} className="text-muted-foreground cursor-grab touch-none">
+                    <GripVertical aria-hidden="true" className="size-4" />
                 </span>
                 <span
                     className={cn(
