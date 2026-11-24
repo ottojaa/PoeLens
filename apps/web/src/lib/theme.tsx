@@ -2,6 +2,7 @@ import { DEFAULT_COLOR_MODE, DEFAULT_THEME_ID, type ColorMode, type ThemeId } fr
 import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useAccountPreferences, useSavePreferences } from '@/lib/api/preferences';
 import { useAuth } from '@/lib/auth';
+import { storeUnit } from '@/lib/economy/units';
 import { storeAppearance, useAppearanceCache } from '@/lib/preferences/appearance-cache';
 import { useMediaQuery } from '@/lib/use-media-query';
 
@@ -21,7 +22,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 /**
  * The theme and mode: the account's choice when signed in, else this browser's, else Reverie in dark. The browser keeps a
- * copy of whatever is showing (see `index.html`, which paints it before React loads), so a reload never flashes.
+ * copy of whatever is showing (and of the account's unit) (see `index.html`, which paints it before React loads), so a reload never flashes.
  * Must sit inside the auth and query providers.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -34,12 +35,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const mode = account?.mode ?? cache.mode ?? DEFAULT_COLOR_MODE;
     const isDark = mode === 'system' ? systemDark : mode === 'dark';
     const isSignedIn = state.status === 'signedIn';
+    const accountUnit = account?.unit;
 
     useEffect(() => {
         document.documentElement.dataset['theme'] = theme;
         document.documentElement.classList.toggle('dark', isDark);
         storeAppearance({ theme, mode });
     }, [theme, mode, isDark]);
+
+    // The unit is copied the same way, so the first price request after a reload on another device already uses it.
+    useEffect(() => {
+        if (accountUnit) storeUnit(accountUnit);
+    }, [accountUnit]);
 
     const choose = useCallback(
         (patch: { theme?: ThemeId; mode?: ColorMode }) => {

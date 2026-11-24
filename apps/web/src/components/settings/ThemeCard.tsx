@@ -1,16 +1,18 @@
 import { Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ThemePreview } from './ThemePreview';
 
 /** One theme: its live preview and name. Pressing it picks the theme. */
 export function ThemeCard({ id, label, selected, isDark, onSelect }: { id: string; label: string; selected: boolean; isDark: boolean; onSelect: () => void }) {
     return (
-        <button
+        <Button
             type="button"
+            variant="ghost"
             aria-pressed={selected}
             onClick={onSelect}
             className={cn(
-                'bg-card focus-visible:ring-ring flex flex-col gap-3 rounded-xl border p-3 text-left outline-none focus-visible:ring-2',
+                'bg-card h-auto flex-col items-stretch justify-start gap-3 rounded-xl border p-3 text-left font-normal whitespace-normal',
                 selected ? 'border-primary ring-primary ring-2' : 'border-border hover:border-input',
             )}
         >
@@ -19,6 +21,6 @@ export function ThemeCard({ id, label, selected, isDark, onSelect }: { id: strin
                 {label}
                 {selected && <Check className="text-primary size-4" aria-hidden="true" />}
             </span>
-        </button>
+        </Button>
     );
 }
