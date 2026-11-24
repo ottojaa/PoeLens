@@ -60,6 +60,19 @@ describe.skipIf(SKIP_DB_TESTS)('watchlist routes for signed-in users', () => {
         expect(WatchlistResponseSchema.parse((await call('GET', '/watchlist?game=poe2', aliceToken)).json()).rows).toEqual([]);
     });
 
+    it('answers unit=auto with 200, echoing auto and giving each row its own unit', async () => {
+        await call('PUT', `/watchlist/${divine}`, aliceToken);
+
+        const listed = await call('GET', '/watchlist?game=poe2&unit=auto', aliceToken);
+        const body = WatchlistResponseSchema.parse(listed.json());
+
+        expect(listed.statusCode).toBe(200);
+        expect(body.unit).toBe('auto');
+        expect(body.rows[0]).toMatchObject({ item: { name: 'Divine Orb' }, unit: 'divine', price: 1 });
+
+        await call('DELETE', `/watchlist/${divine}`, aliceToken);
+    });
+
     it("never shows one user the other's list", async () => {
         await call('PUT', `/watchlist/${divine}`, aliceToken);
 
