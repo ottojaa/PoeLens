@@ -12,19 +12,16 @@ export function GridPanel({
     style,
     className,
     panelRef,
-    animate,
     label,
 }: {
     children: ReactNode;
     style: CSSProperties;
     className?: string;
     panelRef?: Ref<HTMLElement>;
-    /** False while the pointer is dragging the panel itself: it follows the pointer rather than gliding behind it. */
-    animate: boolean;
     label: string;
 }) {
     return (
-        <motion.section ref={panelRef} aria-label={label} layout={animate ? 'position' : false} transition={SPRING} style={style} className={className}>
+        <motion.section ref={panelRef} aria-label={label} layout="position" transition={SPRING} style={style} className={className}>
             {children}
         </motion.section>
     );

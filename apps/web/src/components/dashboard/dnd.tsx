@@ -131,9 +131,13 @@ export function SortableList({
     );
 }
 
-/** One item of a `SortableList`. `handleRef` goes on the part of the item that is grabbed, `ref` on the item. */
-export function useSortableItem(id: string, index: number) {
-    const { ref, handleRef, isDragging } = useSortable({ id, index, sensors: [POINTER, KeyboardSensor] });
+/**
+ * One item of a `SortableList`. `handleRef` goes on the part of the item that is grabbed, `ref` on the item. With
+ * `keyboard` off the handle is pointer-only, for a handle that is also a button: the keyboard sensor would take its
+ * Enter and Space from the click.
+ */
+export function useSortableItem(id: string, index: number, { keyboard }: { keyboard: boolean }) {
+    const { ref, handleRef, isDragging } = useSortable({ id, index, sensors: keyboard ? [POINTER, KeyboardSensor] : [POINTER] });
 
     return { ref, handleRef, isDragging };
 }

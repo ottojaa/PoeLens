@@ -11,12 +11,15 @@ interface TabProps {
     active: boolean;
     locked: boolean;
     onSelect: () => void;
+    /** Set where the tab has a neighbour on that side: the keyboard's way of reordering. */
+    onMoveLeft?: () => void;
+    onMoveRight?: () => void;
     onRename: () => void;
     onDelete: () => void;
 }
 
-function Tab({ dashboard, index, active, locked, onSelect, onRename, onDelete }: TabProps) {
-    const { ref, handleRef } = useSortableItem(dashboard.id, index);
+function Tab({ dashboard, index, active, locked, onSelect, onMoveLeft, onMoveRight, onRename, onDelete }: TabProps) {
+    const { ref, handleRef } = useSortableItem(dashboard.id, index, { keyboard: false });
 
     return (
         <div ref={ref} className="flex shrink-0 items-center">
@@ -50,6 +53,12 @@ function Tab({ dashboard, index, active, locked, onSelect, onRename, onDelete }:
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                         <DropdownMenuItem onSelect={onRename}>Rename</DropdownMenuItem>
+                        <DropdownMenuItem disabled={!onMoveLeft} onSelect={onMoveLeft}>
+                            Move left
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled={!onMoveRight} onSelect={onMoveRight}>
+                            Move right
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                             Delete
@@ -61,8 +70,17 @@ function Tab({ dashboard, index, active, locked, onSelect, onRename, onDelete }:
     );
 }
 
+function toSwapped(ids: readonly string[], from: number, to: number): string[] {
+    const next = [...ids];
+    const [moved] = next.splice(from, 1);
+
+    if (moved !== undefined) next.splice(to, 0, moved);
+
+    return next;
+}
+
 /**
- * The dashboards of the signed-in user as tabs: click to switch, drag to reorder, "+" to add one. While one is edited
+ * The dashboards of the signed-in user as tabs: click to switch, drag or the tab's menu to reorder, "+" to add one. While one is edited
  * the other tabs are locked, so a half-edited draft can't be left behind.
  */
 export function DashboardTabs({
@@ -86,9 +104,11 @@ export function DashboardTabs({
     onRename: (dashboard: Dashboard) => void;
     onDelete: (dashboard: Dashboard) => void;
 }) {
+    const ids = dashboards.map((dashboard) => dashboard.id);
+
     return (
         <div className="flex min-w-0 flex-1 items-end">
-            <SortableList ids={dashboards.map((dashboard) => dashboard.id)} onReorder={onReorder}>
+            <SortableList ids={ids} onReorder={onReorder}>
                 <div
                     role="tablist"
                     aria-label="Your dashboards"
@@ -102,6 +122,8 @@ export function DashboardTabs({
                             active={dashboard.id === activeId}
                             locked={locked}
                             onSelect={() => onSelect(dashboard.id)}
+                            onMoveLeft={index > 0 ? () => onReorder(toSwapped(ids, index, index - 1)) : undefined}
+                            onMoveRight={index < ids.length - 1 ? () => onReorder(toSwapped(ids, index, index + 1)) : undefined}
                             onRename={() => onRename(dashboard)}
                             onDelete={() => onDelete(dashboard)}
                         />

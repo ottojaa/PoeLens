@@ -10,6 +10,13 @@ interface EditState {
     level: EditLevel;
     /** The panel whose content is open (Content level), or the one last opened. */
     panelId: string | undefined;
+    /** The block whose settings are open in the Content sheet, outlined on the panel. */
+    openBlockId: string | undefined;
+    /**
+     * The dashboard as it was when the edit began. Done saves against this revision, not the live list's: that list
+     * refetches on window focus, and a newer revision from another tab would turn Done into a silent overwrite.
+     */
+    base: Dashboard;
 }
 
 /**
@@ -24,7 +31,7 @@ export function useDashboardEditing(active: Dashboard, reload: () => void) {
 
     const begin = (panelId?: string) => {
         dispatch({ type: 'reset', draft: toDraft(active) });
-        setEdit({ level: panelId ? 'content' : 'layout', panelId });
+        setEdit({ level: panelId ? 'content' : 'layout', panelId, openBlockId: undefined, base: active });
     };
 
     const send = (revision: number) =>
@@ -52,10 +59,11 @@ export function useDashboardEditing(active: Dashboard, reload: () => void) {
         saving: save.isPending,
         conflict,
         begin,
-        setLevel: (level: EditLevel) => setEdit((previous) => previous && { ...previous, level }),
-        openContent: (panelId: string) => setEdit({ level: 'content', panelId }),
+        setLevel: (level: EditLevel) => setEdit((previous) => previous && { ...previous, level, openBlockId: undefined }),
+        setOpenBlock: (openBlockId: string | undefined) => setEdit((previous) => previous && { ...previous, openBlockId }),
+        openContent: (panelId: string) => setEdit((previous) => previous && { ...previous, level: 'content', panelId, openBlockId: undefined }),
         cancel: () => setEdit(null),
-        done: () => (isDirty(draft, active) ? send(active.revision) : setEdit(null)),
+        done: () => (!edit || !isDirty(draft, edit.base) ? setEdit(null) : send(edit.base.revision)),
         overwrite: () => conflict && send(conflict.revision),
         reloadStored: () => {
             setConflict(undefined);

@@ -1,4 +1,4 @@
-import { GRID_COLUMNS } from './limits.js';
+import { GRID_COLUMNS, MAX_PANEL_ROWS, MAX_PANEL_Y } from './limits.js';
 
 /** A rectangle on the panel grid: columns `x..x+w`, rows `y..y+h`. */
 export interface GridRect {
@@ -16,12 +16,12 @@ export function overlaps(a: GridRect, b: GridRect): boolean {
     return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 }
 
-/** Fits a rectangle inside the grid's columns, with at least one cell. */
+/** Fits a rectangle inside the grid's columns and the most rows and depth a stored panel may have, with at least one cell. */
 export function clampRect(rect: GridRect): GridRect {
     const w = Math.min(GRID_COLUMNS, Math.max(1, Math.round(rect.w)));
-    const h = Math.max(1, Math.round(rect.h));
+    const h = Math.min(MAX_PANEL_ROWS, Math.max(1, Math.round(rect.h)));
     const x = Math.min(GRID_COLUMNS - w, Math.max(0, Math.round(rect.x)));
-    const y = Math.max(0, Math.round(rect.y));
+    const y = Math.min(MAX_PANEL_Y, Math.max(0, Math.round(rect.y)));
 
     return { x, y, w, h };
 }
@@ -104,11 +104,40 @@ export function resize<T extends GridItem>(items: readonly T[], id: string, to: 
     return item ? withRect(items, id, { ...item, ...to }) : [...items];
 }
 
-/** A keyboard step: the panel moves by whole cells. */
+function isSameLayout(a: readonly GridItem[], b: readonly GridItem[]): boolean {
+    return a.every((item, index) => {
+        const other = b[index];
+
+        return other !== undefined && other.x === item.x && other.y === item.y && other.w === item.w && other.h === item.h;
+    });
+}
+
+/**
+ * A keyboard step: the panel moves a cell, and keeps going in that direction until the layout changes. One cell is often
+ * not enough, as the layout floats a panel straight back up and a panel only passes its neighbour once it is below the
+ * neighbour's top row. Stops at the edge of the grid and the bottom of the layout, leaving the layout as it was.
+ */
 export function nudge<T extends GridItem>(items: readonly T[], id: string, dx: number, dy: number): T[] {
     const item = items.find((candidate) => candidate.id === id);
 
-    return item ? move(items, id, { x: item.x + dx, y: item.y + dy }) : [...items];
+    if (!item) return [...items];
+
+    const current = normalize(items);
+    const bottom = current.reduce((lowest, other) => Math.max(lowest, other.y + other.h), 0);
+    const first = move(items, id, { x: item.x + dx, y: item.y + dy });
+
+    for (let step = 1; step <= GRID_COLUMNS + bottom; step++) {
+        const x = item.x + dx * step;
+        const y = item.y + dy * step;
+
+        if (x < 0 || x > GRID_COLUMNS - item.w || y < 0 || y > bottom) break;
+
+        const next = move(items, id, { x, y });
+
+        if (!isSameLayout(next, current)) return next;
+    }
+
+    return first;
 }
 
 /** A keyboard step: the panel grows or shrinks by whole cells. */

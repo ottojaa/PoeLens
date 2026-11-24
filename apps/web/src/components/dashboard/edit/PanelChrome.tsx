@@ -35,27 +35,29 @@ export function PanelBar({
     const { handleRef, isDragging } = usePanelGesture(panel.id, 'move', false);
 
     return (
-        <div
-            ref={handleRef}
-            role="button"
-            tabIndex={0}
-            aria-pressed={picked}
-            aria-label={'Move ' + panel.title}
-            aria-description="Press Enter to pick up. Then arrow keys move, Shift and arrow keys resize, Enter drops, Escape cancels."
-            onKeyDown={onKeyDown}
-            onBlur={onBlur}
-            className={cn(
-                '@container bg-popover border-border focus-visible:ring-ring/50 flex h-[30px] shrink-0 cursor-grab touch-none items-center gap-2 border-b pr-1.5 pl-2.5 outline-none select-none focus-visible:ring-[3px] focus-visible:ring-inset',
-                (picked || isDragging) && 'bg-accent cursor-grabbing',
-            )}
-        >
-            <GripVertical aria-hidden="true" className="text-muted-foreground size-3.5 shrink-0" />
-            <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
-                <span className="@max-[240px]:hidden">{toSizeText(panel)}</span>
-                <span className="hidden @max-[240px]:inline" title={toSizeText(panel)}>
-                    {toShortSizeText(panel)}
+        <div className={cn('bg-popover border-border flex h-[30px] shrink-0 items-center gap-2 border-b pr-1.5', (picked || isDragging) && 'bg-accent')}>
+            <div
+                ref={handleRef}
+                role="button"
+                tabIndex={0}
+                aria-pressed={picked}
+                aria-label={'Move ' + panel.title}
+                aria-description="Press Enter to pick up. Then arrow keys move, Shift and arrow keys resize, Enter drops, Escape cancels."
+                onKeyDown={onKeyDown}
+                onBlur={onBlur}
+                className={cn(
+                    'focus-visible:ring-ring/50 flex h-full min-w-0 flex-1 cursor-grab touch-none items-center gap-2 pl-2.5 outline-none select-none focus-visible:ring-[3px] focus-visible:ring-inset',
+                    (picked || isDragging) && 'cursor-grabbing',
+                )}
+            >
+                <GripVertical aria-hidden="true" className="text-muted-foreground size-3.5 shrink-0" />
+                <span className="text-muted-foreground @container min-w-0 flex-1 truncate text-xs">
+                    <span className="@max-[125px]:hidden">{toSizeText(panel)}</span>
+                    <span className="hidden @max-[125px]:inline" title={toSizeText(panel)}>
+                        {toShortSizeText(panel)}
+                    </span>
                 </span>
-            </span>
+            </div>
             <Button
                 type="button"
                 variant="outline"

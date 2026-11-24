@@ -187,6 +187,8 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
                             panel={selected}
                             data={data ?? {}}
                             scope={scope}
+                            openBlockId={edit.openBlockId}
+                            onOpenBlock={editing.setOpenBlock}
                             onClose={() => editing.setLevel('layout')}
                             onPatchPanel={(patch) => dispatch({ type: 'patchPanel', id: selected.id, patch })}
                             onAddBlock={(block) => dispatch({ type: 'addBlock', panelId: selected.id, block })}
@@ -228,6 +230,7 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
                     data={data}
                     mode={mode}
                     selectedId={level === 'content' ? selected?.id : undefined}
+                    openBlockId={level === 'content' ? (edit?.openBlockId ?? null) : undefined}
                     onLayout={(next) => dispatch({ type: 'layout', panels: next })}
                     onEditContent={canEdit ? (panelId) => (edit ? editing.openContent(panelId) : editing.begin(panelId)) : undefined}
                 />

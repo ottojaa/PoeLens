@@ -1,16 +1,16 @@
 import { MAX_BLOCKS, MAX_PANEL_TITLE, type Block, type BlockData, type Panel, type Unit, type UnitChoice } from '@poelens/shared';
 import { ArrowLeft } from 'lucide-react';
-import { useState, type KeyboardEvent } from 'react';
+import type { KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Segmented } from '@/components/ui/segmented';
 import type { BlockPatch, PanelPatch } from '@/lib/dashboard/editor';
 import type { PriceScope } from '@/lib/api/prices';
 import { UNIT_LABEL } from '@/lib/economy/units';
 import { SortableList } from '../dnd';
 import { AddBlockMenu } from './AddBlockMenu';
 import { BlockRow } from './BlockRow';
-import { Segmented } from './Segmented';
 
 type PanelUnit = 'same' | UnitChoice;
 
@@ -95,6 +95,8 @@ export function ContentSheet({
     panel,
     data,
     scope,
+    openBlockId,
+    onOpenBlock,
     onClose,
     onPatchPanel,
     onAddBlock,
@@ -106,6 +108,9 @@ export function ContentSheet({
     panel: Panel;
     data: Record<string, BlockData | null | undefined>;
     scope: PriceScope;
+    /** The block whose settings are open: held by the page, which outlines it on the panel. */
+    openBlockId: string | undefined;
+    onOpenBlock: (id: string | undefined) => void;
     onClose: () => void;
     onPatchPanel: (patch: PanelPatch) => void;
     onAddBlock: (block: Block) => void;
@@ -114,7 +119,6 @@ export function ContentSheet({
     onMoveBlock: (from: number, to: number) => void;
     onDeletePanel: () => void;
 }) {
-    const [openId, setOpenId] = useState<string | undefined>(undefined);
     const full = panel.blocks.length >= MAX_BLOCKS;
 
     const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -154,8 +158,8 @@ export function ContentSheet({
                             block={block}
                             index={index}
                             data={data[block.id]}
-                            open={openId === block.id}
-                            onToggle={() => setOpenId(openId === block.id ? undefined : block.id)}
+                            open={openBlockId === block.id}
+                            onToggle={() => onOpenBlock(openBlockId === block.id ? undefined : block.id)}
                             onPatch={(patch) => onPatchBlock(block.id, patch)}
                             onRemove={() => onRemoveBlock(block.id)}
                         />

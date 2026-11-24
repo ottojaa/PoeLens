@@ -4,11 +4,11 @@ import { GripVertical, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Segmented } from '@/components/ui/segmented';
 import type { BlockPatch } from '@/lib/dashboard/editor';
 import { cn } from '@/lib/utils';
 import { toItemName, toPairName } from '../blocks/block-format';
 import { useSortableItem } from '../dnd';
-import { Segmented } from './Segmented';
 
 const KIND_LABEL: Record<Block['type'], string> = { item: 'Item', pair: 'Pair', note: 'Note', heading: 'Heading' };
 
@@ -124,7 +124,7 @@ export function BlockRow({
     onPatch: (patch: BlockPatch) => void;
     onRemove: () => void;
 }) {
-    const { ref, handleRef, isDragging } = useSortableItem(block.id, index);
+    const { ref, handleRef, isDragging } = useSortableItem(block.id, index, { keyboard: true });
     const label = toBlockLabel(block, data);
     const defaultLabel = block.type === 'note' || block.type === 'heading' ? label : toBlockLabel({ ...block, name: undefined }, data);
 

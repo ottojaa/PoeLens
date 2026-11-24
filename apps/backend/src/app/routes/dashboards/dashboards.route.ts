@@ -77,7 +77,7 @@ export default async function (fastify: FastifyInstance) {
                 response: { 200: DashboardDataResponseSchema },
             },
         },
-        async (request) => getDashboardData(db, request.body),
+        async (request) => getDashboardData(db, request.body, request.log),
     );
 
     fastify.put<{ Params: DashboardParams; Body: SaveDashboardBody; Reply: Dashboard }>(

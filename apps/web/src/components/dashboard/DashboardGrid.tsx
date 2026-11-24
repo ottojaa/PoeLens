@@ -87,12 +87,18 @@ function TabletFlow({ panels, data, mode, selectedId, openBlockId, onEditContent
     );
 }
 
+/** Where every panel sits, as text: two layouts are the same exactly when their keys are. */
+function toCellsKey(panels: readonly PanelModel[]): string {
+    return panels.map((panel) => [panel.id, panel.x, panel.y, panel.w, panel.h].join(',')).join('|');
+}
+
 /** The 12-column grid on a desktop. In Layout mode its panels can be dragged, resized and moved from the keyboard. */
 function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEditContent }: GridProps) {
     const { ref, width } = useElementWidth<HTMLDivElement>();
     const keyboard = usePanelKeyboard(panels, onLayout);
     const latest = useRef({ panels, width, onLayout });
     const start = useRef<readonly PanelModel[]>([]);
+    const lastCells = useRef('');
 
     latest.current = { panels, width, onLayout };
 
@@ -100,12 +106,20 @@ function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEdi
         () => ({
             onStart: () => {
                 start.current = latest.current.panels;
+                lastCells.current = toCellsKey(start.current);
             },
             onMove: (id, kind, dx, dy) => {
                 const { width: gridWidth, onLayout: apply } = latest.current;
                 const next = kind === 'move' ? moveByPixels : resizeByPixels;
 
-                apply(next(start.current, id, dx, dy, toColumnWidth(gridWidth)));
+                const placed = next(start.current, id, dx, dy, toColumnWidth(gridWidth));
+                const cells = toCellsKey(placed);
+
+                // The pointer moves many pixels per cell: only a move into another cell changes the layout.
+                if (cells === lastCells.current) return;
+
+                lastCells.current = cells;
+                apply(placed);
             },
             onEnd: (_id, _kind, canceled) => {
                 if (canceled) latest.current.onLayout([...start.current]);
@@ -126,7 +140,6 @@ function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEdi
                     <GridPanel
                         key={panel.id}
                         label={panel.title}
-                        animate
                         className="relative z-[1] min-h-0"
                         style={{ gridColumn: `${panel.x + 1} / span ${panel.w}`, gridRow: `${panel.y + 1} / span ${panel.h}` }}
                     >

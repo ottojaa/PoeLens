@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type GridItem, move, normalize, nudge, overlaps, phoneOrder, place, resize, stretch, tabletFlow } from './grid.js';
+import { MAX_PANEL_ROWS } from './limits.js';
 
 function item(id: string, x: number, y: number, w: number, h: number): GridItem {
     return { id, x, y, w, h };
@@ -170,8 +171,29 @@ describe('keyboard steps', () => {
         expect(rects(result).a).toEqual([0, 2, 12, 2]);
     });
 
+    it('one ArrowDown or ArrowUp passes a stacked neighbour, however tall it is', () => {
+        const stacked = [item('a', 0, 0, 12, 2), item('b', 0, 2, 12, 5)];
+        const down = nudge(stacked, 'a', 0, 1);
+
+        expect(rects(down).b).toEqual([0, 0, 12, 5]);
+        expect(rects(down).a).toEqual([0, 5, 12, 2]);
+
+        const up = nudge(down, 'a', 0, -1);
+
+        expect(rects(up).a).toEqual([0, 0, 12, 2]);
+        expect(rects(up).b).toEqual([0, 2, 12, 5]);
+    });
+
+    it('nudge up at the top stays put', () => {
+        expect(rects(nudge([item('a', 0, 0, 4, 2), item('b', 4, 0, 4, 2)], 'a', 0, -1)).a).toEqual([0, 0, 4, 2]);
+    });
+
     it('nudge left at the edge stays put', () => {
         expect(rects(nudge(items, 'a', -1, 0)).a).toEqual([0, 0, 6, 4]);
+    });
+
+    it('stretch stops at the tallest a panel may be', () => {
+        expect(rects(stretch([item('a', 0, 0, 4, 2)], 'a', 0, 500)).a).toEqual([0, 0, 4, MAX_PANEL_ROWS]);
     });
 
     it('stretch grows and shrinks by cells', () => {

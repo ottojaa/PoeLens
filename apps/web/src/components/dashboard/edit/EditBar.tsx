@@ -1,6 +1,6 @@
 import { LayoutDashboard, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Segmented } from './Segmented';
+import { Segmented } from '@/components/ui/segmented';
 
 export type EditLevel = 'layout' | 'content';
 
