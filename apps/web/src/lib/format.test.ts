@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatChange, formatPrice, formatUptime, toChangeDirection } from './format';
+import { formatChange, formatLiquidity, formatPrice, formatUptime, toChangeDirection } from './format';
 
 describe('formatUptime', () => {
     it.each([
@@ -40,5 +40,16 @@ describe('formatChange', () => {
         expect(toChangeDirection(1)).toBe('up');
         expect(toChangeDirection(-1)).toBe('down');
         expect(toChangeDirection(null)).toBe('flat');
+    });
+});
+
+describe('formatLiquidity', () => {
+    it('keeps the decimals of a small traded volume, which is in divine', () => {
+        expect(formatLiquidity({ kind: 'volume', value: 0.04 })).toBe('0.040');
+        expect(formatLiquidity({ kind: 'volume', value: 8676.4 })).toBe('8,676');
+    });
+
+    it('shows listings as a whole number', () => {
+        expect(formatLiquidity({ kind: 'listings', value: 1234 })).toBe('1,234');
     });
 });

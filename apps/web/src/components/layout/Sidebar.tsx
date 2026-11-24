@@ -7,7 +7,6 @@ import { CategoryNav, NAV_ITEM_CLASS, NavHeading } from './CategoryNav';
 import { Soon } from './Soon';
 import { UnitToggle } from './UnitToggle';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
-import { useLeagues } from '@/lib/api/prices';
 
 /** The category list plus the personal sections (Watchlist and tokens arrive later, so they stay placeholders). */
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
@@ -38,8 +37,7 @@ export function Sidebar() {
 
 /** The same navigation as a drawer, for phones. It also holds the league and unit controls the header hides there. */
 export function SidebarDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-    const { scope, leagueName, setLeague, setUnit } = useEconomyContext();
-    const leagues = useLeagues(GAME);
+    const { scope, leagues, league, setLeague, setUnit } = useEconomyContext();
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -49,7 +47,7 @@ export function SidebarDrawer({ open, onOpenChange }: { open: boolean; onOpenCha
                     <SheetDescription className="sr-only">Categories and your sections</SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col gap-3 px-3 pb-6">
-                    <LeagueSwitcher leagues={leagues.data?.leagues ?? []} value={leagueName ?? null} onChange={setLeague} />
+                    <LeagueSwitcher leagues={leagues ?? []} value={league?.name ?? null} onChange={setLeague} />
                     <UnitToggle value={scope.unit} onChange={setUnit} />
                     <SidebarNav onNavigate={() => onOpenChange(false)} />
                 </div>

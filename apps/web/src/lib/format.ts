@@ -39,6 +39,11 @@ export function formatCount(value: number): string {
     return COUNT.format(value);
 }
 
+/** A row's liquidity: traded volume is in divine and can be a fraction, listings are whole. */
+export function formatLiquidity(liquidity: { kind: 'listings' | 'volume'; value: number }): string {
+    return liquidity.kind === 'volume' ? formatPrice(liquidity.value) : formatCount(liquidity.value);
+}
+
 /** A change in percent with an arrow, so direction never rests on colour alone: "▲ +29.6%", "▼ −3.9%". Null is "—". */
 export function formatChange(percent: number | null): string {
     if (percent === null) return '—';

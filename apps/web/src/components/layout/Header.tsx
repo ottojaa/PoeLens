@@ -2,16 +2,14 @@ import { Link } from '@tanstack/react-router';
 import { Menu, Search } from 'lucide-react';
 import { Wordmark } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/button';
-import { useLeagues } from '@/lib/api/prices';
-import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
+import { useEconomyContext } from '@/lib/economy/use-economy-context';
 import { AccountMenu } from './AccountMenu';
 import { LeagueSwitcher } from './LeagueSwitcher';
 import { ThemeToggle } from './ThemeToggle';
 import { UnitToggle } from './UnitToggle';
 
 export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; onOpenSearch: () => void }) {
-    const { scope, leagueName, setLeague, setUnit } = useEconomyContext();
-    const leagues = useLeagues(GAME);
+    const { scope, leagues, league, setLeague, setUnit } = useEconomyContext();
 
     return (
         <header className="bg-card sticky top-0 z-30 min-h-(--header-height) flex flex-wrap items-center gap-x-4 gap-y-2 border-b md:flex-nowrap px-4 py-3 md:px-6">
@@ -22,7 +20,7 @@ export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; o
                 <Wordmark />
             </Link>
             <div className="hidden lg:block">
-                <LeagueSwitcher leagues={leagues.data?.leagues ?? []} value={leagueName ?? null} onChange={setLeague} />
+                <LeagueSwitcher leagues={leagues ?? []} value={league?.name ?? null} onChange={setLeague} />
             </div>
             <Button
                 type="button"

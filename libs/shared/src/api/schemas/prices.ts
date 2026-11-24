@@ -64,7 +64,6 @@ const booleanQuery = z
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true');
-const includeLowConfidenceQuery = booleanQuery;
 
 export const MOVER_WINDOWS = ['1h', '24h', '7d'] as const;
 export const MoverWindowSchema = z.enum(MOVER_WINDOWS);
@@ -88,7 +87,7 @@ export const TableQuerySchema = z.object({
     league: leagueQuery,
     category: z.string().min(1),
     unit: UnitSchema.optional(),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
     /** Add each row's last week of daily prices (`TableRow.sparkline`). */
     sparkline: booleanQuery,
 });
@@ -98,7 +97,7 @@ export const LatestQuerySchema = z.object({
     league: leagueQuery,
     items: commaSeparatedIds,
     unit: UnitSchema.optional(),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
 });
 
 export const HistoryQuerySchema = z.object({
@@ -109,7 +108,7 @@ export const HistoryQuerySchema = z.object({
     bucket: HistoryBucketSchema.default('hour'),
     from: z.string().datetime().optional(),
     to: z.string().datetime().optional(),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
 });
 
 export const MoversQuerySchema = z.object({
@@ -119,7 +118,7 @@ export const MoversQuerySchema = z.object({
     window: MoverWindowSchema.default('24h'),
     unit: UnitSchema.optional(),
     limit: z.coerce.number().int().min(1).max(50).default(10),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
 });
 
 export const SearchQuerySchema = z.object({

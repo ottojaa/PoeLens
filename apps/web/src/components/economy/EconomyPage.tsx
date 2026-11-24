@@ -16,7 +16,7 @@ import { ErrorState, NoDataState, NoMatchState, TableSkeleton } from './states';
 import type { SortKey } from '@/lib/economy/columns';
 
 /** A category's own label for what its liquidity column counts. */
-function toLiquidityLabel(category: Category | undefined): string {
+function toLiquidityLabel(category: Category): string {
     return category?.endpoint === 'stash' ? 'Listings' : 'Volume';
 }
 
@@ -74,14 +74,25 @@ function TableError({ error, league, onRetry }: { error: unknown; league: string
     return <ErrorState title="This league does not exist" message={`There is no league called ${league}. Pick one from the league menu.`} />;
 }
 
-/** One category: the heading, the filters, and the sortable table with its loading, empty and error states. */
+/** One category, or a not-found state for a link to a category the game does not have. */
 export function EconomyPage({ categoryId, view }: { categoryId: string; view: EconomyView }) {
-    const { scope, leagueName } = useEconomyContext();
     const category = CATEGORIES[GAME].find((candidate) => candidate.id === categoryId);
-    const table = useTable(scope, categoryId, !view.hideLow);
+
+    if (!category) return <ErrorState title="This category does not exist" message="Pick one from the menu." />;
+
+    return <CategoryView category={category} view={view} />;
+}
+
+/** The heading, the filters, and the sortable table with its loading, empty and error states. */
+function CategoryView({ category, view }: { category: Category; view: EconomyView }) {
+    const { scope, league } = useEconomyContext();
+    const query = useTable(scope, category.id, !view.hideLow);
+    // While a new category, league or unit loads, the query hands back the previous answer. Rows and labels come from
+    // the answer itself, so they never describe one scope with another's numbers; a different category is not shown at all.
+    const data = query.data?.category === category.id ? query.data : undefined;
     const navigation = useViewNavigation(view);
     const liquidityLabel = toLiquidityLabel(category);
-    const rows = table.data?.rows;
+    const rows = data?.rows;
     const visible = useMemo(
         () => (rows ? sortRows(filterRows(rows, view.q, view.min), view.sort, view.dir) : []),
         [rows, view.q, view.min, view.sort, view.dir],
@@ -91,19 +102,19 @@ export function EconomyPage({ categoryId, view }: { categoryId: string; view: Ec
 
     return (
         <div className="flex flex-col gap-5">
-            <PageHeading title={category?.label ?? categoryId} meta={meta} hideLow={view.hideLow} onHideLow={navigation.setHideLow} />
+            <PageHeading title={category.label} meta={meta} hideLow={view.hideLow} onHideLow={navigation.setHideLow} />
             <EconomyToolbar view={view} liquidityLabel={liquidityLabel} onChange={navigation.change} />
             <div className="bg-card overflow-x-auto rounded-xl border">
                 <div className="min-w-[760px]">
-                    {table.isPending && <TableSkeleton />}
-                    {table.isError && !rows && <TableError error={table.error} league={scope.league} onRetry={() => void table.refetch()} />}
-                    {rows && rows.length === 0 && <NoDataState league={leagueName} />}
+                    {!data && !query.isError && <TableSkeleton />}
+                    {query.isError && !rows && <TableError error={query.error} league={scope.league} onRetry={() => void query.refetch()} />}
+                    {rows && rows.length === 0 && <NoDataState league={league?.name} />}
                     {rows && rows.length > 0 && visible.length === 0 && <NoMatchState onClear={navigation.clearFilters} />}
-                    {visible.length > 0 && (
+                    {data && visible.length > 0 && (
                         <EconomyTable
                             rows={visible}
-                            unit={scope.unit}
-                            scopeKey={`${scope.league}:${scope.unit}`}
+                            unit={data.unit}
+                            scopeKey={`${data.league.name}:${data.unit}`}
                             columns={view.columns}
                             sort={{ key: view.sort, direction: view.dir }}
                             onSort={navigation.sortBy}

@@ -1,10 +1,12 @@
 import { CATEGORIES } from '@poelens/shared';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { Change } from '@/components/economy/Change';
-import { ItemIcon } from '@/components/economy/ItemIcon';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandInput, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { SEARCH_MIN_LENGTH, useLatest, usePriceSearch, type PriceScope } from '@/lib/api/prices';
+import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
+import { useDebouncedValue } from '@/lib/use-debounced';
+import { BestMatches, GoToCategories } from './PaletteResults';
 
 /** Opens and closes the palette on Cmd+K and on Ctrl+K. */
 export function useCommandShortcut(toggle: () => void) {
@@ -22,15 +24,23 @@ export function useCommandShortcut(toggle: () => void) {
     }, [toggle]);
 }
 
-import { SEARCH_MIN_LENGTH, useLatest, usePriceSearch } from '@/lib/api/prices';
-import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
-import { UNIT_SHORT } from '@/lib/economy/units';
-import { formatPrice } from '@/lib/format';
-import { useDebouncedValue } from '@/lib/use-debounced';
-
 const SEARCH_DEBOUNCE_MS = 200;
-/** The API's cap on one `latest` call, and what a search shows. */
-const MAX_RESULTS = 20;
+
+/** What the palette lists for what was typed: the name matches with their prices, and the categories to jump to. */
+function usePaletteResults(needle: string, scope: PriceScope) {
+    const debounced = useDebouncedValue(needle, SEARCH_DEBOUNCE_MS);
+    const search = usePriceSearch(GAME, debounced);
+    const matches = debounced.length >= SEARCH_MIN_LENGTH ? (search.data?.results ?? []) : [];
+    const latest = useLatest(
+        scope,
+        matches.map((match) => match.item.id),
+    );
+    const prices = new Map(latest.data?.rows.map((row) => [row.item.id, row]));
+    const categories = CATEGORIES[GAME].filter((category) => category.label.toLowerCase().includes(needle.toLowerCase()));
+    const searching = needle.length >= SEARCH_MIN_LENGTH && (needle !== debounced || search.isFetching);
+
+    return { matches, prices, categories, searching };
+}
 
 /**
  * The search palette: a debounced name search, then one call for the matches' prices in the current league and unit,
@@ -41,16 +51,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     const { scope } = useEconomyContext();
     const navigate = useNavigate();
     const needle = text.trim();
-    const debounced = useDebouncedValue(needle, SEARCH_DEBOUNCE_MS);
-    const search = usePriceSearch(GAME, debounced);
-    const matches = debounced.length >= SEARCH_MIN_LENGTH ? (search.data?.results.slice(0, MAX_RESULTS) ?? []) : [];
-    const latest = useLatest(
-        scope,
-        matches.map((match) => match.item.id),
-    );
-    const priceOf = new Map(latest.data?.rows.map((row) => [row.item.id, row]));
-    const categories = CATEGORIES[GAME].filter((category) => category.label.toLowerCase().includes(needle.toLowerCase()));
-    const searching = needle.length >= SEARCH_MIN_LENGTH && (needle !== debounced || search.isFetching);
+    const { matches, prices, categories, searching } = usePaletteResults(needle, scope);
 
     function close(next: boolean) {
         onOpenChange(next);
@@ -79,41 +80,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 <Command shouldFilter={false} loop>
                     <CommandInput value={text} onValueChange={setText} placeholder="Search every currency and item" />
                     <CommandList>
-                        {matches.length > 0 && (
-                            <CommandGroup heading="Best matches">
-                                {matches.map(({ item }) => {
-                                    const row = priceOf.get(item.id);
-
-                                    return (
-                                        <CommandItem key={item.id} value={String(item.id)} onSelect={() => openItem(item.id)} className="gap-3">
-                                            <ItemIcon item={item} />
-                                            <span className="flex min-w-0 flex-1 flex-col">
-                                                <span className="truncate font-semibold">{item.name}</span>
-                                                <span className="text-muted-foreground truncate text-xs">{item.baseType ?? item.category}</span>
-                                            </span>
-                                            {row && (
-                                                <span className="flex shrink-0 items-baseline gap-3 text-sm">
-                                                    <span className="font-semibold">
-                                                        {formatPrice(row.price)}{' '}
-                                                        <span className="text-muted-foreground font-medium">{UNIT_SHORT[scope.unit]}</span>
-                                                    </span>
-                                                    <Change percent={row.change.d7} />
-                                                </span>
-                                            )}
-                                        </CommandItem>
-                                    );
-                                })}
-                            </CommandGroup>
-                        )}
-                        {categories.length > 0 && (
-                            <CommandGroup heading="Go to">
-                                {categories.map((category) => (
-                                    <CommandItem key={category.id} value={'category:' + category.id} onSelect={() => openCategory(category.id)}>
-                                        {category.label}
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        )}
+                        {matches.length > 0 && <BestMatches matches={matches} prices={prices} unit={scope.unit} onOpen={openItem} />}
+                        {categories.length > 0 && <GoToCategories categories={categories} onOpen={openCategory} />}
                         {matches.length === 0 && categories.length === 0 && !searching && <CommandEmpty>Nothing matches “{needle}”.</CommandEmpty>}
                         {matches.length === 0 && searching && (
                             <p role="status" className="text-muted-foreground py-6 text-center text-sm">

@@ -1,4 +1,4 @@
-import type { Game, Unit } from '@poelens/shared';
+import type { Game, League, Unit } from '@poelens/shared';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useLeagues, type PriceScope } from '@/lib/api/prices';
@@ -10,8 +10,10 @@ export const GAME: Game = 'poe2';
 export interface EconomyContext {
     /** What to ask the API for: the league in the URL, else `'current'`, which the API resolves. */
     scope: PriceScope;
-    /** The league's real name, once the league list has loaded, for the switcher and the item page. */
-    leagueName: string | undefined;
+    /** Every league of the game; undefined until the list has loaded. */
+    leagues: readonly League[] | undefined;
+    /** The league the URL points at (`'current'` resolved), once the list has loaded and if it has such a league. */
+    league: League | undefined;
     setLeague: (league: string) => void;
     setUnit: (unit: Unit) => void;
 }
@@ -23,12 +25,10 @@ export interface EconomyContext {
 export function useEconomyContext(): EconomyContext {
     const search = useSearch({ from: '__root__' });
     const navigate = useNavigate();
-    const leagues = useLeagues(GAME);
-    const league = search.league ?? 'current';
+    const leagueList = useLeagues(GAME).data?.leagues;
+    const leagueParam = search.league ?? 'current';
     const unit = resolveUnit(search.unit, loadStoredUnit(), GAME);
-    const leagueName = leagues.data?.leagues.find((candidate) =>
-        league === 'current' ? candidate.current && !candidate.hardcore : candidate.name === league,
-    )?.name;
+    const league = leagueList?.find((candidate) => (leagueParam === 'current' ? candidate.current && !candidate.hardcore : candidate.name === leagueParam));
 
     const setLeague = useCallback((next: string) => void navigate({ to: '.', search: (previous) => ({ ...previous, league: next }) }), [navigate]);
     const setUnit = useCallback(
@@ -39,5 +39,5 @@ export function useEconomyContext(): EconomyContext {
         [navigate],
     );
 
-    return { scope: { game: GAME, league, unit }, leagueName, setLeague, setUnit };
+    return { scope: { game: GAME, league: leagueParam, unit }, leagues: leagueList, league, setLeague, setUnit };
 }

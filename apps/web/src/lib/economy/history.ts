@@ -22,6 +22,8 @@ export function toChartPoints(points: HistoryResponse['points']): ChartPoint[] {
 
 export type HistoryNotice =
     | { kind: 'none' }
+    /** Nothing confident in the range at all. */
+    | { kind: 'empty' }
     /** Too few points for a line: say when collection started instead of drawing one. */
     | { kind: 'too-short'; since: Date }
     /** A line, but history starts after the range does. */
@@ -30,12 +32,12 @@ export type HistoryNotice =
 /**
  * Whether a history answer is thin. Fewer than two points cannot make a line, and a first point more than one bucket
  * after the range start means the item has not been collected for the whole range; both say "Collecting since".
- * `fallbackSince` is when the item was first seen at all, for an answer with no points.
+ * An answer with no points has no first sighting to report, so it is its own kind.
  */
-export function toHistoryNotice(history: Pick<HistoryResponse, 'points' | 'from' | 'bucket'>, fallbackSince: Date): HistoryNotice {
+export function toHistoryNotice(history: Pick<HistoryResponse, 'points' | 'from' | 'bucket'>): HistoryNotice {
     const first = history.points[0];
 
-    if (!first) return { kind: 'too-short', since: fallbackSince };
+    if (!first) return { kind: 'empty' };
 
     const since = new Date(first.time);
 

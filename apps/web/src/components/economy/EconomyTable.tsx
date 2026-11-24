@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { OptionalColumn, SortDirection, SortKey } from '@/lib/economy/columns';
 import { UNIT_SHORT } from '@/lib/economy/units';
-import { formatCount, formatPrice } from '@/lib/format';
+import { formatLiquidity, formatPrice } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { AnimatedNumber } from '@/motion/AnimatedNumber';
 import { Change } from './Change';
@@ -113,7 +113,7 @@ function Row({ row, unit, scopeKey, columns }: { row: TableRow; unit: Unit; scop
                     <Sparkline points={row.sparkline} change={row.change.d7} />
                 </td>
             )}
-            {shows('liquidity') && <td className={cn(CELL, 'text-foreground/80 pr-4 text-right')}>{row.liquidity ? formatCount(row.liquidity.value) : '—'}</td>}
+            {shows('liquidity') && <td className={cn(CELL, 'text-foreground/80 pr-4 text-right')}>{row.liquidity ? formatLiquidity(row.liquidity) : '—'}</td>}
         </tr>
     );
 }
