@@ -5,7 +5,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { LeagueSwitcher } from './LeagueSwitcher';
 import { CategoryNav, NAV_ITEM_CLASS, NavHeading } from './CategoryNav';
 import { Soon } from './Soon';
-import { UnitToggle } from './UnitToggle';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 
 /** The category list plus the personal sections (Watchlist and tokens arrive later, so they stay placeholders). */
@@ -35,9 +34,9 @@ export function Sidebar() {
     );
 }
 
-/** The same navigation as a drawer, for phones. It also holds the league and unit controls the header hides there. */
+/** The same navigation as a drawer, for phones. It also holds the league control the header only has from `md`. */
 export function SidebarDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-    const { scope, leagues, league, setLeague, setUnit } = useEconomyContext();
+    const { leagues, league, setLeague } = useEconomyContext();
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -48,7 +47,6 @@ export function SidebarDrawer({ open, onOpenChange }: { open: boolean; onOpenCha
                 </SheetHeader>
                 <div className="flex flex-col gap-3 px-3 pb-6">
                     <LeagueSwitcher leagues={leagues ?? []} value={league?.name ?? null} onChange={setLeague} />
-                    <UnitToggle value={scope.unit} onChange={setUnit} />
                     <SidebarNav onNavigate={() => onOpenChange(false)} />
                 </div>
             </SheetContent>

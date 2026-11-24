@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { LogOut, Shield } from 'lucide-react';
+import { LogOut, Moon, Shield, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -10,11 +10,13 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 
-/** The signed-in user's menu: their name, the admin page for admins, and sign out. */
+/** The signed-in user's menu: their name, the admin page for admins, the theme switch where the header has no room for it, and sign out. */
 export function AccountMenu() {
     const { state, signOut } = useAuth();
     const navigate = useNavigate();
+    const { isDark, setIsDark } = useTheme();
 
     if (state.status !== 'signedIn') return null;
 
@@ -42,6 +44,9 @@ export function AccountMenu() {
                         </Link>
                     </DropdownMenuItem>
                 )}
+                <DropdownMenuItem className="sm:hidden" onSelect={() => setIsDark((prev) => !prev)}>
+                    {isDark ? <Sun /> : <Moon />} {isDark ? 'Light theme' : 'Dark theme'}
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => void onSignOut()}>
                     <LogOut /> Sign out
                 </DropdownMenuItem>
