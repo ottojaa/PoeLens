@@ -161,18 +161,37 @@ function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload,
     return (
         <div className="flex flex-col gap-3.5">
             {edit && (
-                <EditBar
-                    name={draft.name}
-                    level={level}
-                    contentTitle={selected?.title}
-                    canLayout={isWide}
-                    canAddPanel={newPanel(draft.panels) !== undefined}
-                    saving={editing.saving}
-                    onLevel={(next) => (next === 'content' && !selected ? panels[0] && editing.openContent(panels[0].id) : editing.setLevel(next))}
-                    onAddPanel={addPanel}
-                    onCancel={editing.cancel}
-                    onDone={editing.done}
-                />
+                <div className="sticky top-(--header-height) z-40 -mx-4 -mt-7 md:-mx-8">
+                    <EditBar
+                        name={draft.name}
+                        level={level}
+                        contentTitle={selected?.title}
+                        canLayout={isWide}
+                        canAddPanel={newPanel(draft.panels) !== undefined}
+                        saving={editing.saving}
+                        onLevel={(next) => (next === 'content' && !selected ? panels[0] && editing.openContent(panels[0].id) : editing.setLevel(next))}
+                        onAddPanel={addPanel}
+                        onCancel={editing.cancel}
+                        onDone={editing.done}
+                    />
+                    {level === 'content' && selected && (
+                        <ContentSheet
+                            panel={selected}
+                            data={data ?? {}}
+                            scope={scope}
+                            onClose={() => editing.setLevel('layout')}
+                            onPatchPanel={(patch) => dispatch({ type: 'patchPanel', id: selected.id, patch })}
+                            onAddBlock={(block) => dispatch({ type: 'addBlock', panelId: selected.id, block })}
+                            onPatchBlock={(blockId, patch) => dispatch({ type: 'patchBlock', panelId: selected.id, blockId, patch })}
+                            onRemoveBlock={(blockId) => dispatch({ type: 'removeBlock', panelId: selected.id, blockId })}
+                            onMoveBlock={(from, to) => dispatch({ type: 'moveBlock', panelId: selected.id, from, to })}
+                            onDeletePanel={() => {
+                                dispatch({ type: 'removePanel', id: selected.id });
+                                editing.setLevel('layout');
+                            }}
+                        />
+                    )}
+                </div>
             )}
             <div className="flex items-end gap-3 border-b">
                 <DashboardTabs
@@ -202,23 +221,6 @@ function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload,
                     selectedId={level === 'content' ? selected?.id : undefined}
                     onLayout={(next) => dispatch({ type: 'layout', panels: next })}
                     onEditContent={(panelId) => (edit ? editing.openContent(panelId) : editing.begin(panelId))}
-                />
-            )}
-            {edit && level === 'content' && selected && (
-                <ContentSheet
-                    panel={selected}
-                    data={data ?? {}}
-                    scope={scope}
-                    onClose={() => editing.setLevel('layout')}
-                    onPatchPanel={(patch) => dispatch({ type: 'patchPanel', id: selected.id, patch })}
-                    onAddBlock={(block) => dispatch({ type: 'addBlock', panelId: selected.id, block })}
-                    onPatchBlock={(blockId, patch) => dispatch({ type: 'patchBlock', panelId: selected.id, blockId, patch })}
-                    onRemoveBlock={(blockId) => dispatch({ type: 'removeBlock', panelId: selected.id, blockId })}
-                    onMoveBlock={(from, to) => dispatch({ type: 'moveBlock', panelId: selected.id, from, to })}
-                    onDeletePanel={() => {
-                        dispatch({ type: 'removePanel', id: selected.id });
-                        editing.setLevel('layout');
-                    }}
                 />
             )}
             <ConflictDialog open={editing.conflict !== undefined} saving={editing.saving} onReload={editing.reloadStored} onOverwrite={editing.overwrite} />

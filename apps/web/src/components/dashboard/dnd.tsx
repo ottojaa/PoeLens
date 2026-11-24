@@ -2,10 +2,32 @@
  * The one place `@dnd-kit` is imported. Panels use it only for pointer travel: the grid engine decides where they land,
  * so dnd-kit never moves the element itself. Tab and block lists use its sortable, which does move them.
  */
-import { Feedback, PointerSensor } from '@dnd-kit/dom';
+import { Feedback, KeyboardSensor, PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
 import { DragDropProvider, useDraggable } from '@dnd-kit/react';
 import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable';
 import type { ReactNode } from 'react';
+import { toTravel } from '@/lib/dashboard/geometry';
+
+const INTERACTIVE = 'button, a, input, textarea, select, [role="menuitem"]';
+
+/**
+ * How a pointer starts a drag. dnd-kit's default starts one the moment a mouse presses anywhere on the handle, which
+ * swallows the click of a tab, or of a button sitting inside a handle. A mouse must travel 4px first, a touch is held
+ * for 250ms, and a press on a button that is not the handle itself never starts a drag.
+ */
+const POINTER = PointerSensor.configure({
+    activationConstraints: (event) =>
+        event.pointerType === 'touch'
+            ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })]
+            : [new PointerActivationConstraints.Distance({ value: 4 })],
+    preventActivation: (event, source) => {
+        if (!(event.target instanceof Element)) return false;
+
+        const control = event.target.closest(INTERACTIVE);
+
+        return control !== null && control !== source.handle && control !== source.element;
+    },
+});
 
 export type GestureKind = 'move' | 'resize';
 
@@ -40,10 +62,14 @@ export function PanelGestures({ handlers, children }: { handlers: GestureHandler
 
                 if (gesture) handlers.onStart(gesture.panelId, gesture.kind);
             }}
-            onDragMove={(event) => {
+            onDragMove={(event, manager) => {
                 const gesture = toGestureData(event.operation.source?.data);
 
-                if (gesture) handlers.onMove(gesture.panelId, gesture.kind, event.operation.transform.x, event.operation.transform.y);
+                if (!gesture) return;
+
+                const { x, y } = toTravel(event.to, manager.dragOperation.position.initial);
+
+                handlers.onMove(gesture.panelId, gesture.kind, x, y);
             }}
             onDragEnd={(event) => {
                 const gesture = toGestureData(event.operation.source?.data);
@@ -62,7 +88,7 @@ export function usePanelGesture(panelId: string, kind: GestureKind, disabled: bo
         id: kind + ':' + panelId,
         data: { panelId, kind } satisfies GestureData,
         disabled,
-        sensors: [PointerSensor],
+        sensors: [POINTER],
         plugins: [Feedback.configure({ feedback: 'none' })],
     });
 
@@ -107,7 +133,7 @@ export function SortableList({
 
 /** One item of a `SortableList`. `handleRef` goes on the part of the item that is grabbed, `ref` on the item. */
 export function useSortableItem(id: string, index: number) {
-    const { ref, handleRef, isDragging } = useSortable({ id, index });
+    const { ref, handleRef, isDragging } = useSortable({ id, index, sensors: [POINTER, KeyboardSensor] });
 
     return { ref, handleRef, isDragging };
 }

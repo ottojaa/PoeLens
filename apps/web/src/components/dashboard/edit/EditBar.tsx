@@ -31,7 +31,7 @@ export function EditBar({
     onDone: () => void;
 }) {
     return (
-        <div className="bg-popover border-input relative z-40 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b px-4 py-2.5 md:px-6">
+        <div className="bg-popover border-input flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b px-4 py-2.5 md:px-6">
             <span className="flex items-center gap-2 text-sm font-semibold">
                 <LayoutDashboard aria-hidden="true" className="text-primary size-4" />
                 Editing {name}

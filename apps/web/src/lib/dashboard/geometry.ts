@@ -52,3 +52,13 @@ export function toKeyStep(key: string, shift: boolean): KeyStep | undefined {
 
     return { kind: shift ? 'resize' : 'move', dx: arrow[0], dy: arrow[1] };
 }
+
+/**
+ * The pointer's total travel: where it is now (`to`) minus where the gesture began. dnd-kit's own `operation.transform`
+ * is not used because a `dragmove` fires before the position updates, and with feedback off nothing refreshes its cache.
+ */
+export function toTravel(to: { x: number; y: number } | undefined, initial: { x: number; y: number }): { x: number; y: number } {
+    if (!to) return { x: 0, y: 0 };
+
+    return { x: to.x - initial.x, y: to.y - initial.y };
+}

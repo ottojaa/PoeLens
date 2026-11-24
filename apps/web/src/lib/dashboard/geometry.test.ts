@@ -1,6 +1,6 @@
 import type { Panel } from '@poelens/shared';
 import { describe, expect, it } from 'vitest';
-import { moveByPixels, resizeByPixels, toCells, toColumnWidth, toKeyStep } from './geometry';
+import { moveByPixels, resizeByPixels, toCells, toColumnWidth, toKeyStep, toTravel } from './geometry';
 
 function panel(id: string, x: number, y: number, w = 4, h = 4): Panel {
     return { id, title: id, x, y, w, h, hideOnPhone: false, unit: null, blocks: [] };
@@ -40,5 +40,10 @@ describe('grid geometry', () => {
         expect(toKeyStep('ArrowRight', false)).toEqual({ kind: 'move', dx: 1, dy: 0 });
         expect(toKeyStep('ArrowUp', true)).toEqual({ kind: 'resize', dx: 0, dy: -1 });
         expect(toKeyStep('a', false)).toBeUndefined();
+    });
+
+    it('measures the pointer travel from where the gesture began', () => {
+        expect(toTravel({ x: 130, y: 90 }, { x: 100, y: 100 })).toEqual({ x: 30, y: -10 });
+        expect(toTravel(undefined, { x: 100, y: 100 })).toEqual({ x: 0, y: 0 });
     });
 });

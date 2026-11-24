@@ -126,7 +126,7 @@ export function ContentSheet({
             role="dialog"
             aria-label={'Content of ' + panel.title}
             onKeyDown={onKeyDown}
-            className="bg-popover fixed top-(--header-height) right-0 bottom-0 z-30 flex w-full flex-col gap-3.5 overflow-y-auto border-l p-4 shadow-lg sm:w-[400px]"
+            className="bg-popover fixed inset-0 z-50 flex flex-col gap-3.5 overflow-y-auto border-l p-4 shadow-lg sm:absolute sm:inset-auto sm:top-full sm:right-0 sm:z-20 sm:h-[calc(100dvh-var(--header-height)-100%)] sm:w-[400px]"
         >
             <header className="flex items-center gap-2">
                 <div className="flex min-w-0 flex-1 flex-col">
