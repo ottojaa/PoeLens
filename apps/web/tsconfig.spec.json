@@ -10,7 +10,7 @@
         "tsBuildInfoFile": null,
         "types": ["node", "vite/client"]
     },
-    "include": ["src/**/*.test.ts", "electron/**/*.test.ts"],
+    "include": ["src/**/*.test.ts", "electron/**/*.test.ts", "src/router.ts"],
     "exclude": ["dist"],
     "references": []
 }
