@@ -89,7 +89,7 @@ export function EconomyToolbar({
                     onChange={(event) => setMin(event.target.value)}
                     placeholder={`Min. ${liquidityLabel.toLowerCase()}`}
                     aria-label={`Minimum ${liquidityLabel.toLowerCase()}`}
-                    className="h-10 w-40"
+                    className="h-10 w-48"
                 />
             )}
             <div className="ml-auto hidden md:block">

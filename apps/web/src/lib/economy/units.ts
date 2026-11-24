@@ -24,7 +24,7 @@ export function storeUnit(unit: UnitChoice): void {
     }
 }
 
-/** The choice to show: the URL's, else the browser's stored one, else Auto. */
-export function resolveUnit(fromUrl: UnitChoice | undefined, stored: UnitChoice | undefined): UnitChoice {
-    return fromUrl ?? stored ?? 'auto';
+/** The choice to show: the URL's, else the saved one (the account's when signed in, else this browser's), else Auto. */
+export function resolveUnit(fromUrl: UnitChoice | undefined, saved: UnitChoice | undefined): UnitChoice {
+    return fromUrl ?? saved ?? 'auto';
 }

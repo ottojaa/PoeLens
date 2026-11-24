@@ -4,16 +4,10 @@ import { useTheme } from '@/lib/theme';
 import { TogglePop } from '@/motion/TogglePop';
 
 export function ThemeToggle({ className }: { className?: string }) {
-    const { isDark, setIsDark } = useTheme();
+    const { isDark, toggleDark } = useTheme();
 
     return (
-        <Button
-            variant="ghost"
-            size="icon"
-            className={className}
-            aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-            onClick={() => setIsDark((prev) => !prev)}
-        >
+        <Button variant="ghost" size="icon" className={className} aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleDark}>
             <TogglePop state={isDark}>{isDark ? <Sun /> : <Moon />}</TogglePop>
         </Button>
     );

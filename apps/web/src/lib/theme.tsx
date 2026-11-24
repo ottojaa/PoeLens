@@ -1,32 +1,76 @@
-import { DEFAULT_THEME_ID } from '@/theme/themes';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { DEFAULT_COLOR_MODE, DEFAULT_THEME_ID, type ColorMode, type ThemeId } from '@poelens/shared';
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { useAccountPreferences, useSavePreferences } from '@/lib/api/preferences';
+import { useAuth } from '@/lib/auth';
+import { storeUnit } from '@/lib/economy/units';
+import { storeAppearance, useAppearanceCache } from '@/lib/preferences/appearance-cache';
+import { useMediaQuery } from '@/lib/use-media-query';
 
-const THEME_KEY = 'poelens-theme';
-
-/** Dark unless the user picked light: the game is dark, and so is everyone's second monitor at 3am. */
-function getInitialTheme(): boolean {
-    if (typeof window === 'undefined') return true;
-
-    return localStorage.getItem(THEME_KEY) !== 'light';
-}
-
-type ThemeContextValue = {
+interface ThemeContextValue {
+    theme: ThemeId;
+    /** What the user chose: dark, light, or follow the device. */
+    mode: ColorMode;
+    /** What is showing: `mode` with System resolved against the device. */
     isDark: boolean;
-    setIsDark: (value: boolean | ((prev: boolean) => boolean)) => void;
-};
+    setTheme: (theme: ThemeId) => void;
+    setMode: (mode: ColorMode) => void;
+    /** The quick toggle: the opposite of what is showing, as an explicit mode. */
+    toggleDark: () => void;
+}
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+/**
+ * The theme and mode: the account's choice when signed in, else this browser's, else Reverie in dark. The browser keeps a
+ * copy of whatever is showing (and of the account's unit) (see `index.html`, which paints it before React loads), so a reload never flashes.
+ * Must sit inside the auth and query providers.
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [isDark, setIsDark] = useState(getInitialTheme);
+    const { state } = useAuth();
+    const account = useAccountPreferences();
+    const save = useSavePreferences();
+    const cache = useAppearanceCache();
+    const systemDark = useMediaQuery('(prefers-color-scheme: dark)');
+    const theme = account?.theme ?? cache.theme ?? DEFAULT_THEME_ID;
+    const mode = account?.mode ?? cache.mode ?? DEFAULT_COLOR_MODE;
+    const isDark = mode === 'system' ? systemDark : mode === 'dark';
+    const isSignedIn = state.status === 'signedIn';
+    const accountUnit = account?.unit;
 
     useEffect(() => {
-        document.documentElement.dataset['theme'] = DEFAULT_THEME_ID;
+        document.documentElement.dataset['theme'] = theme;
         document.documentElement.classList.toggle('dark', isDark);
-        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-    }, [isDark]);
+        storeAppearance({ theme, mode });
+    }, [theme, mode, isDark]);
 
-    return <ThemeContext.Provider value={{ isDark, setIsDark }}>{children}</ThemeContext.Provider>;
+    // The unit is copied the same way, so the first price request after a reload on another device already uses it.
+    useEffect(() => {
+        if (accountUnit) storeUnit(accountUnit);
+    }, [accountUnit]);
+
+    const choose = useCallback(
+        (patch: { theme?: ThemeId; mode?: ColorMode }) => {
+            // Signed in, the account's answer drives the screen and the effect above copies it to the browser.
+            if (!isSignedIn) return storeAppearance(patch);
+
+            save(patch);
+        },
+        [isSignedIn, save],
+    );
+
+    const value = useMemo<ThemeContextValue>(
+        () => ({
+            theme,
+            mode,
+            isDark,
+            setTheme: (next) => choose({ theme: next }),
+            setMode: (next) => choose({ mode: next }),
+            toggleDark: () => choose({ mode: isDark ? 'light' : 'dark' }),
+        }),
+        [theme, mode, isDark, choose],
+    );
+
+    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {
