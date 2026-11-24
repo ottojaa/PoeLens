@@ -73,6 +73,25 @@ export class ApiTokensFullError extends AppError {
     }
 }
 
+/** The error code of a refused create at the dashboard limit, for clients to recognise. */
+export const DASHBOARDS_FULL_CODE = 'DASHBOARDS_FULL';
+
+export class DashboardsFullError extends AppError {
+    constructor(limit: number) {
+        super(409, DASHBOARDS_FULL_CODE, 'You have reached the limit of dashboards: delete one first', { limit });
+    }
+}
+
+/** The error code of a save made on an out-of-date revision, for clients to recognise. */
+export const DASHBOARD_CHANGED_CODE = 'DASHBOARD_CHANGED';
+
+export class DashboardChangedError extends AppError {
+    /** `current` is the dashboard as stored now, so the client can reload it or save over it. */
+    constructor(current: unknown) {
+        super(409, DASHBOARD_CHANGED_CODE, 'This dashboard changed in another tab', { current });
+    }
+}
+
 export class TooManyRequestsError extends AppError {
     constructor(retryAfterSeconds: number) {
         super(429, 'RATE_LIMITED', 'Too many requests: retry in ' + retryAfterSeconds + ' seconds', { retryAfterSeconds });

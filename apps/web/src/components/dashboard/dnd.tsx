@@ -1,0 +1,143 @@
+/**
+ * The one place `@dnd-kit` is imported. Panels use it only for pointer travel: the grid engine decides where they land,
+ * so dnd-kit never moves the element itself. Tab and block lists use its sortable, which does move them.
+ */
+import { Feedback, KeyboardSensor, PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
+import { DragDropProvider, useDraggable } from '@dnd-kit/react';
+import { isSortableOperation, useSortable } from '@dnd-kit/react/sortable';
+import type { ReactNode } from 'react';
+import { toTravel } from '@/lib/dashboard/geometry';
+
+const INTERACTIVE = 'button, a, input, textarea, select, [role="menuitem"]';
+
+/**
+ * How a pointer starts a drag. dnd-kit's default starts one the moment a mouse presses anywhere on the handle, which
+ * swallows the click of a tab, or of a button sitting inside a handle. A mouse must travel 4px first, a touch is held
+ * for 250ms, and a press on a button that is not the handle itself never starts a drag.
+ */
+const POINTER = PointerSensor.configure({
+    activationConstraints: (event) =>
+        event.pointerType === 'touch'
+            ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })]
+            : [new PointerActivationConstraints.Distance({ value: 4 })],
+    preventActivation: (event, source) => {
+        if (!(event.target instanceof Element)) return false;
+
+        const control = event.target.closest(INTERACTIVE);
+
+        return control !== null && control !== source.handle && control !== source.element;
+    },
+});
+
+export type GestureKind = 'move' | 'resize';
+
+export interface GestureHandlers {
+    onStart: (id: string, kind: GestureKind) => void;
+    /** The pointer's total travel since the gesture began, in pixels. */
+    onMove: (id: string, kind: GestureKind, dx: number, dy: number) => void;
+    onEnd: (id: string, kind: GestureKind, canceled: boolean) => void;
+}
+
+interface GestureData {
+    panelId: string;
+    kind: GestureKind;
+}
+
+function toGestureData(data: unknown): GestureData | undefined {
+    if (typeof data !== 'object' || data === null) return undefined;
+
+    const { panelId, kind } = data as Partial<GestureData>;
+
+    if (typeof panelId !== 'string' || (kind !== 'move' && kind !== 'resize')) return undefined;
+
+    return { panelId, kind };
+}
+
+/** Reports the pointer travel of every panel gesture beneath it. */
+export function PanelGestures({ handlers, children }: { handlers: GestureHandlers; children: ReactNode }) {
+    return (
+        <DragDropProvider
+            onDragStart={(event) => {
+                const gesture = toGestureData(event.operation.source?.data);
+
+                if (gesture) handlers.onStart(gesture.panelId, gesture.kind);
+            }}
+            onDragMove={(event, manager) => {
+                const gesture = toGestureData(event.operation.source?.data);
+
+                if (!gesture) return;
+
+                const { x, y } = toTravel(event.to, manager.dragOperation.position.initial);
+
+                handlers.onMove(gesture.panelId, gesture.kind, x, y);
+            }}
+            onDragEnd={(event) => {
+                const gesture = toGestureData(event.operation.source?.data);
+
+                if (gesture) handlers.onEnd(gesture.panelId, gesture.kind, event.canceled);
+            }}
+        >
+            {children}
+        </DragDropProvider>
+    );
+}
+
+/** The handle that moves or resizes a panel with the pointer. Feedback is off: the grid re-places the real panel. */
+export function usePanelGesture(panelId: string, kind: GestureKind, disabled: boolean) {
+    const { handleRef, isDragging } = useDraggable({
+        id: kind + ':' + panelId,
+        data: { panelId, kind } satisfies GestureData,
+        disabled,
+        sensors: [POINTER],
+        plugins: [Feedback.configure({ feedback: 'none' })],
+    });
+
+    return { handleRef, isDragging };
+}
+
+export function toReordered<T>(items: readonly T[], from: number, to: number): T[] {
+    const next = items.filter((_, index) => index !== from);
+    const moved = items[from];
+
+    if (moved === undefined) return [...items];
+
+    return [...next.slice(0, to), moved, ...next.slice(to)];
+}
+
+/** A list whose items can be dragged into a new order; `onReorder` gets the ids in their new order and the move that made it. */
+export function SortableList({
+    ids,
+    onReorder,
+    children,
+}: {
+    ids: readonly string[];
+    onReorder: (ids: string[], from: number, to: number) => void;
+    children: ReactNode;
+}) {
+    return (
+        <DragDropProvider
+            onDragEnd={(event) => {
+                if (event.canceled || !isSortableOperation(event.operation)) return;
+
+                const { source } = event.operation;
+
+                if (!source || source.initialIndex === source.index) return;
+
+                onReorder(toReordered(ids, source.initialIndex, source.index), source.initialIndex, source.index);
+            }}
+        >
+            {children}
+        </DragDropProvider>
+    );
+}
+
+/**
+ * One item of a `SortableList`. `handleRef` goes on the part of the item that is grabbed, `ref` on the item. With
+ * `keyboard` off the handle is pointer-only, for a handle that is also a button: the keyboard sensor would take its
+ * Enter and Space from the click.
+ */
+export function useSortableItem(id: string, index: number, { keyboard }: { keyboard: boolean }) {
+    const { ref, handleRef, isDragging } = useSortable({ id, index, sensors: keyboard ? [POINTER, KeyboardSensor] : [POINTER] });
+
+    return { ref, handleRef, isDragging };
+}

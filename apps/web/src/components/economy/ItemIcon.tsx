@@ -2,7 +2,12 @@ import type { ItemRef } from '@poelens/shared';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-const SIZES = { sm: 'size-8 rounded-lg text-[13px]', md: 'size-9 rounded-lg text-sm', lg: 'size-[60px] rounded-2xl text-2xl' } as const;
+const SIZES = {
+    xs: 'size-7 rounded-lg text-xs',
+    sm: 'size-8 rounded-lg text-[13px]',
+    md: 'size-9 rounded-lg text-sm',
+    lg: 'size-[60px] rounded-2xl text-2xl',
+} as const;
 
 /**
  * An item's picture from the game's own image host, or its initial in a tile when it has none or it fails to load.

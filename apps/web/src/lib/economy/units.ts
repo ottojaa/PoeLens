@@ -1,5 +1,8 @@
 import { UnitChoiceSchema, type Unit, type UnitChoice } from '@poelens/shared';
 
+/** What a unit is called in running text and on buttons. */
+export const UNIT_LABEL: Record<Unit, string> = { divine: 'Divine', exalted: 'Exalted', chaos: 'Chaos' };
+
 /** What a unit is called in a price: "1.5 div". */
 export const UNIT_SHORT: Record<Unit, string> = { divine: 'div', exalted: 'ex', chaos: 'c' };
 
