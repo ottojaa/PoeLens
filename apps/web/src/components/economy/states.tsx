@@ -33,13 +33,24 @@ export function TableSkeleton({ rows = 10 }: { rows?: number }) {
     );
 }
 
-export function ErrorState({ title = 'Could not load prices', onRetry }: { title?: string; onRetry: () => void }) {
+export function ErrorState({
+    title = 'Could not load prices',
+    message = 'The price service did not answer as expected. Your view is unchanged.',
+    onRetry,
+}: {
+    title?: string;
+    message?: string;
+    /** Left out when trying again cannot help, such as a link to something that does not exist. */
+    onRetry?: () => void;
+}) {
     return (
         <StateBox icon={<TriangleAlert className="size-6" aria-hidden="true" />} title={title}>
-            <p>The price service did not answer as expected. Your view is unchanged.</p>
-            <Button type="button" variant="outline" onClick={onRetry}>
-                Try again
-            </Button>
+            <p>{message}</p>
+            {onRetry && (
+                <Button type="button" variant="outline" onClick={onRetry}>
+                    Try again
+                </Button>
+            )}
         </StateBox>
     );
 }

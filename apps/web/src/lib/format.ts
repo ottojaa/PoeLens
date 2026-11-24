@@ -23,7 +23,7 @@ export function formatPrice(value: number): string {
 
     if (magnitude >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
 
-    if (magnitude >= 10_000) return COUNT.format(value);
+    if (magnitude >= 1_000) return COUNT.format(value);
 
     if (magnitude >= 100) return value.toFixed(1);
 

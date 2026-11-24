@@ -5,9 +5,17 @@ describe('price query schemas', () => {
     it('fill the defaults a caller should never have to repeat', () => {
         const table = TableQuerySchema.parse({ game: 'poe2', category: 'Currency' });
 
-        expect(table).toEqual({ game: 'poe2', league: 'current', category: 'Currency', includeLowConfidence: false });
+        expect(table).toEqual({ game: 'poe2', league: 'current', category: 'Currency', includeLowConfidence: false, sparkline: false });
         expect(MoversQuerySchema.parse({ game: 'poe2' })).toMatchObject({ window: '24h', limit: 10, league: 'current' });
         expect(HistoryQuerySchema.parse({ game: 'poe2', item: '7' })).toMatchObject({ item: 7, bucket: 'hour', league: 'current' });
+    });
+
+    it('ask for sparklines only with a literal true', () => {
+        const parse = (value: string) => TableQuerySchema.safeParse({ game: 'poe2', category: 'Currency', sparkline: value });
+
+        expect(parse('true')).toMatchObject({ success: true, data: { sparkline: true } });
+        expect(parse('false')).toMatchObject({ success: true, data: { sparkline: false } });
+        expect(parse('1').success).toBe(false);
     });
 
     it('make the game mandatory and reject unknown values', () => {

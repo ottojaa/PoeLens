@@ -24,8 +24,8 @@ const RANGE_LABELS: Record<Range, string> = { '24h': '24 hours', '7d': '7 days',
 
 function StatCard({ label, children }: { label: string; children: React.ReactNode }) {
     return (
-        <Card className="gap-1.5 px-5 py-4">
-            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">{label}</span>
+        <Card className="bg-card gap-1.5 rounded-xl px-5 py-[18px]">
+            <span className="text-muted-foreground text-[13px]">{label}</span>
             {children}
         </Card>
     );
@@ -87,7 +87,9 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     if (history.isError && !history.data) {
         const missing = history.error instanceof ApiError && history.error.status === 404;
 
-        return <ErrorState title={missing ? 'This item does not exist' : 'Could not load this item'} onRetry={() => void history.refetch()} />;
+        if (missing) return <ErrorState title="This item does not exist" message="Check the link, or find the item with the search (Ctrl+K or ⌘K)." />;
+
+        return <ErrorState title="Could not load this item" onRetry={() => void history.refetch()} />;
     }
 
     if (!item) return <ItemSkeleton />;
@@ -97,7 +99,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     const from = row && row.change.d7 !== null ? row.price / (1 + row.change.d7 / 100) : null;
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
             <nav aria-label="Breadcrumb" className="text-muted-foreground flex items-center gap-1.5 text-sm">
                 <Link
                     to="/economy/$category"
@@ -114,15 +116,15 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
             <div className="flex items-center gap-4">
                 <ItemIcon item={item} size="lg" />
                 <div>
-                    <h1 className="font-heading text-[30px] leading-tight font-bold">{item.name}</h1>
+                    <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
                     <p className="text-muted-foreground text-sm">{[item.baseType, category?.label ?? item.category].filter(Boolean).join(' · ')}</p>
                 </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
                 <StatCard label="Price">
                     {row ? (
                         <>
-                            <span className="text-3xl font-bold">
+                            <span className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]">
                                 <AnimatedNumber key={`${scope.league}:${scope.unit}`} value={row.price} format={formatPrice} />
                                 <span className="text-muted-foreground ml-1.5 text-base font-medium">{UNIT_SHORT[scope.unit]}</span>
                             </span>
@@ -132,10 +134,10 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
                         <Skeleton className="h-9 w-32" />
                     )}
                 </StatCard>
-                <StatCard label="7 day change">
+                <StatCard label="Change, 7 days">
                     {row ? (
                         <>
-                            <Change percent={row.change.d7} className="text-2xl" />
+                            <Change percent={row.change.d7} className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]" />
                             <span className="text-muted-foreground text-sm">
                                 {from === null ? 'Not enough history yet' : `from ${formatPrice(from)} ${UNIT_SHORT[scope.unit]}`}
                             </span>
@@ -146,14 +148,20 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
                 </StatCard>
                 <StatCard label={row?.liquidity?.kind === 'listings' ? 'Listings' : 'Volume'}>
                     {row ? (
-                        <span className="text-2xl font-bold">{row.liquidity ? formatCount(row.liquidity.value) : '—'}</span>
+                        <span className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]">
+                            {row.liquidity ? formatCount(row.liquidity.value) : '—'}
+                        </span>
                     ) : (
                         <Skeleton className="h-9 w-24" />
                     )}
                     {row?.lowConfidence && <span className="text-warning text-sm">Low confidence: the price may be unreliable</span>}
                 </StatCard>
                 <StatCard label="Updated">
-                    {row ? <span className="text-2xl font-bold">{formatAgo(row.asOf)}</span> : <Skeleton className="h-9 w-28" />}
+                    {row ? (
+                        <span className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]">{formatAgo(row.asOf)}</span>
+                    ) : (
+                        <Skeleton className="h-9 w-28" />
+                    )}
                 </StatCard>
             </div>
             <Card className="gap-4 p-5">

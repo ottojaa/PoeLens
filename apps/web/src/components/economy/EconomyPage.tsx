@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ApiError } from '@/lib/api/client';
 import { useTable } from '@/lib/api/prices';
 import { DEFAULT_SORT } from '@/lib/economy/columns';
 import { toColumnsParam, type EconomyView } from '@/lib/economy/search-params';
@@ -65,6 +66,14 @@ function PageHeading({ title, meta, hideLow, onHideLow }: { title: string; meta:
     );
 }
 
+function TableError({ error, league, onRetry }: { error: unknown; league: string; onRetry: () => void }) {
+    const unknownLeague = error instanceof ApiError && error.status === 404;
+
+    if (!unknownLeague) return <ErrorState onRetry={onRetry} />;
+
+    return <ErrorState title="This league does not exist" message={`There is no league called ${league}. Pick one from the league menu.`} />;
+}
+
 /** One category: the heading, the filters, and the sortable table with its loading, empty and error states. */
 export function EconomyPage({ categoryId, view }: { categoryId: string; view: EconomyView }) {
     const { scope, leagueName } = useEconomyContext();
@@ -87,7 +96,7 @@ export function EconomyPage({ categoryId, view }: { categoryId: string; view: Ec
             <div className="bg-card overflow-x-auto rounded-xl border">
                 <div className="min-w-[760px]">
                     {table.isPending && <TableSkeleton />}
-                    {table.isError && !rows && <ErrorState onRetry={() => void table.refetch()} />}
+                    {table.isError && !rows && <TableError error={table.error} league={scope.league} onRetry={() => void table.refetch()} />}
                     {rows && rows.length === 0 && <NoDataState league={leagueName} />}
                     {rows && rows.length > 0 && visible.length === 0 && <NoMatchState onClear={navigation.clearFilters} />}
                     {visible.length > 0 && (

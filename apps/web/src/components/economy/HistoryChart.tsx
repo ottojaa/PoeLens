@@ -74,7 +74,7 @@ export function HistoryChart({ points, bucket, unit, label }: { points: readonly
                 <ChartTooltip cursor content={(props) => <PointTooltip {...props} bucket={bucket} unit={unit} />} />
                 <Area
                     dataKey="price"
-                    type="monotone"
+                    type="linear"
                     stroke="var(--color-price)"
                     strokeWidth={2}
                     fill={`url(#${gradientId})`}

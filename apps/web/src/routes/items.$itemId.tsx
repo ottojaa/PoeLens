@@ -13,7 +13,8 @@ function ItemRoute() {
     const search = Route.useSearch();
     const id = Number(itemId);
 
-    if (!Number.isInteger(id) || id <= 0) return <ErrorState title="This item does not exist" onRetry={() => history.back()} />;
+    if (!Number.isInteger(id) || id <= 0)
+        return <ErrorState title="This item does not exist" message="Check the link, or find the item with the search (Ctrl+K or ⌘K)." />;
 
     return <ItemPage itemId={id} range={toRange(search)} />;
 }
