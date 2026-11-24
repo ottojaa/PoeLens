@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './theme/reverie.css';
+@import './theme/slate.css';
+@import './theme/graphite.css';
 @import './motion/motion.css';
 
 @custom-variant dark (&:is(.dark *));

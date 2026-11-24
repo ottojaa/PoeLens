@@ -7,24 +7,21 @@ import { queryClient } from './lib/query-client';
 import { ThemeProvider } from './lib/theme';
 import { MotionProvider } from './motion/MotionProvider';
 import { router } from './router';
-import '@fontsource/geist/400.css';
-import '@fontsource/geist/500.css';
-import '@fontsource/geist/600.css';
-import '@fontsource/geist/700.css';
+import './theme/fonts';
 import './styles.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 root.render(
     <StrictMode>
-        <ThemeProvider>
-            <QueryClientProvider client={queryClient}>
-                <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+                <ThemeProvider>
                     <MotionProvider>
                         <RouterProvider router={router} />
                     </MotionProvider>
-                </AuthProvider>
-            </QueryClientProvider>
-        </ThemeProvider>
+                </ThemeProvider>
+            </AuthProvider>
+        </QueryClientProvider>
     </StrictMode>,
 );

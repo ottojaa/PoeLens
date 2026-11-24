@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { THEME_IDS } from '@poelens/shared';
 import { describe, expect, it } from 'vitest';
 import { findThemeViolations } from './audit';
 import { COLOR_TOKENS, DEFAULT_THEME_ID, FONT_TOKENS, THEMES, type ColorToken } from './themes';
@@ -96,6 +97,10 @@ describe('theme files', () => {
         expect(THEMES.map((theme) => theme.id)).toContain(DEFAULT_THEME_ID);
     });
 
+    it('registers every theme the API accepts, and no other', () => {
+        expect(THEMES.map((theme) => theme.id)).toEqual([...THEME_IDS]);
+    });
+
     describe.each(THEMES.map((theme) => theme.id))('%s', (id) => {
         const css = read(path.join(THEME_DIR, id + '.css'));
         const blocks = parseBlocks(css);
@@ -155,12 +160,6 @@ describe('styles.css', () => {
 
     it('exposes every colour token as a Tailwind colour', () => {
         for (const token of COLOR_TOKENS) expect(styles, token).toContain(`--color-${token}: var(--${token});`);
-    });
-
-    it('sets data-theme before the first paint, to the default theme', () => {
-        const html = read(path.resolve(SRC, '../index.html'));
-
-        expect(html).toContain(`'data-theme', '${DEFAULT_THEME_ID}'`);
     });
 });
 

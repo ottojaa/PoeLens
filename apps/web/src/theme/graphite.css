@@ -1,0 +1,92 @@
+/*
+ * Graphite: near-black zinc, a blue accent, Inter Tight titles over Inter.
+ *
+ * Dark follows the design's board, except the accent. The board's blue (#2563eb) reaches only 3.85:1 on the background,
+ * so --primary and --primary-foreground differ from the board in dark: a lighter blue with the background's near-black as
+ * the text on it (white on a blue light enough to read on the page cannot reach 4.5:1). Light is derived from the
+ * board (it has none): zinc surfaces with the board's blue, and the teal and orange darkened until the contrast check
+ * (theme.test.ts) passes.
+ *
+ * The board draws two panel levels (a header and sidebar one step darker than the table and cards). Here --card is the
+ * board's surface, which is what the table and cards use, so the header and sidebar sit on it too. The board's
+ * separate accent text colour is not a token: accent text is --primary. Destructive, success, warning and chart-4/5 are
+ * not on the board and come from Reverie's set, with chart-4 on violet to stay clear of the blue accent.
+ */
+
+[data-theme='graphite'] {
+    --font-title: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Light */
+    --background: #fafafa;
+    --foreground: #09090b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --popover: #ffffff;
+    --popover-foreground: #09090b;
+
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #09090b;
+    --muted: #ececef;
+    --muted-foreground: #52525b;
+    --accent: #e4e4e7;
+    --accent-foreground: #09090b;
+
+    --destructive: #c62828;
+    --destructive-foreground: #ffffff;
+    --success: #15803d;
+    --warning: #8a5300;
+
+    --border: #d4d4d8;
+    --input: #a1a1aa;
+    --ring: #2563eb;
+
+    --up: #0f766e;
+    --down: #b34700;
+    --scrim: #09090b73;
+
+    --chart-1: #2563eb;
+    --chart-2: #0f766e;
+    --chart-3: #b34700;
+    --chart-4: #7c3aed;
+    --chart-5: #b83280;
+}
+
+[data-theme='graphite'].dark {
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #111113;
+    --card-foreground: #fafafa;
+    --popover: #111113;
+    --popover-foreground: #fafafa;
+
+    --primary: #3d7df1;
+    --primary-foreground: #09090b;
+    --secondary: #18181b;
+    --secondary-foreground: #fafafa;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --accent: #1c1c20;
+    --accent-foreground: #fafafa;
+
+    --destructive: #f87171;
+    --destructive-foreground: #09090b;
+    --success: #48bb78;
+    --warning: #e8b339;
+
+    --border: #232326;
+    --input: #303036;
+    --ring: #3d7df1;
+
+    --up: #2dd4bf;
+    --down: #fb923c;
+    --scrim: #0000008c;
+
+    --chart-1: #3d7df1;
+    --chart-2: #2dd4bf;
+    --chart-3: #fb923c;
+    --chart-4: #a78bfa;
+    --chart-5: #f687b3;
+}

@@ -1,0 +1,89 @@
+/*
+ * Slate: cool blue-grey surfaces, a violet accent, Space Grotesk titles over Inter.
+ *
+ * Dark follows the design's board. Light is derived from it (the board has none): the same hues on pale surfaces, with
+ * the violet, sky blue and orange darkened until the contrast check (theme.test.ts) passes.
+ *
+ * The board draws two panel levels (a header and sidebar one step darker than the table and cards). Here --card is the
+ * board's surface, which is what the table and cards use, so the header and sidebar sit on it too. The board's
+ * separate accent text colour is not a token: accent text is --primary. Destructive, success, warning and chart-4/5 are
+ * not on the board and come from Reverie's set, with chart-4 moved off violet (the accent's own hue).
+ */
+
+[data-theme='slate'] {
+    --font-title: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Light */
+    --background: #f3f5f9;
+    --foreground: #11141b;
+    --card: #ffffff;
+    --card-foreground: #11141b;
+    --popover: #ffffff;
+    --popover-foreground: #11141b;
+
+    --primary: #6d4fd6;
+    --primary-foreground: #ffffff;
+    --secondary: #e9edf4;
+    --secondary-foreground: #11141b;
+    --muted: #e1e6ef;
+    --muted-foreground: #525c72;
+    --accent: #e1e6ef;
+    --accent-foreground: #11141b;
+
+    --destructive: #c62828;
+    --destructive-foreground: #ffffff;
+    --success: #15803d;
+    --warning: #8a5300;
+
+    --border: #d3d9e5;
+    --input: #b4bccd;
+    --ring: #6d4fd6;
+
+    --up: #0369a1;
+    --down: #b34700;
+    --scrim: #11141b73;
+
+    --chart-1: #6d4fd6;
+    --chart-2: #0369a1;
+    --chart-3: #b34700;
+    --chart-4: #0f766e;
+    --chart-5: #b83280;
+}
+
+[data-theme='slate'].dark {
+    --background: #0b0d12;
+    --foreground: #e6e9f0;
+    --card: #11141b;
+    --card-foreground: #e6e9f0;
+    --popover: #11141b;
+    --popover-foreground: #e6e9f0;
+
+    --primary: #a78bfa;
+    --primary-foreground: #0b0d12;
+    --secondary: #171b24;
+    --secondary-foreground: #e6e9f0;
+    --muted: #171b24;
+    --muted-foreground: #8b93a7;
+    --accent: #1b2029;
+    --accent-foreground: #e6e9f0;
+
+    --destructive: #f87171;
+    --destructive-foreground: #0b0d12;
+    --success: #48bb78;
+    --warning: #e8b339;
+
+    --border: #222734;
+    --input: #2f3646;
+    --ring: #a78bfa;
+
+    --up: #38bdf8;
+    --down: #fb923c;
+    --scrim: #0000008c;
+
+    --chart-1: #a78bfa;
+    --chart-2: #38bdf8;
+    --chart-3: #fb923c;
+    --chart-4: #2dd4bf;
+    --chart-5: #f687b3;
+}
