@@ -1,6 +1,6 @@
-import type { TableRow } from '@poelens/shared';
+import type { TableRow } from '../api/schemas/prices.js';
 import { describe, expect, it } from 'vitest';
-import { filterRows, sortRows } from './sort';
+import { filterRows, sortRows } from './sort.js';
 
 function row(
     name: string,

@@ -34,11 +34,11 @@ async function resolveType(
  * The data behind a dashboard's blocks, by block id. Each type is answered by its own resolver, in parallel; a type that
  * fails answers null for its blocks, is logged, and leaves the others alone.
  */
-export async function getDashboardData(db: Kysely<Database>, body: DashboardDataBody, log?: DataLog): Promise<DashboardDataResponse> {
+export async function getDashboardData(db: Kysely<Database>, body: DashboardDataBody, log?: DataLog, now = new Date()): Promise<DashboardDataResponse> {
     const context = await resolveContext(db, { game: body.game, league: body.league, ...(body.unit && { unit: body.unit }) });
     const entries: ResolverEntry[] = body.panels.flatMap((panel) => panel.blocks.map((block: DataBlock) => ({ block, unit: panel.unit ?? context.unit })));
     const byType = groupBy(entries, (entry) => entry.block.type);
-    const resolverContext: ResolverContext = { game: context.game, league: context.league.name };
+    const resolverContext: ResolverContext = { game: context.game, league: context.league.name, now };
     const answered = await Promise.all([...byType].map(([type, group]) => resolveType(db, resolverContext, type, group, log)));
 
     return { game: context.game, league: context.league, unit: context.unit, blocks: Object.fromEntries(answered.flatMap((answers) => [...answers])) };

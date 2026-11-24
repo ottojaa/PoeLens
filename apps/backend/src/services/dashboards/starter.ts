@@ -13,7 +13,7 @@ const USEFUL_LINKS = [
 ].join('\n');
 
 /** The ids of items by exact name in a game; a name the catalog doesn't have is absent. */
-async function loadItemIdsByName(db: Kysely<Database>, game: Game, names: readonly string[]): Promise<Map<string, number>> {
+export async function loadItemIdsByName(db: Kysely<Database>, game: Game, names: readonly string[]): Promise<Map<string, number>> {
     const rows = await db
         .selectFrom('items')
         .select(['id', 'name'])
@@ -46,24 +46,32 @@ function toRatesBlocks(ids: ReadonlyMap<string, number>): Block[] {
     return blocks.filter((block) => block !== null);
 }
 
+/** The names `buildRatesPanel` looks up. */
+export const RATES_ITEM_NAMES = ['Divine Orb', 'Exalted Orb', 'Chaos Orb', 'Orb of Annulment', 'Perfect Chaos Orb'] as const;
+
+/** The Currency rates panel; a pair or item whose currency the catalog lacks is left out. */
+export function buildRatesPanel(ids: ReadonlyMap<string, number>): Panel {
+    return { id: 'rates', title: 'Currency rates', x: 0, y: 0, w: 4, h: 10, hideOnPhone: false, unit: 'exalted', blocks: toRatesBlocks(ids) };
+}
+
+/** The Useful links panel: a note with the sites a player keeps open. */
+export function buildLinksPanel(): Panel {
+    return {
+        id: 'links',
+        title: 'Useful links',
+        x: 4,
+        y: 0,
+        w: 3,
+        h: 9,
+        hideOnPhone: false,
+        unit: null,
+        blocks: [{ id: 'links-note', v: 1, type: 'note', markdown: USEFUL_LINKS }],
+    };
+}
+
 /** What a user sees until they first save: Currency rates and Useful links, for games that have a catalog to build them from. */
 export async function buildStarterPanels(db: Kysely<Database>, game: Game): Promise<Panel[]> {
     if (game !== 'poe2') return [];
 
-    const ids = await loadItemIdsByName(db, game, ['Divine Orb', 'Exalted Orb', 'Chaos Orb', 'Orb of Annulment', 'Perfect Chaos Orb']);
-
-    return [
-        { id: 'rates', title: 'Currency rates', x: 0, y: 0, w: 4, h: 10, hideOnPhone: false, unit: 'exalted', blocks: toRatesBlocks(ids) },
-        {
-            id: 'links',
-            title: 'Useful links',
-            x: 4,
-            y: 0,
-            w: 3,
-            h: 9,
-            hideOnPhone: false,
-            unit: null,
-            blocks: [{ id: 'links-note', v: 1, type: 'note', markdown: USEFUL_LINKS }],
-        },
-    ];
+    return [buildRatesPanel(await loadItemIdsByName(db, game, RATES_ITEM_NAMES)), buildLinksPanel()];
 }

@@ -1,4 +1,4 @@
-import { UnitChoiceSchema } from '@poelens/shared';
+import { HISTORY_RANGES, UnitChoiceSchema } from '@poelens/shared';
 import { z } from 'zod';
 import { DEFAULT_COLUMNS, DEFAULT_SORT, OPTIONAL_COLUMNS, SORT_KEYS, type OptionalColumn, type SortDirection, type SortKey } from './columns';
 
@@ -8,7 +8,7 @@ import { DEFAULT_COLUMNS, DEFAULT_SORT, OPTIONAL_COLUMNS, SORT_KEYS, type Option
  * JSON-decoded each value (`q=123` arrives as a number, `min=abc` as a string), and the schemas accept that.
  */
 
-export const RANGES = ['24h', '7d', '30d', 'league'] as const;
+export const RANGES = HISTORY_RANGES;
 export type Range = (typeof RANGES)[number];
 export const DEFAULT_RANGE: Range = '7d';
 

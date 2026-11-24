@@ -2,13 +2,19 @@ import {
     DashboardChangedError,
     DashboardsFullError,
     GAMES,
+    MAX_BLOCKS,
     MAX_DASHBOARDS,
+    MAX_PANELS,
     NotFoundError,
     PanelsSchema,
     UnauthorizedError,
     ValidationError,
     normalize,
+    place,
+    toNewPanelSize,
     upgradePanels,
+    type AppendBlockBody,
+    type AppendBlockResponse,
     type CreateDashboardBody,
     type Dashboard,
     type DashboardOrderBody,
@@ -17,9 +23,11 @@ import {
     type Panel,
     type SaveDashboardBody,
 } from '@poelens/shared';
+import { randomUUID } from 'node:crypto';
 import { sql, type Kysely, type Selectable } from 'kysely';
 import type { Database, DashboardsTable } from '../../db/schema.js';
 import { buildStarterPanels, STARTER_NAME } from './starter.js';
+import { assertPanelsKnown } from './validation.js';
 import { toStarterId } from './starter-id.js';
 
 type Trx = Kysely<Database>;
@@ -117,25 +125,6 @@ async function findDashboard(trx: Trx, userId: string, id: string): Promise<Sele
     return (await find()) ?? null;
 }
 
-/** The ids of items an item or pair block points at that the game's catalog does not have. */
-async function findUnknownItemIds(trx: Trx, game: Game, panels: readonly Panel[]): Promise<number[]> {
-    const wanted = new Set(
-        panels.flatMap((panel) => panel.blocks).flatMap((block) => (block.type === 'item' ? [block.item] : block.type === 'pair' ? [block.a, block.b] : [])),
-    );
-
-    if (!wanted.size) return [];
-
-    const known = await trx
-        .selectFrom('items')
-        .select('id')
-        .where('game', '=', game)
-        .where('id', 'in', [...wanted])
-        .execute();
-    const knownIds = new Set(known.map((item) => item.id));
-
-    return [...wanted].filter((id) => !knownIds.has(id));
-}
-
 /**
  * Saves a dashboard's name and panels (laid out by the grid engine, so what is stored never overlaps). The save must start
  * from the stored revision; any other is refused with the stored dashboard attached, for the client to reload or overwrite.
@@ -148,9 +137,7 @@ export async function saveDashboard(db: Trx, userId: string, id: string, body: S
 
         if (!row) throw new NotFoundError('Dashboard', id);
 
-        const unknown = await findUnknownItemIds(trx, row.game as Game, body.panels);
-
-        if (unknown.length) throw new ValidationError('Unknown items for this game', { itemIds: unknown });
+        await assertPanelsKnown(trx, row.game as Game, body.panels);
 
         if (row.revision !== body.revision) throw new DashboardChangedError(toDashboard(row));
 
@@ -164,6 +151,63 @@ export async function saveDashboard(db: Trx, userId: string, id: string, body: S
             .executeTakeFirstOrThrow();
 
         return toDashboard(saved);
+    });
+}
+
+/** The panels with the block added: to the panel asked for, or to a new one below the rest. */
+function withAppendedBlock(panels: readonly Panel[], body: AppendBlockBody, block: AppendBlockBody['block']): { panels: Panel[]; panelId: string } {
+    if (body.panelId === undefined) {
+        if (panels.length >= MAX_PANELS) throw new ValidationError('The dashboard is full: remove a panel first', { max: MAX_PANELS });
+
+        const panel: Panel = {
+            id: randomUUID(),
+            title: body.title ?? '',
+            ...place(panels, toNewPanelSize(block)),
+            hideOnPhone: false,
+            unit: null,
+            blocks: [block],
+        };
+
+        return { panels: [...panels, panel], panelId: panel.id };
+    }
+
+    const target = panels.find((panel) => panel.id === body.panelId);
+
+    if (!target) throw new NotFoundError('Panel', body.panelId);
+
+    if (target.blocks.length >= MAX_BLOCKS) throw new ValidationError('The panel is full: remove a block first', { max: MAX_BLOCKS });
+
+    return { panels: panels.map((panel) => (panel === target ? { ...panel, blocks: [...panel.blocks, block] } : panel)), panelId: target.id };
+}
+
+/**
+ * Adds one block to a dashboard on the server's current copy, so a client that holds no layout (the economy page) can
+ * still add. The block gets a fresh id, so it can never collide with one already stored. The dashboard's revision goes up
+ * by one, which makes an editor open on the old revision learn of the change at its next save.
+ */
+export async function appendBlock(db: Trx, userId: string, id: string, body: AppendBlockBody): Promise<AppendBlockResponse> {
+    return db.transaction().execute(async (trx) => {
+        await lockUser(trx, userId);
+
+        const row = await findDashboard(trx, userId, id);
+
+        if (!row) throw new NotFoundError('Dashboard', id);
+
+        const block = { ...body.block, id: randomUUID() };
+        const { panels, panelId } = withAppendedBlock(toDashboard(row).panels, body, block);
+
+        await assertPanelsKnown(trx, row.game as Game, panels);
+
+        const saved = await trx
+            .updateTable('dashboards')
+            .set({ panels: toJson(normalize(panels)), revision: row.revision + 1, updated_at: sql`now()` })
+            .where('id', '=', row.id)
+            .where('user_id', '=', userId)
+            .where('revision', '=', row.revision)
+            .returning('revision')
+            .executeTakeFirstOrThrow();
+
+        return { panelId, blockId: block.id, revision: saved.revision };
     });
 }
 

@@ -1,25 +1,16 @@
 import { z } from 'zod';
+import { blockBase, BlockIdSchema, blockName, ItemIdSchema, MAX_HEADING_LENGTH, MAX_NOTE_LENGTH } from './block-base.js';
+import {
+    ChartBlockSchema,
+    ChartDataBlockSchema,
+    MoversBlockSchema,
+    MoversDataBlockSchema,
+    ScreenerBlockSchema,
+    ScreenerDataBlockSchema,
+    TableBlockSchema,
+    TableDataBlockSchema,
+} from './block-settings.js';
 import { MAX_BLOCKS } from './limits.js';
-
-/** The highest id a PostgreSQL `integer` column holds; a larger one is a bad request, not a database error. */
-const MAX_ITEM_ID = 2_147_483_647;
-
-export const ItemIdSchema = z.number().int().positive().max(MAX_ITEM_ID);
-
-/** A block's id: made by the client, unique within its dashboard. The data response is keyed by it. */
-export const BlockIdSchema = z
-    .string()
-    .min(1)
-    .max(64)
-    .regex(/^[A-Za-z0-9_-]+$/, 'Expected letters, digits, - and _');
-
-/** The longest display name a block can carry. */
-export const MAX_BLOCK_NAME = 60;
-export const MAX_NOTE_LENGTH = 4000;
-export const MAX_HEADING_LENGTH = 80;
-
-const blockBase = { id: BlockIdSchema, v: z.literal(1) };
-const blockName = z.string().trim().max(MAX_BLOCK_NAME).optional();
 
 export const ITEM_DISPLAYS = ['compact', 'card'] as const;
 export const ItemDisplaySchema = z.enum(ITEM_DISPLAYS);
@@ -57,7 +48,16 @@ export const HeadingBlockSchema = z.object({
     text: z.string().trim().max(MAX_HEADING_LENGTH),
 });
 
-export const BlockSchema = z.discriminatedUnion('type', [ItemBlockSchema, PairBlockSchema, NoteBlockSchema, HeadingBlockSchema]);
+export const BlockSchema = z.discriminatedUnion('type', [
+    ItemBlockSchema,
+    PairBlockSchema,
+    NoteBlockSchema,
+    HeadingBlockSchema,
+    TableBlockSchema,
+    MoversBlockSchema,
+    ScreenerBlockSchema,
+    ChartBlockSchema,
+]);
 
 export const BlocksSchema = z.array(BlockSchema).max(MAX_BLOCKS);
 
@@ -65,6 +65,7 @@ export type ItemBlock = z.infer<typeof ItemBlockSchema>;
 export type PairBlock = z.infer<typeof PairBlockSchema>;
 export type NoteBlock = z.infer<typeof NoteBlockSchema>;
 export type HeadingBlock = z.infer<typeof HeadingBlockSchema>;
+export type { TableBlock, MoversBlock, ScreenerBlock, ChartBlock } from './block-settings.js';
 export type Block = z.infer<typeof BlockSchema>;
 export type BlockType = Block['type'];
 
@@ -76,7 +77,14 @@ export const BLOCK_TYPES = BlockSchema.options.map((option) => option.shape.type
 export const ItemDataBlockSchema = z.object({ id: BlockIdSchema, type: z.literal('item'), item: ItemIdSchema });
 export const PairDataBlockSchema = z.object({ id: BlockIdSchema, type: z.literal('pair'), a: ItemIdSchema, b: ItemIdSchema });
 
-export const DataBlockSchema = z.discriminatedUnion('type', [ItemDataBlockSchema, PairDataBlockSchema]);
+export const DataBlockSchema = z.discriminatedUnion('type', [
+    ItemDataBlockSchema,
+    PairDataBlockSchema,
+    TableDataBlockSchema,
+    MoversDataBlockSchema,
+    ScreenerDataBlockSchema,
+    ChartDataBlockSchema,
+]);
 
 export type DataBlock = z.infer<typeof DataBlockSchema>;
 export type DataBlockType = DataBlock['type'];
@@ -96,6 +104,36 @@ export const BLOCK_DEFS: { [T in BlockType]: BlockDef<T> } = {
     pair: { label: 'Pair', dataKey: ({ id, a, b }) => ({ id, type: 'pair', a, b }) },
     note: { label: 'Note', dataKey: () => null },
     heading: { label: 'Heading', dataKey: () => null },
+    table: {
+        label: 'Price table',
+        dataKey: ({ id, category, sort, dir, q, minLiquidity, hideLowConfidence, limit }) => ({
+            id,
+            type: 'table',
+            category,
+            sort,
+            dir,
+            q,
+            minLiquidity,
+            hideLowConfidence,
+            limit,
+        }),
+    },
+    movers: { label: 'Movers', dataKey: ({ id, scope, window, limit }) => ({ id, type: 'movers', scope, window, limit }) },
+    screener: {
+        label: 'Screener',
+        dataKey: ({ id, scope, windowHours, direction, minChangePct, minLiquidity, minDivine, limit }) => ({
+            id,
+            type: 'screener',
+            scope,
+            windowHours,
+            direction,
+            minChangePct,
+            minLiquidity,
+            minDivine,
+            limit,
+        }),
+    },
+    chart: { label: 'Price chart', dataKey: ({ id, item, quote, range }) => ({ id, type: 'chart', item, quote, range }) },
 };
 
 /** The data inputs of a block, or null for a block that shows no data. */
@@ -118,6 +156,10 @@ export const BLOCK_UPGRADES: Record<BlockType, BlockUpgrade[]> = {
     pair: [],
     note: [],
     heading: [],
+    table: [],
+    movers: [],
+    screener: [],
+    chart: [],
 };
 
 export function currentBlockVersion(type: BlockType): number {
