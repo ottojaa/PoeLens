@@ -2,9 +2,15 @@ import { StarIcon } from '@/components/watchlist/WatchStar';
 import { cn } from '@/lib/utils';
 import { TogglePop } from '@/motion/TogglePop';
 
+function toLabel(ready: boolean, watched: boolean): string {
+    if (!ready) return 'Watchlist';
+
+    return watched ? 'On your watchlist' : 'Add to watchlist';
+}
+
 /**
- * The watch button of the item page: the accent when watched, an outline button when not. Until the watchlist has loaded
- * it is disabled, so a watched item never shows "Add to watchlist" for a moment.
+ * The watch button of the item page: the accent when watched, an outline button when not. Until the watchlist has
+ * answered it is disabled and says just "Watchlist", so a watched item never shows "Add to watchlist" for a moment.
  */
 export function WatchButton({ ready, watched, onToggle }: { ready: boolean; watched: boolean; onToggle: (watched: boolean) => void }) {
     return (
@@ -21,7 +27,7 @@ export function WatchButton({ ready, watched, onToggle }: { ready: boolean; watc
             <TogglePop state={watched}>
                 <StarIcon filled={watched} strokeWidth={watched ? 0 : 1.6} />
             </TogglePop>
-            {watched ? 'On your watchlist' : 'Add to watchlist'}
+            {toLabel(ready, watched)}
         </button>
     );
 }

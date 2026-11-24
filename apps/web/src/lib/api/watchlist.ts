@@ -93,7 +93,7 @@ export function useWatchlist(): Watchlist {
         [mutate, isFull, watchedIds],
     );
 
-    const isReady = query.data !== undefined;
+    const isReady = !query.isPending;
     const controls = useMemo(() => ({ isReady, isWatched, onToggle: setWatched }), [isReady, isWatched, setWatched]);
 
     return {
