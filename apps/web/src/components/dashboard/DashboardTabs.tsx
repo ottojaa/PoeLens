@@ -3,7 +3,7 @@ import { MoreHorizontal, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { SortableList, useSortableItem } from './dnd';
+import { SortableList, toReordered, useSortableItem } from './dnd';
 
 interface TabProps {
     dashboard: Dashboard;
@@ -70,15 +70,6 @@ function Tab({ dashboard, index, active, locked, onSelect, onMoveLeft, onMoveRig
     );
 }
 
-function toSwapped(ids: readonly string[], from: number, to: number): string[] {
-    const next = [...ids];
-    const [moved] = next.splice(from, 1);
-
-    if (moved !== undefined) next.splice(to, 0, moved);
-
-    return next;
-}
-
 /**
  * The dashboards of the signed-in user as tabs: click to switch, drag or the tab's menu to reorder, "+" to add one. While one is edited
  * the other tabs are locked, so a half-edited draft can't be left behind.
@@ -122,8 +113,8 @@ export function DashboardTabs({
                             active={dashboard.id === activeId}
                             locked={locked}
                             onSelect={() => onSelect(dashboard.id)}
-                            onMoveLeft={index > 0 ? () => onReorder(toSwapped(ids, index, index - 1)) : undefined}
-                            onMoveRight={index < ids.length - 1 ? () => onReorder(toSwapped(ids, index, index + 1)) : undefined}
+                            onMoveLeft={index > 0 ? () => onReorder(toReordered(ids, index, index - 1)) : undefined}
+                            onMoveRight={index < ids.length - 1 ? () => onReorder(toReordered(ids, index, index + 1)) : undefined}
                             onRename={() => onRename(dashboard)}
                             onDelete={() => onDelete(dashboard)}
                         />

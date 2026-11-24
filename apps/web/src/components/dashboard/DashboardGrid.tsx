@@ -37,13 +37,15 @@ interface GridProps {
     /** In content mode, the panel being edited and the block whose settings are open. */
     selectedId?: string | null;
     openBlockId?: string | null;
+    /** The dashboard is being edited: its panels' rows do not navigate. */
+    editing?: boolean;
     onLayout: (panels: PanelModel[]) => void;
     /** Absent where the dashboard cannot be edited, which also leaves out each panel's menu. */
     onEditContent?: (panelId: string) => void;
 }
 
 /** On a phone: one column in reading order, each panel as tall as its blocks, and the hidden ones named at the bottom. */
-function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent }: GridProps) {
+function PhoneStack({ panels, data, mode, selectedId, openBlockId, editing, onEditContent }: GridProps) {
     const shown = phoneOrder(panels).filter((panel) => !panel.hideOnPhone);
 
     return (
@@ -56,6 +58,7 @@ function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent
                         mode={mode}
                         selected={panel.id === selectedId}
                         openBlockId={openBlockId}
+                        editing={editing}
                         fitContent
                         onEditContent={onEditContent && (() => onEditContent(panel.id))}
                     />
@@ -67,7 +70,7 @@ function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent
 }
 
 /** On a tablet: two columns, a panel up to half the grid wide taking one and a wider one the row, hidden panels included. */
-function TabletFlow({ panels, data, mode, selectedId, openBlockId, onEditContent }: GridProps) {
+function TabletFlow({ panels, data, mode, selectedId, openBlockId, editing, onEditContent }: GridProps) {
     return (
         <div className="grid grid-cols-2 gap-4">
             {tabletFlow(panels).map(({ item, span }) => (
@@ -78,6 +81,7 @@ function TabletFlow({ panels, data, mode, selectedId, openBlockId, onEditContent
                         mode={mode}
                         selected={item.id === selectedId}
                         openBlockId={openBlockId}
+                        editing={editing}
                         fitContent
                         onEditContent={onEditContent && (() => onEditContent(item.id))}
                     />
@@ -93,7 +97,7 @@ function toCellsKey(panels: readonly PanelModel[]): string {
 }
 
 /** The 12-column grid on a desktop. In Layout mode its panels can be dragged, resized and moved from the keyboard. */
-function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEditContent }: GridProps) {
+function WideGrid({ panels, data, mode, selectedId, openBlockId, editing, onLayout, onEditContent }: GridProps) {
     const { ref, width } = useElementWidth<HTMLDivElement>();
     const keyboard = usePanelKeyboard(panels, onLayout);
     const latest = useRef({ panels, width, onLayout });
@@ -149,6 +153,7 @@ function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEdi
                             mode={mode}
                             selected={panel.id === selectedId}
                             openBlockId={openBlockId}
+                            editing={editing}
                             fitContent={false}
                             onEditContent={onEditContent && (() => onEditContent(panel.id))}
                             bar={

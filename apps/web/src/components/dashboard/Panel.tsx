@@ -47,6 +47,7 @@ export function Panel({
     mode,
     selected,
     openBlockId,
+    editing,
     fitContent,
     bar,
     resizeHandle,
@@ -59,6 +60,8 @@ export function Panel({
     /** In content mode, the one panel being edited. */
     selected: boolean;
     openBlockId?: string | null;
+    /** The dashboard is being edited, whatever the width: its rows are not links to follow then. */
+    editing?: boolean;
     /** On a phone the panel grows to fit its blocks instead of scrolling inside a fixed height. */
     fitContent: boolean;
     bar?: ReactNode;
@@ -89,17 +92,20 @@ export function Panel({
                 {panel.unit && <UnitPill unit={panel.unit} />}
                 {onEditContent && <PanelMenu title={panel.title} onEditContent={onEditContent} />}
             </div>
-            <div className={cn('@container px-1 pb-1.5', !fitContent && 'min-h-0 flex-1 overflow-y-auto')} inert={mode !== 'view'}>
-                {panel.blocks.length === 0 && <p className="text-muted-foreground px-3 py-2.5 text-[13px]">No blocks yet</p>}
-                {panel.blocks.map((block, index) => (
-                    <BlockView
-                        key={block.id}
-                        block={block}
-                        data={data?.[block.id]}
-                        previous={panel.blocks[index - 1]}
-                        outline={mode === 'content' && selected && openBlockId !== undefined ? (block.id === openBlockId ? 'open' : 'idle') : undefined}
-                    />
-                ))}
+            <div className={cn('@container px-1 pb-1.5', !fitContent && 'min-h-0 flex-1 overflow-y-auto')}>
+                {/* Inert on an inner wrapper: the scroll container itself must still take the wheel. */}
+                <div inert={editing || mode !== 'view'}>
+                    {panel.blocks.length === 0 && <p className="text-muted-foreground px-3 py-2.5 text-[13px]">No blocks yet</p>}
+                    {panel.blocks.map((block, index) => (
+                        <BlockView
+                            key={block.id}
+                            block={block}
+                            data={data?.[block.id]}
+                            previous={panel.blocks[index - 1]}
+                            outline={mode === 'content' && selected && openBlockId !== undefined ? (block.id === openBlockId ? 'open' : 'idle') : undefined}
+                        />
+                    ))}
+                </div>
             </div>
             {mode === 'layout' && resizeHandle}
         </div>

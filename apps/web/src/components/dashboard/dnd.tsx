@@ -95,7 +95,7 @@ export function usePanelGesture(panelId: string, kind: GestureKind, disabled: bo
     return { handleRef, isDragging };
 }
 
-function toReordered<T>(items: readonly T[], from: number, to: number): T[] {
+export function toReordered<T>(items: readonly T[], from: number, to: number): T[] {
     const next = items.filter((_, index) => index !== from);
     const moved = items[from];
 

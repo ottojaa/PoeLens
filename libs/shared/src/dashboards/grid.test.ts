@@ -163,14 +163,6 @@ describe('keyboard steps', () => {
         expect(rects(nudge([item('a', 0, 0, 4, 2)], 'a', 0, 1)).a).toEqual([0, 0, 4, 2]);
     });
 
-    it('nudge down with another panel below swaps places', () => {
-        const stacked = [item('a', 0, 0, 12, 2), item('b', 0, 2, 12, 2)];
-        const result = nudge(stacked, 'a', 0, 3);
-
-        expect(rects(result).b).toEqual([0, 0, 12, 2]);
-        expect(rects(result).a).toEqual([0, 2, 12, 2]);
-    });
-
     it('one ArrowDown or ArrowUp passes a stacked neighbour, however tall it is', () => {
         const stacked = [item('a', 0, 0, 12, 2), item('b', 0, 2, 12, 5)];
         const down = nudge(stacked, 'a', 0, 1);

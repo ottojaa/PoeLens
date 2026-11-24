@@ -230,6 +230,7 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
                     data={data}
                     mode={mode}
                     selectedId={level === 'content' ? selected?.id : undefined}
+                    editing={edit !== null}
                     openBlockId={level === 'content' ? (edit?.openBlockId ?? null) : undefined}
                     onLayout={(next) => dispatch({ type: 'layout', panels: next })}
                     onEditContent={canEdit ? (panelId) => (edit ? editing.openContent(panelId) : editing.begin(panelId)) : undefined}
