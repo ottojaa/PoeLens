@@ -97,6 +97,15 @@ export function useReorderDashboards(game: Game) {
 
     return useMutation({
         mutationFn: (ids: string[]) => sendApi('/dashboards/order', { method: 'PUT', json: { game, ids } }),
+        // The tabs take their new order at once; the list is read again when the server has answered.
+        onMutate: (ids) =>
+            queryClient.setQueryData(dashboardsKey(game), (list: DashboardsResponse | undefined) => {
+                if (!list) return list;
+
+                const dashboards = ids.flatMap((id) => list.dashboards.find((dashboard) => dashboard.id === id) ?? []);
+
+                return dashboards.length === list.dashboards.length ? { ...list, dashboards } : list;
+            }),
         onSettled: () => queryClient.invalidateQueries({ queryKey: dashboardsKey(game) }),
     });
 }

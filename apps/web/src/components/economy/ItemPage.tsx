@@ -1,4 +1,4 @@
-import type { ItemRef, LeagueRef } from '@poelens/shared';
+import { CATEGORIES, type ItemRef, type LeagueRef } from '@poelens/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -40,7 +40,12 @@ function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel:
     const isInline = useMediaQuery(NARROW_DESKTOP);
     const trail = (
         <nav aria-label="Breadcrumb" className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-sm whitespace-nowrap">
-            <Link to="/" className="hover:text-foreground rounded-sm underline-offset-4 hover:underline">
+            {/* The economy has no page of its own: its first category is where it starts. */}
+            <Link
+                to="/economy/$category"
+                params={{ category: CATEGORIES[GAME][0]?.id ?? item.category }}
+                className="hover:text-foreground rounded-sm underline-offset-4 hover:underline"
+            >
                 Economy
             </Link>
             <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />

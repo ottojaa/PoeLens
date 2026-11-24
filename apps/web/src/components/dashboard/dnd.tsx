@@ -78,8 +78,8 @@ function toReordered<T>(items: readonly T[], from: number, to: number): T[] {
     return [...next.slice(0, to), moved, ...next.slice(to)];
 }
 
-/** A list whose items can be dragged into a new order; `onReorder` gets the ids in their new order. */
-export function SortableList({ ids, onReorder, children }: { ids: readonly string[]; onReorder: (ids: string[]) => void; children: ReactNode }) {
+/** A list whose items can be dragged into a new order; `onReorder` gets the ids in their new order and the move that made it. */
+export function SortableList({ ids, onReorder, children }: { ids: readonly string[]; onReorder: (ids: string[], from: number, to: number) => void; children: ReactNode }) {
     return (
         <DragDropProvider
             onDragEnd={(event) => {
@@ -89,7 +89,7 @@ export function SortableList({ ids, onReorder, children }: { ids: readonly strin
 
                 if (!source || source.initialIndex === source.index) return;
 
-                onReorder(toReordered(ids, source.initialIndex, source.index));
+                onReorder(toReordered(ids, source.initialIndex, source.index), source.initialIndex, source.index);
             }}
         >
             {children}

@@ -8,6 +8,23 @@ import { useWatchlist } from '@/lib/api/watchlist';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { cn } from '@/lib/utils';
 
+/** The way to the home page, where the user's dashboards are. */
+function DashboardsLink({ onNavigate }: { onNavigate?: () => void }) {
+    const { location } = useRouterState();
+    const isCurrent = location.pathname === '/';
+
+    return (
+        <Link
+            to="/"
+            aria-current={isCurrent ? 'page' : undefined}
+            onClick={onNavigate}
+            className={cn(buttonVariants({ variant: 'ghost' }), NAV_ITEM_CLASS, isCurrent && 'bg-accent text-foreground')}
+        >
+            Dashboards
+        </Link>
+    );
+}
+
 /** The way to the watchlist, with how many items are on it once that is known. */
 function WatchlistLink({ onNavigate }: { onNavigate?: () => void }) {
     const { count, answer } = useWatchlist();
@@ -53,6 +70,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             <CategoryNav categories={CATEGORIES[GAME]} value={category ?? null} onNavigate={onNavigate} />
             <NavHeading>Yours</NavHeading>
             <WatchlistLink onNavigate={onNavigate} />
+            <DashboardsLink onNavigate={onNavigate} />
             <TokensLink onNavigate={onNavigate} />
         </nav>
     );
