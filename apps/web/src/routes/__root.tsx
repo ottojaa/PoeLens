@@ -1,11 +1,18 @@
-import { createRootRoute, Outlet, useRouterState } from '@tanstack/react-router';
+import { createRootRoute, Outlet, retainSearchParams, useRouterState } from '@tanstack/react-router';
 import { AuthGate, isPublicPath } from '@/components/auth/AuthGate';
 import { AppShell } from '@/components/layout/AppShell';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useAuth } from '@/lib/auth';
+import { parseRootSearch } from '@/lib/economy/search-params';
 import { PageTransition } from '@/motion/PageTransition';
 
+/**
+ * League and unit belong to the whole app, so the root route owns them. `retainSearchParams` puts them back on every
+ * navigation that does not name them, so a link to another page keeps the viewer's league and unit.
+ */
 export const Route = createRootRoute({
+    validateSearch: parseRootSearch,
+    search: { middlewares: [retainSearchParams(['league', 'unit'])] },
     component: RootLayout,
 });
 

@@ -1,18 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { HealthCard } from '@/components/health/HealthCard';
+import { CATEGORIES } from '@poelens/shared';
+import { createFileRoute, redirect } from '@tanstack/react-router';
+import { GAME } from '@/lib/economy/use-economy-context';
 
+/** There is no home page of its own: the economy view is the app, starting at the first category. */
 export const Route = createFileRoute('/')({
-    component: HomePage,
-});
+    beforeLoad: () => {
+        const first = CATEGORIES[GAME][0];
 
-function HomePage() {
-    return (
-        <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-semibold tracking-tight">PoeLens</h1>
-                <p className="text-muted-foreground">Path of Exile prices, history and your watchlist, in one place.</p>
-            </div>
-            <HealthCard />
-        </div>
-    );
-}
+        if (!first) throw new Error('No categories for the game: ' + GAME);
+
+        throw redirect({ to: '/economy/$category', params: { category: first.id }, search: true, replace: true });
+    },
+});

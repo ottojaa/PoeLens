@@ -1,19 +1,20 @@
-import { CATEGORIES, DEFAULT_UNIT } from '@poelens/shared';
+import { CATEGORIES } from '@poelens/shared';
+import { useParams } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { LeagueSwitcher } from './LeagueSwitcher';
 import { CategoryNav, NAV_ITEM_CLASS, NavHeading } from './CategoryNav';
 import { Soon } from './Soon';
 import { UnitToggle } from './UnitToggle';
+import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 
-const GAME = 'poe2';
-const noop = () => undefined;
+/** The category list plus the personal sections (Watchlist and tokens arrive later, so they stay placeholders). */
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+    const { category } = useParams({ strict: false });
 
-/** The category list plus the personal sections. The economy view will replace the placeholders' `disabled`. */
-function SidebarNav() {
     return (
         <nav aria-label="Sections" className="flex flex-col gap-0.5">
-            <CategoryNav categories={CATEGORIES[GAME]} value={null} onChange={noop} disabled />
+            <CategoryNav categories={CATEGORIES[GAME]} value={category ?? null} onNavigate={onNavigate} />
             <NavHeading>Yours</NavHeading>
             <Button type="button" variant="ghost" disabled className={NAV_ITEM_CLASS}>
                 Watchlist <Soon />
@@ -36,6 +37,8 @@ export function Sidebar() {
 
 /** The same navigation as a drawer, for phones. It also holds the league and unit controls the header hides there. */
 export function SidebarDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+    const { scope, leagues, league, setLeague, setUnit } = useEconomyContext();
+
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent side="left" className="overflow-y-auto">
@@ -44,9 +47,9 @@ export function SidebarDrawer({ open, onOpenChange }: { open: boolean; onOpenCha
                     <SheetDescription className="sr-only">Categories and your sections</SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col gap-3 px-3 pb-6">
-                    <LeagueSwitcher leagues={[]} value={null} onChange={noop} disabled />
-                    <UnitToggle value={DEFAULT_UNIT[GAME]} onChange={noop} disabled />
-                    <SidebarNav />
+                    <LeagueSwitcher leagues={leagues ?? []} value={league?.name ?? null} onChange={setLeague} />
+                    <UnitToggle value={scope.unit} onChange={setUnit} />
+                    <SidebarNav onNavigate={() => onOpenChange(false)} />
                 </div>
             </SheetContent>
         </Sheet>

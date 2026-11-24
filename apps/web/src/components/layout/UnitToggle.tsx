@@ -4,10 +4,9 @@ import { useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { SPRING } from '@/motion/tokens';
 import { cn } from '@/lib/utils';
-import { Soon } from './Soon';
 
-/** Switches the currency prices are quoted in. Controlled: the economy view will own the value. */
-export function UnitToggle({ value, onChange, disabled = false }: { value: Unit; onChange: (unit: Unit) => void; disabled?: boolean }) {
+/** Switches the currency prices are quoted in. Controlled: the economy context owns the value. */
+export function UnitToggle({ value, onChange }: { value: Unit; onChange: (unit: Unit) => void }) {
     const pillId = useId();
 
     return (
@@ -19,11 +18,10 @@ export function UnitToggle({ value, onChange, disabled = false }: { value: Unit;
                         type="button"
                         variant="ghost"
                         size="sm"
-                        disabled={disabled}
                         aria-pressed={unit === value}
                         onClick={() => onChange(unit)}
                         className={cn(
-                            'relative h-8 rounded-lg px-3 capitalize hover:bg-transparent disabled:opacity-60 dark:hover:bg-transparent',
+                            'relative h-8 rounded-lg px-3 capitalize hover:bg-transparent dark:hover:bg-transparent',
                             unit === value ? 'text-primary-foreground hover:text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
                         )}
                     >
@@ -34,7 +32,6 @@ export function UnitToggle({ value, onChange, disabled = false }: { value: Unit;
                     </Button>
                 ))}
             </div>
-            {disabled && <Soon />}
         </div>
     );
 }

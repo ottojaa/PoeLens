@@ -60,7 +60,7 @@ const envelope = {
 // Query parameters
 
 const leagueQuery = z.string().min(1).default('current');
-const includeLowConfidenceQuery = z
+const booleanQuery = z
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true');
@@ -87,7 +87,9 @@ export const TableQuerySchema = z.object({
     league: leagueQuery,
     category: z.string().min(1),
     unit: UnitSchema.optional(),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
+    /** Add each row's last week of daily prices (`TableRow.sparkline`). */
+    sparkline: booleanQuery,
 });
 
 export const LatestQuerySchema = z.object({
@@ -95,7 +97,7 @@ export const LatestQuerySchema = z.object({
     league: leagueQuery,
     items: commaSeparatedIds,
     unit: UnitSchema.optional(),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
 });
 
 export const HistoryQuerySchema = z.object({
@@ -106,7 +108,7 @@ export const HistoryQuerySchema = z.object({
     bucket: HistoryBucketSchema.default('hour'),
     from: z.string().datetime().optional(),
     to: z.string().datetime().optional(),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
 });
 
 export const MoversQuerySchema = z.object({
@@ -116,7 +118,7 @@ export const MoversQuerySchema = z.object({
     window: MoverWindowSchema.default('24h'),
     unit: UnitSchema.optional(),
     limit: z.coerce.number().int().min(1).max(50).default(10),
-    includeLowConfidence: includeLowConfidenceQuery,
+    includeLowConfidence: booleanQuery,
 });
 
 export const SearchQuerySchema = z.object({
@@ -129,10 +131,18 @@ export const LeaguesQuerySchema = z.object({ game: GameSchema });
 
 // Responses
 
+export const TableRowSchema = PriceRowSchema.extend({
+    /**
+     * Present when asked for (`sparkline=true`): the last 7 UTC days' closing prices in the answer's unit, oldest first,
+     * one point per day that had a confident price, so it can hold fewer than two.
+     */
+    sparkline: z.array(z.number()).optional(),
+});
+
 export const TableResponseSchema = z.object({
     ...envelope,
     category: z.string(),
-    rows: z.array(PriceRowSchema),
+    rows: z.array(TableRowSchema),
 });
 
 export const LatestResponseSchema = z.object({
@@ -189,6 +199,7 @@ export type League = z.infer<typeof LeagueSchema>;
 export type ItemRef = z.infer<typeof ItemRefSchema>;
 export type PriceChange = z.infer<typeof PriceChangeSchema>;
 export type PriceRow = z.infer<typeof PriceRowSchema>;
+export type TableRow = z.infer<typeof TableRowSchema>;
 export type MoverWindow = z.infer<typeof MoverWindowSchema>;
 export type HistoryBucket = z.infer<typeof HistoryBucketSchema>;
 export type TableQuery = z.infer<typeof TableQuerySchema>;

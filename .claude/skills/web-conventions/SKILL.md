@@ -51,6 +51,7 @@ Every data view handles loading (Skeleton), error (message and retry) and the lo
 
 - Use shadcn components from `components/ui/`; install missing ones first: `npx shadcn@latest add <component>`
 - **Never use native `<button>`, `<input>` or `<textarea>`**: use `Button`, `Input`, `Textarea`. Icon-only buttons need an `aria-label`.
+- The one native form control allowed is `<select>` for the phone sort picker (`EconomyCards`): the operating system's own picker beats a dropdown menu on a phone.
 - Functional components only; extract reusable logic into hooks
 - The footer carries the GGG notice and the poe.ninja credit on every page
 
@@ -69,7 +70,7 @@ Colours and fonts are theme data, and nothing outside `src/theme/` may write one
 
 `routes/__root.tsx` picks the frame: signed-in pages get `AppShell` (header with wordmark, league switcher, command palette trigger, unit toggle, account menu and theme toggle; a sidebar of categories from `@poelens/shared`, a Sheet drawer below `md`; the footer), and `/login`, `/invite/$token`, `/reset/$token` (and everything while signed out or loading) get `PublicLayout`: wordmark, theme toggle, footer. `isPublicPath` in `AuthGate` is the one list of public pages.
 
-League switcher, unit toggle and category navigation are **controlled, presentational** components (`value` / `onChange`). They render `disabled` with a visible "soon" label until the economy view owns their state; a disabled button gets no hover events, so a tooltip would never show. The command palette (Dialog + cmdk) opens on Cmd+K and Ctrl+K.
+League switcher, unit toggle and category navigation are **controlled** components (`value` / `onChange`), wired in `Header` and `Sidebar` through `useEconomyContext()` (`lib/economy/use-economy-context.ts`). Categories are real links, and the active one comes from the route param. **League and unit are global and live in the URL:** the root route validates `league` and `unit` and carries them with `retainSearchParams(['league','unit'])`, so a link only names what it changes. Unit precedence is URL, then the stored choice (`poelens.unit`), then `DEFAULT_UNIT[game]`; the toggle writes both. League is never stored (a stale stored league breaks when it ends); `'current'` is resolved to the real name with `useLeagues` before it reaches the switcher. The command palette (Dialog + cmdk) opens on Cmd+K and Ctrl+K.
 
 ## Motion
 
@@ -81,7 +82,7 @@ All animation goes through `src/motion/`; the numbers live in `tokens.ts` (secon
 - **`TogglePop`**: the spring a toggle's icon pops with.
 - **Overlays** (Dialog, Sheet, DropdownMenu) animate in CSS through `tw-animate-css` with `duration-(--motion-...)` and `ease-(--ease-out)`. The palette fades in from 98% over 140ms.
 - **Reduced motion** leaves fades only: `MotionProvider` sets `MotionConfig reducedMotion="user"` (Motion drops transforms and keeps opacity), `AnimatedNumber` checks `useReducedMotion()` itself because imperative `animate()` ignores `MotionConfig`, and one `@media (prefers-reduced-motion: reduce)` rule in `motion.css` pins tw-animate's `--tw-enter-*` / `--tw-exit-*` translate, scale and rotate to neutral.
-- Only the chart draw-in timing (`--motion-chart`, 600ms) exists so far; there is no chart primitive.
+- Chart draw-in timing is `--motion-chart` (600ms). Sparklines draw in with CSS only (`.sparkline-draw` in `motion.css`: `pathLength="1"`, `stroke-dasharray: 1`, `stroke-dashoffset` 1 to 0), because a few hundred JS animations on first paint is wasteful; reduced motion swaps it for a fade. The history chart is `components/ui/chart.tsx` (a trimmed shadcn wrapper over Recharts: `ChartContainer` sets `--color-<key>` from the config, series use `var(--color-<key>)`, themed by `--chart-*`) and draws in once (`isAnimationActive` until the first animation ends, off under reduced motion). Price cells use `AnimatedNumber` keyed on `league:unit`, so a context switch remounts silently and only a real refetch counts up.
 
 ## Electron
 
@@ -93,4 +94,4 @@ All animation goes through `src/motion/`; the numbers live in `tokens.ts` (secon
 
 ## Tests
 
-Vitest, configured in `vite.config.mts` (do not add a separate `vitest.config.ts`: the `@nx/vite` plugin would take it as the config for the build). Tests: `src/**/*.test.ts` and `electron/**/*.test.ts`. **A `.test.tsx` file is silently never collected**, and the environment is node (no DOM), so test components with `renderToString` from `react-dom/server` via `createElement` in a `.test.ts`, or test pure functions. Motion's frame loop needs `requestAnimationFrame`: stub it in `vi.hoisted` before the imports (see `motion.test.ts`).
+Vitest, configured in `vite.config.mts` (do not add a separate `vitest.config.ts`: the `@nx/vite` plugin would take it as the config for the build). Tests: `src/**/*.test.ts` and `electron/**/*.test.ts`. **A `.test.tsx` file is silently never collected**, and the default environment is node (no DOM), so test components with `renderToString` from `react-dom/server` via `createElement` in a `.test.ts`, or test pure functions. Motion's frame loop needs `requestAnimationFrame`: stub it in `vi.hoisted` before the imports (see `motion.test.ts`). When a test needs a DOM (a hook or component that runs effects), give that one file a `// @vitest-environment happy-dom` docblock first line (`motion/AnimatedNumber.test.ts` does); `happy-dom` is a dev dependency and the rest of the suite stays in node. Search-param schemas, sort, sparkline path and chart helpers are pure and tested in `lib/economy/*.test.ts`.

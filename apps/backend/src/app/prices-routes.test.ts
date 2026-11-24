@@ -55,6 +55,15 @@ describe.skipIf(SKIP_DB_TESTS)('price routes for a signed-in user', () => {
         expect(parsed.rows).toHaveLength(11);
     });
 
+    it('adds a sparkline to each row only when asked, and the response schema does not strip it', async () => {
+        const plain = (await get('/prices/table?game=poe2&category=Currency')).body as { rows: object[] };
+        const withLines = (await get('/prices/table?game=poe2&category=Currency&sparkline=true')).body as { rows: { sparkline?: number[] }[] };
+
+        expect(plain.rows.every((row) => !('sparkline' in row))).toBe(true);
+        expect(withLines.rows.every((row) => Array.isArray(row.sparkline))).toBe(true);
+        expect(withLines.rows.some((row) => (row.sparkline?.length ?? 0) > 0)).toBe(true);
+    });
+
     it('answers latest, history, movers, search and leagues', async () => {
         const table = TableResponseSchema.parse((await get('/prices/table?game=poe2&category=Currency')).body);
         const divine = table.rows.find((row) => row.item.name === 'Divine Orb');

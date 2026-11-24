@@ -57,3 +57,35 @@
         animation: none;
     }
 }
+
+/* A sparkline drawing itself in once (Sparkline). The path has pathLength="1", so a dash of 1 is the whole line. */
+.sparkline-draw {
+    stroke-dasharray: 1;
+    animation: sparkline-draw var(--motion-chart) var(--ease-out) 1 both;
+}
+
+@keyframes sparkline-draw {
+    from {
+        stroke-dashoffset: 1;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Reduced motion keeps a fade and loses the drawing. */
+@media (prefers-reduced-motion: reduce) {
+    .sparkline-draw {
+        stroke-dasharray: none;
+        animation-name: sparkline-fade;
+    }
+}
+
+@keyframes sparkline-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

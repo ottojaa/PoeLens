@@ -13,7 +13,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResetTokenRouteImport } from './routes/reset.$token'
+import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as EconomyCategoryRouteImport } from './routes/economy.$category'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -35,9 +37,19 @@ const ResetTokenRoute = ResetTokenRouteImport.update({
   path: '/reset/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
+  id: '/items/$itemId',
+  path: '/items/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EconomyCategoryRoute = EconomyCategoryRouteImport.update({
+  id: '/economy/$category',
+  path: '/economy/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -45,14 +57,18 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/items/$itemId': typeof ItemsItemIdRoute
   '/reset/$token': typeof ResetTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/items/$itemId': typeof ItemsItemIdRoute
   '/reset/$token': typeof ResetTokenRoute
 }
 export interface FileRoutesById {
@@ -60,23 +76,48 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/items/$itemId': typeof ItemsItemIdRoute
   '/reset/$token': typeof ResetTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/login' | '/invite/$token' | '/reset/$token'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/economy/$category'
+    | '/invite/$token'
+    | '/items/$itemId'
+    | '/reset/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/login' | '/invite/$token' | '/reset/$token'
+  to:
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/economy/$category'
+    | '/invite/$token'
+    | '/items/$itemId'
+    | '/reset/$token'
   id:
-    '__root__' | '/' | '/admin' | '/login' | '/invite/$token' | '/reset/$token'
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/economy/$category'
+    | '/invite/$token'
+    | '/items/$itemId'
+    | '/reset/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
+  EconomyCategoryRoute: typeof EconomyCategoryRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  ItemsItemIdRoute: typeof ItemsItemIdRoute
   ResetTokenRoute: typeof ResetTokenRoute
 }
 
@@ -110,11 +151,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/items/$itemId': {
+      id: '/items/$itemId'
+      path: '/items/$itemId'
+      fullPath: '/items/$itemId'
+      preLoaderRoute: typeof ItemsItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/economy/$category': {
+      id: '/economy/$category'
+      path: '/economy/$category'
+      fullPath: '/economy/$category'
+      preLoaderRoute: typeof EconomyCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -124,7 +179,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
+  EconomyCategoryRoute: EconomyCategoryRoute,
   InviteTokenRoute: InviteTokenRoute,
+  ItemsItemIdRoute: ItemsItemIdRoute,
   ResetTokenRoute: ResetTokenRoute,
 }
 export const routeTree = rootRouteImport
