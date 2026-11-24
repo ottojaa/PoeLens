@@ -3,6 +3,8 @@ import { Change } from '@/components/economy/Change';
 import { ItemIcon } from '@/components/economy/ItemIcon';
 import { CommandGroup, CommandItem } from '@/components/ui/command';
 import { StarIcon } from '@/components/watchlist/WatchStar';
+import { toCategoryLabel } from '@/lib/economy/category-label';
+import { GAME } from '@/lib/economy/use-economy-context';
 import { UNIT_SHORT } from '@/lib/economy/units';
 import { formatPrice } from '@/lib/format';
 
@@ -39,7 +41,7 @@ export function ItemResults({
                         <ItemIcon item={item} />
                         <span className="flex min-w-0 flex-1 flex-col">
                             <span className="truncate font-semibold">{item.name}</span>
-                            <span className="text-muted-foreground truncate text-xs">{item.baseType ?? item.category}</span>
+                            <span className="text-muted-foreground truncate text-xs">{item.baseType ?? toCategoryLabel(GAME, item.category)}</span>
                         </span>
                         {row && <PriceAndChange row={row} />}
                     </CommandItem>

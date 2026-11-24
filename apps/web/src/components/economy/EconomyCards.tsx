@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { COLUMN_LABELS, SORT_KEYS, type SortKey } from '@/lib/economy/columns';
+import { toCategoryLabel } from '@/lib/economy/category-label';
+import { GAME } from '@/lib/economy/use-economy-context';
 import { UNIT_SHORT } from '@/lib/economy/units';
 import { formatLiquidity, formatLiquidityWithUnit, formatPrice } from '@/lib/format';
 import { WatchStar } from '@/components/watchlist/WatchStar';
@@ -59,7 +61,7 @@ function Card({ row, scopeKey, liquidityLabel, options }: { row: TableRow; scope
                     <ItemIcon item={row.item} />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate font-semibold">{row.item.name}</span>
-                        <span className="text-muted-foreground truncate text-xs">{row.item.baseType ?? row.item.category}</span>
+                        <span className="text-muted-foreground truncate text-xs">{row.item.baseType ?? toCategoryLabel(GAME, row.item.category)}</span>
                     </span>
                     <span className="shrink-0 text-right font-semibold">
                         <AnimatedNumber key={`${scopeKey}:${row.unit}`} value={row.price} format={formatPrice} />

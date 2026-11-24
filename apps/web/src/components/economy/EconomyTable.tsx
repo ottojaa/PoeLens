@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { OptionalColumn, SortDirection, SortKey } from '@/lib/economy/columns';
+import { toCategoryLabel } from '@/lib/economy/category-label';
+import { GAME } from '@/lib/economy/use-economy-context';
 import { UNIT_SHORT } from '@/lib/economy/units';
 import { formatLiquidity, formatLiquidityWithUnit, formatPrice } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -97,7 +99,7 @@ function Row({ row, scopeKey, columns, options }: { row: TableRow; scopeKey: str
                         >
                             {row.item.name}
                         </Link>
-                        <span className="text-muted-foreground truncate text-xs">{row.item.baseType ?? row.item.category}</span>
+                        <span className="text-muted-foreground truncate text-xs">{row.item.baseType ?? toCategoryLabel(GAME, row.item.category)}</span>
                     </div>
                 </div>
             </td>

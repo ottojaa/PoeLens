@@ -1,7 +1,8 @@
-import { CATEGORIES, type WatchlistUnlisted } from '@poelens/shared';
+import type { WatchlistUnlisted } from '@poelens/shared';
 import { Link } from '@tanstack/react-router';
 import { ItemIcon } from '@/components/economy/ItemIcon';
 import type { WatchControls } from '@/lib/watchlist/controls';
+import { toCategoryLabel } from '@/lib/economy/category-label';
 import { GAME } from '@/lib/economy/use-economy-context';
 import { AnimatedList } from '@/motion/AnimatedList';
 import { WatchStar } from './WatchStar';
@@ -31,9 +32,7 @@ export function UnlistedItems({ items, league, controls }: { items: readonly Wat
                                 <ItemIcon item={item} />
                                 <span className="flex min-w-0 flex-col">
                                     <span className="truncate font-semibold">{item.name}</span>
-                                    <span className="text-muted-foreground truncate text-xs">
-                                        {CATEGORIES[GAME].find((category) => category.id === item.category)?.label ?? item.category}
-                                    </span>
+                                    <span className="text-muted-foreground truncate text-xs">{toCategoryLabel(GAME, item.category)}</span>
                                 </span>
                             </Link>
                         </div>
