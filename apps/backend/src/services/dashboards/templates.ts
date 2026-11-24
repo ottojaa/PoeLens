@@ -24,7 +24,7 @@ function buildChasePanel(ids: ReadonlyMap<string, number>): Panel {
 }
 
 function buildRisingPanel(): Panel {
-    return toPanel('rising', 'Rising fast', { w: 4, h: 10 }, [
+    return toPanel('rising', 'Rising fast', { w: 4, h: 14 }, [
         {
             id: 'rising-screener',
             v: 1,
