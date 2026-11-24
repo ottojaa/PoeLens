@@ -27,7 +27,7 @@ export function UnitToggle({ value, onChange }: { value: Unit; onChange: (unit: 
                         aria-pressed={unit === value}
                         onClick={() => onChange(unit)}
                         className={cn(
-                            'relative h-8 rounded-lg px-2.5 capitalize lg:px-3 hover:bg-transparent dark:hover:bg-transparent',
+                            'relative h-8 rounded-lg px-2.5 lg:px-3 hover:bg-transparent dark:hover:bg-transparent',
                             unit === value ? 'text-primary-foreground hover:text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
                         )}
                     >
@@ -35,7 +35,7 @@ export function UnitToggle({ value, onChange }: { value: Unit; onChange: (unit: 
                             <motion.span layoutId={pillId} transition={SPRING} className="bg-primary absolute inset-0 rounded-lg" aria-hidden="true" />
                         )}
                         <span className="relative lg:hidden">{SHORT_LABEL[unit]}</span>
-                        <span className="relative hidden lg:inline">{unit}</span>
+                        <span className="relative hidden capitalize lg:inline">{unit}</span>
                     </Button>
                 ))}
             </div>

@@ -24,30 +24,48 @@ vi.mock('./ThemeToggle', () => ({ ThemeToggle: () => null }));
 
 const BREAKPOINTS: Record<string, number> = { sm: 640, md: 768, lg: 1024 };
 const DISPLAYS = new Set(['hidden', 'block', 'flex', 'inline', 'inline-flex', 'grid', 'contents']);
+const HIDING = new Set(['hidden', 'sr-only', 'invisible']);
+
+/** The width range a responsive variant covers, or undefined for a variant this test does not understand. */
+function toRange(variant: string | undefined): { min: number; max: number } | undefined {
+    if (variant === undefined) return { min: 0, max: Infinity };
+
+    const min = BREAKPOINTS[variant];
+    if (min !== undefined) return { min, max: Infinity };
+
+    const max = variant.startsWith('max-') ? BREAKPOINTS[variant.slice(4)] : undefined;
+
+    return max === undefined ? undefined : { min: 0, max };
+}
 
 /**
- * Whether Tailwind's responsive display classes on this element leave it displayed at the width. It reads the classes
- * because a layout engine is not available here: the unit control was once unreachable because a wrapper said
- * `hidden lg:flex`.
+ * Whether Tailwind's responsive display classes leave the element on screen at the width: `hidden`, `sr-only` and
+ * `invisible` hide it, and a larger breakpoint (or a `max-*` one, which wins ties) overrides a smaller one. It reads
+ * classes because no layout engine is available here: the unit control was once unreachable because a wrapper said
+ * `hidden lg:flex`. A variant it cannot read throws instead of passing silently.
  */
 function isDisplayed(element: Element, width: number): boolean {
-    let display = 'inline';
-    let tier = -1;
+    let hidden = false;
+    let rank = -1;
 
     for (const token of Array.from(element.classList)) {
-        const [variant, utility] = token.includes(':') ? token.split(':') : [undefined, token];
+        const parts = token.split(':');
+        const utility = parts[parts.length - 1] ?? '';
+        const isShowing = DISPLAYS.has(utility) && utility !== 'hidden';
+        if (!HIDING.has(utility) && !isShowing && utility !== 'not-sr-only') continue;
 
-        if (!utility || !DISPLAYS.has(utility)) continue;
+        const range = toRange(parts.length > 1 ? parts[0] : undefined);
+        if (parts.length > 2 || !range) throw new Error('Unreadable class in a visibility check: ' + token);
+        if (width < range.min || width >= range.max) continue;
 
-        const min = variant === undefined ? 0 : (BREAKPOINTS[variant] ?? Infinity);
+        const order = range.max === Infinity ? range.min : 10_000 - range.max;
+        if (order < rank) continue;
 
-        if (width < min || min < tier) continue;
-
-        tier = min;
-        display = utility;
+        rank = order;
+        hidden = HIDING.has(utility);
     }
 
-    return display !== 'hidden';
+    return !hidden;
 }
 
 function isVisibleAt(element: Element, width: number): boolean {
@@ -87,11 +105,22 @@ describe('Header controls without opening a menu', () => {
         expect(button && isVisibleAt(button, width)).toBe(true);
     });
 
-    it('checks what it claims: a control hidden below lg is not visible at 800 px', () => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'hidden lg:flex';
+    it('checks what it claims', () => {
+        const cases: Array<[string, number, boolean]> = [
+            ['hidden lg:flex', 800, false],
+            ['hidden lg:flex', 1440, true],
+            ['flex max-sm:hidden', 390, false],
+            ['flex max-sm:hidden', 800, true],
+            ['sr-only md:not-sr-only', 390, false],
+            ['sr-only md:not-sr-only', 800, true],
+            ['invisible', 800, false],
+        ];
 
-        expect(isVisibleAt(wrapper, 800)).toBe(false);
-        expect(isVisibleAt(wrapper, 1440)).toBe(true);
+        for (const [classes, width, expected] of cases) {
+            const element = document.createElement('div');
+            element.className = classes;
+
+            expect([classes, width, isVisibleAt(element, width)]).toEqual([classes, width, expected]);
+        }
     });
 });
