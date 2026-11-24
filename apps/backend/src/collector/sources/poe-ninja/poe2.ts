@@ -1,3 +1,4 @@
+import { categoriesOnEndpoint } from '@poelens/shared';
 import type { LeagueRecord, ParsedFacts, RequestKey, RequestSpec, SourceAdapter } from '../../types.js';
 import { ParseError } from '../../types.js';
 import { parseExchange, parseLeagues, parseStash } from './parse.js';
@@ -8,35 +9,6 @@ const BASE_URL = 'https://poe.ninja/poe2/api/economy';
 
 /** Bumped when `parse` changes what it produces. */
 const PARSER_VERSION = 1;
-
-export const POE2_EXCHANGE_TYPES = [
-    'Currency',
-    'Fragments',
-    'Abyss',
-    'UncutGems',
-    'LineageSupportGems',
-    'Essences',
-    'SoulCores',
-    'Idols',
-    'Runes',
-    'Ritual',
-    'Expedition',
-    'Delirium',
-    'Breach',
-    'Verisium',
-] as const;
-
-export const POE2_STASH_TYPES = [
-    'UniqueWeapons',
-    'UniqueArmours',
-    'UniqueAccessories',
-    'UniqueFlasks',
-    'UniqueCharms',
-    'UniqueJewels',
-    'UniqueSanctumRelics',
-    'UniqueTablets',
-    'PrecursorTablets',
-] as const;
 
 export interface PoeNinjaPoe2Options {
     /** League names to collect. Empty means the current challenge league and its hardcore version. */
@@ -73,8 +45,8 @@ export function createPoeNinjaPoe2Adapter(options: PoeNinjaPoe2Options = {}): So
 
         plan: (known) =>
             pickLeagues(known).flatMap((league) => [
-                ...POE2_EXCHANGE_TYPES.map((type) => exchangeRequest(league, type)),
-                ...POE2_STASH_TYPES.map((type) => stashRequest(league, type)),
+                ...categoriesOnEndpoint('poe2', 'exchange').map((category) => exchangeRequest(league, category.id)),
+                ...categoriesOnEndpoint('poe2', 'stash').map((category) => stashRequest(league, category.id)),
             ]),
 
         parse(key: RequestKey, body: string): ParsedFacts {

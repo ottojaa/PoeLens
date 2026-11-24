@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 /** The frame of the sign-in, invite and reset pages. */
 export function AuthCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
     return (
-        <Card className="mx-auto w-full max-w-sm">
+        <Card className="mx-auto my-auto w-full max-w-sm">
             <CardHeader>
                 <CardTitle role="heading" aria-level={1} className="text-xl">
                     {title}

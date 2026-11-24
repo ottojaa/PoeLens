@@ -6,9 +6,11 @@
 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <!-- Prevent a flash of the wrong theme: dark unless the user picked light. -->
+        <!-- Prevent a flash of the wrong theme: the default theme, dark unless the user picked light. -->
         <script>
             (function () {
+                document.documentElement.setAttribute('data-theme', 'reverie');
+
                 const stored = localStorage.getItem('poelens-theme');
                 if (stored !== 'light') document.documentElement.classList.add('dark');
             })();
