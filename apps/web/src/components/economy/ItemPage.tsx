@@ -71,13 +71,13 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     if (leagues && !league && scope.league !== 'current') return <UnknownLeague name={scope.league} />;
 
-    const priced = byUnit[scope.unit];
-
-    if (priced.data && !priced.isPlaceholderData && priced.data.unlisted.includes(itemId)) return <NoItemPriceState league={priced.data.league.name} />;
-
     if (history.isError && !answer) return <HistoryError error={history.error} onRetry={() => void history.refetch()} />;
 
     if (!item) return <ItemSkeleton />;
+
+    const priced = byUnit[scope.unit];
+    // Only a real answer (not the previous one kept on screen) that lists this item as unpriced, and only for an item the history knows.
+    const unpricedIn = priced.data && !priced.isPlaceholderData && priced.data.unlisted.includes(itemId) ? priced.data.league.name : undefined;
 
     const setRange = (next: Range) =>
         void navigate({ to: '.', replace: true, search: (previous) => ({ ...previous, range: next === '7d' ? undefined : next }) });
@@ -85,7 +85,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
             <ItemHeading item={item} leagueName={answer?.league.name ?? shown?.leagueName} />
-            <ItemStats shown={shown} unit={scope.unit} prices={prices} />
+            {unpricedIn ? <NoItemPriceState league={unpricedIn} /> : <ItemStats shown={shown} unit={scope.unit} prices={prices} />}
             <HistoryCard history={answer} itemName={item.name} range={range} onRange={setRange} />
         </div>
     );

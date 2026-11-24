@@ -71,7 +71,7 @@ export function NoDataState({ league }: { league: string | undefined }) {
 export function NoItemPriceState({ league }: { league: string }) {
     return (
         <StateBox icon={<SearchX className="size-6" aria-hidden="true" />} title={`No price in ${league} right now`}>
-            <p>This item has not been priced in this league. Pick another league from the league menu.</p>
+            <p>The newest prices have none for this item in this league. Pick another league from the league menu to see it elsewhere.</p>
         </StateBox>
     );
 }
