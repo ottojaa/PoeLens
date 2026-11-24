@@ -20,7 +20,12 @@ export function toBlockLabel(block: Block, data: BlockData | null | undefined): 
 
     if (block.type === 'heading') return block.text || 'Heading';
 
-    return block.markdown.split('\n').find((line) => line.trim())?.replace(/^[#>*\-\s]+/, '') || 'Note';
+    return (
+        block.markdown
+            .split('\n')
+            .find((line) => line.trim())
+            ?.replace(/^[#>*\-\s]+/, '') || 'Note'
+    );
 }
 
 function NameField({ block, fallback, onPatch }: { block: Extract<Block, { type: 'item' | 'pair' }>; fallback: string; onPatch: (patch: BlockPatch) => void }) {
@@ -31,8 +36,16 @@ function NameField({ block, fallback, onPatch }: { block: Extract<Block, { type:
             <label htmlFor={id} className="text-sm font-semibold">
                 Display name
             </label>
-            <Input id={id} value={block.name ?? ''} maxLength={MAX_BLOCK_NAME} placeholder={fallback} onChange={(event) => onPatch({ name: event.target.value || undefined })} />
-            <span className="text-muted-foreground text-xs">{block.name ? 'Shown instead of “' + fallback + '”.' : 'Empty, so it shows “' + fallback + '”.'}</span>
+            <Input
+                id={id}
+                value={block.name ?? ''}
+                maxLength={MAX_BLOCK_NAME}
+                placeholder={fallback}
+                onChange={(event) => onPatch({ name: event.target.value || undefined })}
+            />
+            <span className="text-muted-foreground text-xs">
+                {block.name ? 'Shown instead of “' + fallback + '”.' : 'Empty, so it shows “' + fallback + '”.'}
+            </span>
         </div>
     );
 }
@@ -61,7 +74,12 @@ function BlockSettings({ block, fallback, onPatch }: { block: Block; fallback: s
                 <label htmlFor={'heading-' + block.id} className="text-sm font-semibold">
                     Heading
                 </label>
-                <Input id={'heading-' + block.id} value={block.text} maxLength={MAX_HEADING_LENGTH} onChange={(event) => onPatch({ text: event.target.value })} />
+                <Input
+                    id={'heading-' + block.id}
+                    value={block.text}
+                    maxLength={MAX_HEADING_LENGTH}
+                    onChange={(event) => onPatch({ text: event.target.value })}
+                />
                 <span className="text-muted-foreground text-xs">Leave it empty for a plain divider.</span>
             </div>
         );

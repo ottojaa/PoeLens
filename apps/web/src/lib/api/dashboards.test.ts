@@ -28,7 +28,6 @@ const keyOf = (panels: Panel[], unit: 'auto' | 'divine' = 'auto') => JSON.string
 describe('dashboard data key', () => {
     it('ignores note text, display names, titles, positions and sizes', () => {
         const base = keyOf([panel()]);
-        const [item, pair] = panel().blocks;
         const edited = panel({
             title: 'Renamed',
             x: 3,
@@ -36,8 +35,8 @@ describe('dashboard data key', () => {
             w: 9,
             h: 12,
             blocks: [
-                { ...item!, name: 'My orb' },
-                { ...pair!, name: 'My pair' },
+                { id: 'b1', type: 'item', v: 1, item: 10, display: 'compact', name: 'My orb' },
+                { id: 'b2', type: 'pair', v: 1, a: 10, b: 11, name: 'My pair' },
                 { id: 'b3', type: 'note', v: 1, markdown: 'something else entirely' },
             ],
         });

@@ -33,7 +33,17 @@ function toPairUnit(panel: Panel, headerUnit: UnitChoice): Unit {
     return unit === 'auto' ? 'divine' : unit;
 }
 
-function PanelSettings({ panel, headerUnit, onPatch, onDelete }: { panel: Panel; headerUnit: UnitChoice; onPatch: (patch: PanelPatch) => void; onDelete: () => void }) {
+function PanelSettings({
+    panel,
+    headerUnit,
+    onPatch,
+    onDelete,
+}: {
+    panel: Panel;
+    headerUnit: UnitChoice;
+    onPatch: (patch: PanelPatch) => void;
+    onDelete: () => void;
+}) {
     const value: PanelUnit = panel.unit ?? 'same';
     const hint =
         value === 'same'
@@ -106,6 +116,7 @@ export function ContentSheet({
 }) {
     const [openId, setOpenId] = useState<string | undefined>(undefined);
     const full = panel.blocks.length >= MAX_BLOCKS;
+
     const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
         if (event.key === 'Escape' && !event.defaultPrevented) onClose();
     };

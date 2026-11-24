@@ -76,6 +76,7 @@ export function AddBlockMenu({ scope, unit, disabled, onAdd }: { scope: PriceSco
     const [text, setText] = useState('');
     const debounced = useDebouncedValue(text.trim(), 200);
     const unitItemId = useUnitItemId(scope, unit);
+
     const add = (block: Block) => {
         onAdd(block);
         setOpen(false);
@@ -93,16 +94,32 @@ export function AddBlockMenu({ scope, unit, disabled, onAdd }: { scope: PriceSco
             <PopoverContent align="end" className="flex w-[min(540px,calc(100vw-2rem))] flex-col gap-2">
                 <div className="relative">
                     <Search aria-hidden="true" className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input aria-label="Search an item" placeholder="Search an item" value={text} onChange={(event) => setText(event.target.value)} className="pl-9" />
+                    <Input
+                        aria-label="Search an item"
+                        placeholder="Search an item"
+                        value={text}
+                        onChange={(event) => setText(event.target.value)}
+                        className="pl-9"
+                    />
                 </div>
                 <SearchResults text={debounced} unit={unit} unitItemId={unitItemId} onAdd={add} />
                 <p className="text-muted-foreground px-1 pt-1 text-[11px] font-semibold tracking-[0.08em] uppercase">Block types</p>
                 <div className="grid grid-cols-2 gap-0.5">
-                    <Button type="button" variant="ghost" className="h-auto flex-col items-start gap-0.5 px-2 py-2 text-left" onClick={() => add(newNoteBlock())}>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-auto flex-col items-start gap-0.5 px-2 py-2 text-left"
+                        onClick={() => add(newNoteBlock())}
+                    >
                         <span className="text-sm font-semibold">Note</span>
                         <span className="text-muted-foreground text-xs font-normal">Markdown text and links</span>
                     </Button>
-                    <Button type="button" variant="ghost" className="h-auto flex-col items-start gap-0.5 px-2 py-2 text-left" onClick={() => add(newHeadingBlock())}>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-auto flex-col items-start gap-0.5 px-2 py-2 text-left"
+                        onClick={() => add(newHeadingBlock())}
+                    >
                         <span className="text-sm font-semibold">Heading or divider</span>
                         <span className="text-muted-foreground text-xs font-normal">Splits a panel into sections</span>
                     </Button>

@@ -38,7 +38,13 @@ function Tab({ dashboard, index, active, locked, onSelect, onRename, onDelete }:
             {active && !locked && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" className="text-muted-foreground -ml-2 size-7" aria-label={'Options for ' + dashboard.name}>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground -ml-2 size-7"
+                            aria-label={'Options for ' + dashboard.name}
+                        >
                             <MoreHorizontal aria-hidden="true" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -83,7 +89,11 @@ export function DashboardTabs({
     return (
         <div className="flex min-w-0 flex-1 items-end">
             <SortableList ids={dashboards.map((dashboard) => dashboard.id)} onReorder={onReorder}>
-                <div role="tablist" aria-label="Your dashboards" className="flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0 items-end gap-0.5 overflow-x-auto">
+                <div
+                    role="tablist"
+                    aria-label="Your dashboards"
+                    className="flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0 items-end gap-0.5 overflow-x-auto"
+                >
                     {dashboards.map((dashboard, index) => (
                         <Tab
                             key={dashboard.id}

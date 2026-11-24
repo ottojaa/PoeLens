@@ -49,7 +49,9 @@ export function EditBar({
                 />
             )}
             <span className="text-muted-foreground hidden text-[13px] xl:inline">
-                {level === 'content' ? 'Reorder, add and set up the blocks in this panel.' : 'Drag a panel by its top bar, resize it from the corner, or open its content.'}
+                {level === 'content'
+                    ? 'Reorder, add and set up the blocks in this panel.'
+                    : 'Drag a panel by its top bar, resize it from the corner, or open its content.'}
             </span>
             <div className="ml-auto flex items-center gap-2">
                 <Button type="button" variant="outline" onClick={onAddPanel} disabled={!canAddPanel} className="gap-2">

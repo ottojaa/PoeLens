@@ -24,14 +24,7 @@ export function GridPanel({
     label: string;
 }) {
     return (
-        <motion.section
-            ref={panelRef}
-            aria-label={label}
-            layout={animate ? 'position' : false}
-            transition={SPRING}
-            style={style}
-            className={className}
-        >
+        <motion.section ref={panelRef} aria-label={label} layout={animate ? 'position' : false} transition={SPRING} style={style} className={className}>
             {children}
         </motion.section>
     );

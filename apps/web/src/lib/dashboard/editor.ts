@@ -91,16 +91,21 @@ export function draftReducer(state: Draft, action: DraftAction): Draft {
         switch (action.type) {
             case 'rename':
                 draft.name = action.name;
+
                 return;
             case 'layout':
                 draft.panels = action.panels;
+
                 return;
             case 'addPanel':
                 draft.panels = normalize([...draft.panels, action.panel]);
+
                 return;
             case 'removePanel':
                 draft.panels = normalize(draft.panels.filter((panel) => panel.id !== action.id));
+
                 return;
+
             case 'patchPanel': {
                 const panel = findPanel(draft, action.id);
 
@@ -108,6 +113,7 @@ export function draftReducer(state: Draft, action: DraftAction): Draft {
 
                 return;
             }
+
             case 'addBlock': {
                 const panel = findPanel(draft, action.panelId);
 
@@ -115,6 +121,7 @@ export function draftReducer(state: Draft, action: DraftAction): Draft {
 
                 return;
             }
+
             case 'patchBlock': {
                 const block = findPanel(draft, action.panelId)?.blocks.find((candidate) => candidate.id === action.blockId);
 
@@ -122,6 +129,7 @@ export function draftReducer(state: Draft, action: DraftAction): Draft {
 
                 return;
             }
+
             case 'removeBlock': {
                 const panel = findPanel(draft, action.panelId);
 
@@ -129,6 +137,7 @@ export function draftReducer(state: Draft, action: DraftAction): Draft {
 
                 return;
             }
+
             case 'moveBlock': {
                 const panel = findPanel(draft, action.panelId);
                 const [moved] = panel?.blocks.splice(action.from, 1) ?? [];

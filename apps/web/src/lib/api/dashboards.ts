@@ -57,9 +57,7 @@ function withDashboard(list: DashboardsResponse | undefined, dashboard: Dashboar
     if (!list) return list;
 
     const known = list.dashboards.some((candidate) => candidate.id === dashboard.id);
-    const dashboards = known
-        ? list.dashboards.map((candidate) => (candidate.id === dashboard.id ? dashboard : candidate))
-        : [...list.dashboards, dashboard];
+    const dashboards = known ? list.dashboards.map((candidate) => (candidate.id === dashboard.id ? dashboard : candidate)) : [...list.dashboards, dashboard];
 
     return { ...list, dashboards };
 }

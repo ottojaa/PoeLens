@@ -79,7 +79,15 @@ function toReordered<T>(items: readonly T[], from: number, to: number): T[] {
 }
 
 /** A list whose items can be dragged into a new order; `onReorder` gets the ids in their new order and the move that made it. */
-export function SortableList({ ids, onReorder, children }: { ids: readonly string[]; onReorder: (ids: string[], from: number, to: number) => void; children: ReactNode }) {
+export function SortableList({
+    ids,
+    onReorder,
+    children,
+}: {
+    ids: readonly string[];
+    onReorder: (ids: string[], from: number, to: number) => void;
+    children: ReactNode;
+}) {
     return (
         <DragDropProvider
             onDragEnd={(event) => {

@@ -19,7 +19,17 @@ import { useDashboardEditing } from './use-dashboard-editing';
 type TabDialog = { kind: 'new' } | { kind: 'rename'; dashboard: Dashboard } | { kind: 'delete'; dashboard: Dashboard };
 
 /** The dialogs the tabs open: a name for a new or renamed dashboard, and the confirmation of a delete. */
-function TabDialogs({ dialog, dashboards, onSelect, onClose }: { dialog: TabDialog | undefined; dashboards: readonly Dashboard[]; onSelect: (id: string) => void; onClose: () => void }) {
+function TabDialogs({
+    dialog,
+    dashboards,
+    onSelect,
+    onClose,
+}: {
+    dialog: TabDialog | undefined;
+    dashboards: readonly Dashboard[];
+    onSelect: (id: string) => void;
+    onClose: () => void;
+}) {
     const create = useCreateDashboard(GAME);
     const save = useSaveDashboard(GAME);
     const remove = useDeleteDashboard(GAME);
@@ -34,7 +44,9 @@ function TabDialogs({ dialog, dashboards, onSelect, onClose }: { dialog: TabDial
                 name={dashboard.name}
                 pending={remove.isPending}
                 onClose={onClose}
-                onConfirm={() => remove.mutate(dashboard.id, { onSuccess: () => (onSelect(dashboards.find((other) => other.id !== dashboard.id)?.id ?? ''), onClose()) })}
+                onConfirm={() =>
+                    remove.mutate(dashboard.id, { onSuccess: () => (onSelect(dashboards.find((other) => other.id !== dashboard.id)?.id ?? ''), onClose()) })
+                }
             />
         );
     }
@@ -139,6 +151,7 @@ function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload,
     const selected = panels.find((panel) => panel.id === edit?.panelId);
     const level = edit?.level === 'content' && selected ? 'content' : 'layout';
     const mode = !edit ? 'view' : level === 'content' ? 'content' : isWide ? 'layout' : 'view';
+
     const addPanel = () => {
         const panel = newPanel(draft.panels);
 
@@ -230,7 +243,14 @@ function DashboardSkeleton() {
 export function DashboardPage() {
     const list = useDashboards(GAME);
 
-    if (list.isError) return <ErrorState title="Could not load your dashboards" message="Your dashboards did not load. Nothing on them has changed." onRetry={() => void list.refetch()} />;
+    if (list.isError)
+        return (
+            <ErrorState
+                title="Could not load your dashboards"
+                message="Your dashboards did not load. Nothing on them has changed."
+                onRetry={() => void list.refetch()}
+            />
+        );
 
     if (!list.data) return <DashboardSkeleton />;
 

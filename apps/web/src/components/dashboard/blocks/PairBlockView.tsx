@@ -35,7 +35,11 @@ export function PairBlockView({ block, data }: { block: PairBlock; data: PairBlo
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-muted-foreground truncate text-[13px]">{toPairName(block, data)}</span>
                 {data.lowConfidence && (
-                    <Badge variant="outline" className="text-warning border-warning/50 w-fit" title="Few listings or little trading: the rate may be unreliable">
+                    <Badge
+                        variant="outline"
+                        className="text-warning border-warning/50 w-fit"
+                        title="Few listings or little trading: the rate may be unreliable"
+                    >
                         low
                     </Badge>
                 )}

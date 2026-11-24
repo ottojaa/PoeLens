@@ -22,14 +22,7 @@ export function Sparkline({
     const label = path ? `Price over the last 7 days, ${direction === 'flat' ? 'about flat' : direction === 'up' ? 'rising' : 'falling'}` : 'No trend yet';
 
     return (
-        <svg
-            width={width}
-            height={height}
-            viewBox={`0 0 ${width} ${height}`}
-            role="img"
-            aria-label={label}
-            className={CHANGE_TEXT_CLASS[direction]}
-        >
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label} className={CHANGE_TEXT_CLASS[direction]}>
             {path && (
                 <path
                     d={path}

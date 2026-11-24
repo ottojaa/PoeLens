@@ -26,6 +26,7 @@ export function useDashboardEditing(active: Dashboard, reload: () => void) {
         dispatch({ type: 'reset', draft: toDraft(active) });
         setEdit({ level: panelId ? 'content' : 'layout', panelId });
     };
+
     const send = (revision: number) =>
         save.mutate(
             { id: active.id, revision, name: draft.name, panels: draft.panels },

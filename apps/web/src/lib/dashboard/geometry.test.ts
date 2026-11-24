@@ -30,10 +30,10 @@ describe('grid geometry', () => {
     });
 
     it('resizes by cells and keeps the corner', () => {
-        const start = [panel('a', 2, 2)];
+        const start = [panel('a', 2, 0)];
         const next = resizeByPixels(start, 'a', (COLUMN + 16) * 2, 80, COLUMN);
 
-        expect(next[0]).toMatchObject({ x: 2, y: 2, w: 6, h: 6 });
+        expect(next[0]).toMatchObject({ x: 2, y: 0, w: 6, h: 6 });
     });
 
     it('maps arrows to steps and ignores other keys', () => {

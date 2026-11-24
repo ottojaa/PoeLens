@@ -40,7 +40,13 @@ export function NameDialog({
                         <DialogTitle>{title}</DialogTitle>
                         <DialogDescription>Shown on its tab.</DialogDescription>
                     </DialogHeader>
-                    <Input aria-label="Dashboard name" value={name} maxLength={MAX_DASHBOARD_NAME} autoFocus onChange={(event) => setName(event.target.value)} />
+                    <Input
+                        aria-label="Dashboard name"
+                        value={name}
+                        maxLength={MAX_DASHBOARD_NAME}
+                        autoFocus
+                        onChange={(event) => setName(event.target.value)}
+                    />
                     {error && (
                         <p role="alert" className="text-destructive text-sm">
                             {error}
