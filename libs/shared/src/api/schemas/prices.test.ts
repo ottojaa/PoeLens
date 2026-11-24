@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HistoryQuerySchema, LatestQuerySchema, MAX_LATEST_ITEMS, MoversQuerySchema, SearchQuerySchema, TableQuerySchema } from './prices.js';
+import { PriceRowSchema, HistoryQuerySchema, LatestQuerySchema, MAX_LATEST_ITEMS, MoversQuerySchema, SearchQuerySchema, TableQuerySchema } from './prices.js';
 
 describe('price query schemas', () => {
     it('fill the defaults a caller should never have to repeat', () => {
@@ -8,6 +8,16 @@ describe('price query schemas', () => {
         expect(table).toEqual({ game: 'poe2', league: 'current', category: 'Currency', includeLowConfidence: false, sparkline: false });
         expect(MoversQuerySchema.parse({ game: 'poe2' })).toMatchObject({ window: '24h', limit: 10, league: 'current' });
         expect(HistoryQuerySchema.parse({ game: 'poe2', item: '7' })).toMatchObject({ item: 7, bucket: 'hour', league: 'current' });
+    });
+
+    it('take auto as a unit on rows and history, but not on movers', () => {
+        const table = TableQuerySchema.parse({ game: 'poe2', category: 'Currency', unit: 'auto' });
+
+        expect(table.unit).toBe('auto');
+        expect(LatestQuerySchema.parse({ game: 'poe2', items: '1', unit: 'auto' }).unit).toBe('auto');
+        expect(HistoryQuerySchema.parse({ game: 'poe2', item: '1', unit: 'auto' }).unit).toBe('auto');
+        expect(MoversQuerySchema.safeParse({ game: 'poe2', unit: 'auto' }).success).toBe(false);
+        expect(MoversQuerySchema.parse({ game: 'poe2', unit: 'chaos' }).unit).toBe('chaos');
     });
 
     it('ask for sparklines only with a literal true', () => {
@@ -45,5 +55,24 @@ describe('price query schemas', () => {
     it('require a search of at least two characters', () => {
         expect(SearchQuerySchema.safeParse({ game: 'poe2', q: 'd' }).success).toBe(false);
         expect(SearchQuerySchema.parse({ game: 'poe2', q: ' divne ' }).q).toBe('divne');
+    });
+});
+
+describe('PriceRowSchema', () => {
+    const row = {
+        item: { id: 1, name: 'Divine Orb', baseType: null, category: 'Currency', icon: null },
+        price: 1,
+        asOf: '2026-11-23T12:00:00.000Z',
+        liquidity: null,
+        lowConfidence: false,
+        change: { h1: null, h24: null, d7: null },
+    };
+
+    it('carries the row unit and the price in every unit, and refuses a row without them', () => {
+        const full = { ...row, unit: 'divine', prices: { divine: 1, exalted: 445.9, chaos: 13.44 } };
+
+        expect(PriceRowSchema.parse(full)).toEqual(full);
+        expect(PriceRowSchema.safeParse(row).success).toBe(false);
+        expect(PriceRowSchema.safeParse({ ...full, unit: 'auto' }).success).toBe(false);
     });
 });

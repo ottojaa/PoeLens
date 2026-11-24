@@ -5,6 +5,7 @@ import { parseColumns, parseEconomySearch, parseItemSearch, parseRootSearch, toC
 describe('root search', () => {
     it('keeps a valid league and unit', () => {
         expect(parseRootSearch({ league: 'Forbidden Rites', unit: 'chaos' })).toEqual({ league: 'Forbidden Rites', unit: 'chaos' });
+        expect(parseRootSearch({ unit: 'auto' })).toMatchObject({ unit: 'auto' });
     });
 
     it('drops garbage instead of throwing', () => {

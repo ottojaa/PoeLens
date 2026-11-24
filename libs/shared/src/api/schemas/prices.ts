@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { GameSchema } from '../../domain/game.js';
-import { UnitSchema } from '../../domain/units.js';
+import { PricesSchema, UnitChoiceSchema, UnitSchema } from '../../domain/units.js';
 
 /** What a row's liquidity number counts: open listings (unique items) or traded value in divine (exchange currencies). */
 export const LiquidityKindSchema = z.enum(['listings', 'volume']);
@@ -33,7 +33,7 @@ export const ItemRefSchema = z.object({
     icon: z.string().nullable(),
 });
 
-/** Percent change over each window, in the requested unit. Null until the history reaches back that far. */
+/** Percent change over each window, in the row's unit. Null until the history reaches back that far. */
 export const PriceChangeSchema = z.object({
     h1: z.number().nullable(),
     h24: z.number().nullable(),
@@ -42,7 +42,12 @@ export const PriceChangeSchema = z.object({
 
 export const PriceRowSchema = z.object({
     item: ItemRefSchema,
+    /** The latest price, in `unit`. */
     price: z.number(),
+    /** The unit `price`, `change` and (on a table row) `sparkline` are in: the requested unit, or under `auto` the one the row's price reads best in. */
+    unit: UnitSchema,
+    /** The latest price in every unit. Order rows by `prices.divine` to rank them by real value: `price` alone is not comparable across rows that can be in different units. */
+    prices: PricesSchema,
     /** When the snapshot this price comes from was fetched. */
     asOf: z.string().datetime(),
     liquidity: LiquiditySchema.nullable(),
@@ -50,11 +55,10 @@ export const PriceRowSchema = z.object({
     change: PriceChangeSchema,
 });
 
-/** What every price answer resolved: the game, the league `'current'` pointed at, and the unit prices are in. */
+/** What every price answer resolved: the game and the league `'current'` pointed at. Each answer adds the unit it was asked in. */
 export const priceEnvelope = {
     game: GameSchema,
     league: LeagueRefSchema,
-    unit: UnitSchema,
 };
 
 // Query parameters
@@ -86,7 +90,8 @@ export const TableQuerySchema = z.object({
     game: GameSchema,
     league: leagueQuery,
     category: z.string().min(1),
-    unit: UnitSchema.optional(),
+    /** Defaults to the game's default unit. `auto` gives each row the unit its price reads best in. */
+    unit: UnitChoiceSchema.optional(),
     includeLowConfidence: booleanQuery,
     /** Add each row's last week of daily prices (`TableRow.sparkline`). */
     sparkline: booleanQuery,
@@ -96,7 +101,8 @@ export const LatestQuerySchema = z.object({
     game: GameSchema,
     league: leagueQuery,
     items: commaSeparatedIds,
-    unit: UnitSchema.optional(),
+    /** Defaults to the game's default unit. `auto` gives each row the unit its price reads best in. */
+    unit: UnitChoiceSchema.optional(),
     includeLowConfidence: booleanQuery,
 });
 
@@ -104,7 +110,8 @@ export const HistoryQuerySchema = z.object({
     game: GameSchema,
     league: leagueQuery,
     item: z.coerce.number().int().positive(),
-    unit: UnitSchema.optional(),
+    /** Defaults to the game's default unit. `auto` picks one unit for the whole chart, from the item's newest price. */
+    unit: UnitChoiceSchema.optional(),
     bucket: HistoryBucketSchema.default('hour'),
     from: z.string().datetime().optional(),
     to: z.string().datetime().optional(),
@@ -116,6 +123,7 @@ export const MoversQuerySchema = z.object({
     league: leagueQuery,
     category: z.string().min(1).optional(),
     window: MoverWindowSchema.default('24h'),
+    /** A fixed unit only: changes measured in different units would not rank against each other. */
     unit: UnitSchema.optional(),
     limit: z.coerce.number().int().min(1).max(50).default(10),
     includeLowConfidence: booleanQuery,
@@ -133,7 +141,7 @@ export const LeaguesQuerySchema = z.object({ game: GameSchema });
 
 export const TableRowSchema = PriceRowSchema.extend({
     /**
-     * Present when asked for (`sparkline=true`): the last 7 UTC days' closing prices in the answer's unit, oldest first,
+     * Present when asked for (`sparkline=true`): the last 7 UTC days' closing prices in the row's `unit`, oldest first,
      * one point per day that had a confident price, so it can hold fewer than two.
      */
     sparkline: z.array(z.number()).optional(),
@@ -141,12 +149,16 @@ export const TableRowSchema = PriceRowSchema.extend({
 
 export const TableResponseSchema = z.object({
     ...priceEnvelope,
+    /** The unit asked for, so `auto` stays `auto`: each row says its own. */
+    unit: UnitChoiceSchema,
     category: z.string(),
     rows: z.array(TableRowSchema),
 });
 
 export const LatestResponseSchema = z.object({
     ...priceEnvelope,
+    /** The unit asked for, so `auto` stays `auto`: each row says its own. */
+    unit: UnitChoiceSchema,
     rows: z.array(PriceRowSchema),
     /** Requested items missing from the newest snapshot of their category (or unknown, or low confidence). */
     unlisted: z.array(z.number().int()),
@@ -162,6 +174,8 @@ export const HistoryPointSchema = z.object({
 
 export const HistoryResponseSchema = z.object({
     ...priceEnvelope,
+    /** The unit of every point: the one asked for, or under `auto` the one picked for the whole chart. */
+    unit: UnitSchema,
     item: ItemRefSchema,
     bucket: HistoryBucketSchema,
     from: z.string().datetime(),
@@ -171,6 +185,7 @@ export const HistoryResponseSchema = z.object({
 
 export const MoversResponseSchema = z.object({
     ...priceEnvelope,
+    unit: UnitSchema,
     window: MoverWindowSchema,
     risers: z.array(PriceRowSchema),
     fallers: z.array(PriceRowSchema),

@@ -1,4 +1,4 @@
-import type { Game, TableRow, Unit } from '@poelens/shared';
+import type { Game, TableRow, UnitChoice } from '@poelens/shared';
 import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import { resolveContext, type PriceContext } from './context.js';
@@ -10,7 +10,7 @@ export interface ItemRowsQuery {
     game: Game;
     /** A league name, or `'current'`. */
     league: string;
-    unit?: Unit;
+    unit?: UnitChoice;
     itemIds: readonly number[];
     includeLowConfidence: boolean;
     /** Give each row its last week of daily prices (`[]` when it has none). */
@@ -43,6 +43,7 @@ export async function getItemRows(db: Kysely<Database>, query: ItemRowsQuery): P
         categories.map((item) => item.category),
     );
     const priced = await loadPriceRows(db, {
+        game: context.game,
         unit: context.unit,
         rawIds: snapshots.map((snapshot) => snapshot.rawId),
         times: snapshots.map((snapshot) => snapshot.time),
@@ -59,8 +60,7 @@ export async function getItemRows(db: Kysely<Database>, query: ItemRowsQuery): P
     const sparklines = await loadSparklines(db, {
         game: context.game,
         league: context.league.name,
-        unit: context.unit,
-        itemIds: priced.map((row) => row.item.id),
+        rows: priced,
         latest,
     });
 

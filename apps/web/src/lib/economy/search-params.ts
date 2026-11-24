@@ -1,4 +1,4 @@
-import { UnitSchema } from '@poelens/shared';
+import { UnitChoiceSchema } from '@poelens/shared';
 import { z } from 'zod';
 import { DEFAULT_COLUMNS, DEFAULT_SORT, OPTIONAL_COLUMNS, SORT_KEYS, type OptionalColumn, type SortDirection, type SortKey } from './columns';
 
@@ -17,7 +17,7 @@ const NO_COLUMNS = 'none';
 /** League and unit, on every page: carried across navigation by the root route. */
 const RootSearchSchema = z.object({
     league: z.string().min(1).optional().catch(undefined),
-    unit: UnitSchema.optional().catch(undefined),
+    unit: UnitChoiceSchema.optional().catch(undefined),
 });
 
 const EconomySearchSchema = z.object({

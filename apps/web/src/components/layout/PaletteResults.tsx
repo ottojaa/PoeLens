@@ -1,4 +1,4 @@
-import type { Category, ItemRef, PriceRow, Unit } from '@poelens/shared';
+import type { Category, ItemRef, PriceRow } from '@poelens/shared';
 import { Change } from '@/components/economy/Change';
 import { ItemIcon } from '@/components/economy/ItemIcon';
 import { CommandGroup, CommandItem } from '@/components/ui/command';
@@ -6,11 +6,11 @@ import { StarIcon } from '@/components/watchlist/WatchStar';
 import { UNIT_SHORT } from '@/lib/economy/units';
 import { formatPrice } from '@/lib/format';
 
-function PriceAndChange({ row, unit }: { row: PriceRow; unit: Unit }) {
+function PriceAndChange({ row }: { row: PriceRow }) {
     return (
         <span className="flex shrink-0 items-baseline gap-3 text-sm">
             <span className="font-semibold">
-                {formatPrice(row.price)} <span className="text-muted-foreground font-medium">{UNIT_SHORT[unit]}</span>
+                {formatPrice(row.price)} <span className="text-muted-foreground font-medium">{UNIT_SHORT[row.unit]}</span>
             </span>
             <Change percent={row.change.d7} />
         </span>
@@ -22,13 +22,11 @@ export function ItemResults({
     heading,
     matches,
     prices,
-    unit,
     onOpen,
 }: {
     heading: string;
     matches: readonly { item: ItemRef }[];
     prices: ReadonlyMap<number, PriceRow>;
-    unit: Unit;
     onOpen: (itemId: number) => void;
 }) {
     return (
@@ -43,7 +41,7 @@ export function ItemResults({
                             <span className="truncate font-semibold">{item.name}</span>
                             <span className="text-muted-foreground truncate text-xs">{item.baseType ?? item.category}</span>
                         </span>
-                        {row && <PriceAndChange row={row} unit={unit} />}
+                        {row && <PriceAndChange row={row} />}
                     </CommandItem>
                 );
             })}

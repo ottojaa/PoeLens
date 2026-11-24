@@ -100,6 +100,20 @@ describe.skipIf(SKIP_DB_TESTS)('the watchlist against TimescaleDB', () => {
             expect((await list(alice, { unit: 'chaos' })).rows[0]?.price).toBe(13.44);
         });
 
+        it('under auto reads each item in its own unit, echoes auto, and orders by worth in divine', async () => {
+            for (const name of ['Exalted Orb', 'Divine Orb', 'Chaos Orb']) await watchItem(test.db, alice, await itemId(name));
+
+            const response = await list(alice, { unit: 'auto' });
+
+            expect(response.unit).toBe('auto');
+            expect(response.rows.map((row) => [row.item.name, row.unit])).toEqual([
+                ['Divine Orb', 'divine'],
+                ['Chaos Orb', 'chaos'],
+                ['Exalted Orb', 'exalted'],
+            ]);
+            expect(response.rows.map((row) => row.prices.divine)).toEqual([...response.rows.map((row) => row.prices.divine)].sort((a, b) => b - a));
+        });
+
         it('lists a watched item with no price in the league as unlisted, with its item and added time', async () => {
             const [filler] = await insertFiller(1);
             const divine = await itemId('Divine Orb');

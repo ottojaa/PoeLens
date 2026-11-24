@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category, type TableRow } from '@poelens/shared';
+import { CATEGORIES, type Category, type Prices, type TableRow } from '@poelens/shared';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,7 +10,7 @@ import { DEFAULT_SORT } from '@/lib/economy/columns';
 import { toColumnsParam, type EconomyView } from '@/lib/economy/search-params';
 import { filterRows, sortRows } from '@/lib/economy/sort';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
-import { formatRates, toRates, type Rates } from '@/lib/economy/rates';
+import { formatRates, toRates } from '@/lib/economy/rates';
 import { formatAgo } from '@/lib/format';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { EconomyCards, SortControl } from './EconomyCards';
@@ -30,7 +30,7 @@ function toSourceLabel(category: Category): string {
 }
 
 /** The line under the title: where the prices come from, how fresh they are and the exchange rates between the units. */
-function toMeta(category: Category, rows: readonly TableRow[] | undefined, rates: Rates | undefined): string {
+function toMeta(category: Category, rows: readonly TableRow[] | undefined, rates: Prices | undefined): string {
     if (!rows) return 'Loading prices';
 
     const asOf = rows[0]?.asOf;
@@ -118,7 +118,7 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
         () => (rows ? sortRows(filterRows(rows, view.q, view.min), view.sort, view.dir) : []),
         [rows, view.q, view.min, view.sort, view.dir],
     );
-    const rates = toRates(useCurrencyRows(scope, 'exalted').data?.rows, useCurrencyRows(scope, 'chaos').data?.rows);
+    const rates = toRates(useCurrencyRows(scope).data?.rows);
     const meta = toMeta(category, rows, rates);
 
     return (
@@ -135,7 +135,6 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
                     {data && visible.length > 0 && !isWide && (
                         <EconomyCards
                             rows={visible}
-                            unit={data.unit}
                             scopeKey={`${data.league.name}:${data.unit}`}
                             liquidityLabel={liquidityLabel}
                             options={{ watch: controls }}
@@ -144,7 +143,6 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
                     {data && visible.length > 0 && isWide && (
                         <EconomyTable
                             rows={visible}
-                            unit={data.unit}
                             scopeKey={`${data.league.name}:${data.unit}`}
                             columns={view.columns}
                             sort={{ key: view.sort, direction: view.dir }}

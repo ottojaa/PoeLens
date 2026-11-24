@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { GameSchema } from '../../domain/game.js';
-import { UnitSchema } from '../../domain/units.js';
+import { UnitChoiceSchema } from '../../domain/units.js';
 import { ItemRefSchema, MAX_LATEST_ITEMS, priceEnvelope, TableRowSchema } from './prices.js';
 
 /** The most items one user can watch: one priced answer for the whole list stays within a `latest` request's limit. */
@@ -12,7 +12,7 @@ const MAX_ITEM_ID = 2_147_483_647;
 export const WatchlistQuerySchema = z.object({
     game: GameSchema,
     league: z.string().min(1).default('current'),
-    unit: UnitSchema.optional(),
+    unit: UnitChoiceSchema.optional(),
 });
 
 export const WatchlistItemParamsSchema = z.object({
@@ -33,6 +33,8 @@ export const WatchlistUnlistedSchema = z.object({
 
 export const WatchlistResponseSchema = z.object({
     ...priceEnvelope,
+    /** The unit asked for, so `auto` stays `auto`: each row says its own. */
+    unit: UnitChoiceSchema,
     rows: z.array(WatchlistRowSchema),
     unlisted: z.array(WatchlistUnlistedSchema),
 });

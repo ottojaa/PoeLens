@@ -1,4 +1,4 @@
-import type { Unit, WatchlistRow } from '@poelens/shared';
+import type { WatchlistRow } from '@poelens/shared';
 import { useMemo } from 'react';
 import { EconomyCards, SortControl } from '@/components/economy/EconomyCards';
 import { useViewNavigation } from '@/components/economy/EconomyPage';
@@ -30,7 +30,6 @@ function toMeta(count: number, rows: readonly WatchlistRow[]): string {
 
 function PricedItems({
     rows,
-    unit,
     scopeKey,
     view,
     onSort,
@@ -38,7 +37,6 @@ function PricedItems({
 }: {
     controls: WatchControls;
     rows: readonly WatchlistRow[];
-    unit: Unit;
     scopeKey: string;
     view: EconomyView;
     onSort: Parameters<typeof EconomyTable>[0]['onSort'];
@@ -47,19 +45,10 @@ function PricedItems({
     const options = { watch: controls, liquidityUnits: true, animate: true };
     const sort = { key: view.sort, direction: view.dir };
 
-    if (!isWide) return <EconomyCards rows={rows} unit={unit} scopeKey={scopeKey} liquidityLabel={LIQUIDITY_LABEL} options={options} />;
+    if (!isWide) return <EconomyCards rows={rows} scopeKey={scopeKey} liquidityLabel={LIQUIDITY_LABEL} options={options} />;
 
     return (
-        <EconomyTable
-            rows={rows}
-            unit={unit}
-            scopeKey={scopeKey}
-            columns={view.columns}
-            sort={sort}
-            onSort={onSort}
-            liquidityLabel={LIQUIDITY_LABEL}
-            options={options}
-        />
+        <EconomyTable rows={rows} scopeKey={scopeKey} columns={view.columns} sort={sort} onSort={onSort} liquidityLabel={LIQUIDITY_LABEL} options={options} />
     );
 }
 
@@ -99,7 +88,7 @@ export function WatchlistPage({ view }: { view: EconomyView }) {
                             {!loaded && <TableSkeleton rows={5} />}
                             {loaded && rows.length > 0 && visible.length === 0 && <NoMatchState onClear={navigation.clearFilters} />}
                             {answer && visible.length > 0 && (
-                                <PricedItems rows={visible} unit={answer.unit} scopeKey={scopeKey} view={view} onSort={navigation.sortBy} controls={controls} />
+                                <PricedItems rows={visible} scopeKey={scopeKey} view={view} onSort={navigation.sortBy} controls={controls} />
                             )}
                             {loaded && rows.length === 0 && unlisted.length > 0 && (
                                 <p className="text-muted-foreground px-6 py-8 text-center text-sm">None of your items has a price in {answer.league}.</p>

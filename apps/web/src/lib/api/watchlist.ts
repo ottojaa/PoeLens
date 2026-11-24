@@ -1,4 +1,4 @@
-import { WatchlistResponseSchema, type ItemRef, type Unit, type WatchlistRow, type WatchlistUnlisted } from '@poelens/shared';
+import { WatchlistResponseSchema, type ItemRef, type UnitChoice, type WatchlistRow, type WatchlistUnlisted } from '@poelens/shared';
 import { keepPreviousData, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -50,7 +50,7 @@ export interface Watchlist {
     isLoading: boolean;
     error: Error | null;
     /** The league and unit the answer was for (it can trail the page's while a switch loads). */
-    answer: { league: string; unit: Unit } | undefined;
+    answer: { league: string; unit: UnitChoice } | undefined;
     refetch: () => void;
 }
 

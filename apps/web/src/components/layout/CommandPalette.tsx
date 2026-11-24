@@ -99,10 +99,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 <Command shouldFilter={false} loop>
                     <CommandInput value={text} onValueChange={setText} placeholder="Search every currency and item" />
                     <CommandList>
-                        {matches.length > 0 && <ItemResults heading="Best matches" matches={matches} prices={prices} unit={scope.unit} onOpen={openItem} />}
-                        {watched.length > 0 && (
-                            <ItemResults heading="On your watchlist" matches={watched} prices={prices} unit={scope.unit} onOpen={openItem} />
-                        )}
+                        {matches.length > 0 && <ItemResults heading="Best matches" matches={matches} prices={prices} onOpen={openItem} />}
+                        {watched.length > 0 && <ItemResults heading="On your watchlist" matches={watched} prices={prices} onOpen={openItem} />}
                         {(categories.length > 0 || watchlistCount !== undefined) && (
                             <GoTo categories={categories} watchlistCount={watchlistCount} onOpenCategory={openCategory} onOpenWatchlist={openWatchlist} />
                         )}

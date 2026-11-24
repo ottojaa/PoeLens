@@ -1,4 +1,4 @@
-import type { TableRow, Unit } from '@poelens/shared';
+import type { TableRow } from '@poelens/shared';
 import { Link } from '@tanstack/react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
@@ -73,19 +73,7 @@ export interface RowOptions {
     animate?: boolean;
 }
 
-function Row({
-    row,
-    unit,
-    scopeKey,
-    columns,
-    options,
-}: {
-    row: TableRow;
-    unit: Unit;
-    scopeKey: string;
-    columns: readonly OptionalColumn[];
-    options: RowOptions;
-}) {
+function Row({ row, scopeKey, columns, options }: { row: TableRow; scopeKey: string; columns: readonly OptionalColumn[]; options: RowOptions }) {
     const shows = (column: OptionalColumn) => columns.includes(column);
     const { watch, liquidityUnits, animate } = options;
     const Tr = animate ? motion.tr : 'tr';
@@ -114,9 +102,9 @@ function Row({
                 </div>
             </td>
             <td className={cn(CELL, 'text-right font-semibold')}>
-                {/* Keyed by the scope, so a new unit or league replaces the number instead of counting from the old one. */}
-                <AnimatedNumber key={scopeKey} value={row.price} format={formatPrice} />
-                <span className="text-muted-foreground ml-1 font-medium">{UNIT_SHORT[unit]}</span>
+                {/* Keyed by the scope and the row's unit, so a new unit, league or tier replaces the number instead of counting from the old one. */}
+                <AnimatedNumber key={`${scopeKey}:${row.unit}`} value={row.price} format={formatPrice} />
+                <span className="text-muted-foreground ml-1 font-medium">{UNIT_SHORT[row.unit]}</span>
                 {row.lowConfidence && (
                     <Badge
                         variant="outline"
@@ -165,11 +153,10 @@ function MaybePresence({ enabled, children }: { enabled: boolean; children: Reac
 
 /**
  * The price table: plain rows (no reorder animation, it would measure every row on every sort), a sortable header,
- * and only the columns the viewer chose. `scopeKey` changes with the league and unit.
+ * and only the columns the viewer chose. `scopeKey` changes with the league and unit choice; each row names its own unit.
  */
 export function EconomyTable({
     rows,
-    unit,
     scopeKey,
     columns,
     sort,
@@ -179,7 +166,6 @@ export function EconomyTable({
 }: {
     options?: RowOptions;
     rows: readonly TableRow[];
-    unit: Unit;
     scopeKey: string;
     columns: readonly OptionalColumn[];
     sort: TableSort;
@@ -210,7 +196,7 @@ export function EconomyTable({
             <tbody>
                 <MaybePresence enabled={rowOptions.animate}>
                     {rows.map((row) => (
-                        <Row key={row.item.id} row={row} unit={unit} scopeKey={scopeKey} columns={columns} options={rowOptions} />
+                        <Row key={row.item.id} row={row} scopeKey={scopeKey} columns={columns} options={rowOptions} />
                     ))}
                 </MaybePresence>
             </tbody>

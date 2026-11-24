@@ -7,7 +7,8 @@ function toSortValue(row: TableRow, key: SortKey): number | string | null {
         case 'name':
             return row.item.name;
         case 'price':
-            return row.price;
+            // Rows can be in different units under Auto, so the number shown is not comparable: sort by the row's real value.
+            return row.prices.divine;
         case 'h1':
             return row.change.h1;
         case 'h24':

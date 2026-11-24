@@ -1,4 +1,4 @@
-import type { TableRow, Unit } from '@poelens/shared';
+import type { TableRow } from '@poelens/shared';
 import { Link } from '@tanstack/react-router';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -33,7 +33,7 @@ interface CardOptions {
     animate?: boolean;
 }
 
-function Card({ row, unit, scopeKey, liquidityLabel, options }: { row: TableRow; unit: Unit; scopeKey: string; liquidityLabel: string; options: CardOptions }) {
+function Card({ row, scopeKey, liquidityLabel, options }: { row: TableRow; scopeKey: string; liquidityLabel: string; options: CardOptions }) {
     const { watch, liquidityUnits } = options;
 
     return (
@@ -62,8 +62,8 @@ function Card({ row, unit, scopeKey, liquidityLabel, options }: { row: TableRow;
                         <span className="text-muted-foreground truncate text-xs">{row.item.baseType ?? row.item.category}</span>
                     </span>
                     <span className="shrink-0 text-right font-semibold">
-                        <AnimatedNumber key={scopeKey} value={row.price} format={formatPrice} />
-                        <span className="text-muted-foreground ml-1 font-medium">{UNIT_SHORT[unit]}</span>
+                        <AnimatedNumber key={`${scopeKey}:${row.unit}`} value={row.price} format={formatPrice} />
+                        <span className="text-muted-foreground ml-1 font-medium">{UNIT_SHORT[row.unit]}</span>
                         {row.lowConfidence && (
                             <Badge
                                 variant="outline"
@@ -99,18 +99,16 @@ function Card({ row, unit, scopeKey, liquidityLabel, options }: { row: TableRow;
 /** The phone layout of the price list: one tappable card per item instead of a table. */
 export function EconomyCards({
     rows,
-    unit,
     scopeKey,
     liquidityLabel,
     options = {},
 }: {
     rows: readonly TableRow[];
-    unit: Unit;
     scopeKey: string;
     liquidityLabel: string;
     options?: CardOptions;
 }) {
-    const renderCard = (row: TableRow) => <Card row={row} unit={unit} scopeKey={scopeKey} liquidityLabel={liquidityLabel} options={options} />;
+    const renderCard = (row: TableRow) => <Card row={row} scopeKey={scopeKey} liquidityLabel={liquidityLabel} options={options} />;
 
     if (options.animate && canAnimateLayout(rows.length)) {
         return <AnimatedList items={rows} getKey={(row) => String(row.item.id)} renderItem={renderCard} className="divide-y" />;

@@ -10,6 +10,8 @@ function row(id: number, addedAt: string): WatchlistRow {
     return {
         item: item(id),
         price: 1,
+        unit: 'exalted',
+        prices: { divine: 0.01, exalted: 1, chaos: 0.1 },
         asOf: addedAt,
         liquidity: null,
         lowConfidence: false,

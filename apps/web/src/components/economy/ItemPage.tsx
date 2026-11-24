@@ -1,4 +1,4 @@
-import { CATEGORIES, UNITS, type ItemRef, type LeagueRef, type Unit } from '@poelens/shared';
+import { CATEGORIES, type ItemRef, type LeagueRef } from '@poelens/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,7 +24,7 @@ function toShownPrice(query: LatestQuery, itemId: number): ShownPrice | undefine
 
     if (!query.data || !row) return undefined;
 
-    return { row, key: `${itemId}:${query.data.league.name}:${query.data.unit}`, league: query.data.league };
+    return { row, key: `${itemId}:${query.data.league.name}:${row.unit}`, league: query.data.league };
 }
 
 /** "Forbidden Rites (softcore)": the league and which of its two ladders the prices are from. */
@@ -84,20 +84,15 @@ function ItemHeading({ item, league, watch }: { item: ItemRef; league: LeagueRef
     );
 }
 
-/** One item: its price in all three units, how it moved, and its history over a chosen range. */
+/** One item: its price in the unit it reads best in, and in the other two, how it moved, and its history over a chosen range. */
 export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     const { scope, leagues, league } = useEconomyContext();
     const navigate = useNavigate();
     const { controls } = useWatchlist();
     const history = useHistory(scope, itemId, range, league?.firstSeen);
-    // One cached `latest` query per unit: the chosen one is large, the other two sit small beneath it.
-    const byUnit: Record<Unit, LatestQuery> = {
-        divine: useLatest({ ...scope, unit: 'divine' }, [itemId], { refresh: true }),
-        exalted: useLatest({ ...scope, unit: 'exalted' }, [itemId], { refresh: true }),
-        chaos: useLatest({ ...scope, unit: 'chaos' }, [itemId], { refresh: true }),
-    };
-    const shown = toShownPrice(byUnit[scope.unit], itemId);
-    const prices = Object.fromEntries(UNITS.map((unit) => [unit, toShownPrice(byUnit[unit], itemId)?.row.price]));
+    // One `latest` query: the row carries its price in every unit, the large number in the row's own.
+    const priced = useLatest(scope, [itemId], { refresh: true });
+    const shown = toShownPrice(priced, itemId);
     // The query hands back the previous item's answer while a new one loads; only this item's answer is shown.
     const answer = history.data?.item.id === itemId ? history.data : undefined;
     const item = answer?.item ?? shown?.row.item;
@@ -108,7 +103,6 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     if (!item) return <ItemSkeleton />;
 
-    const priced = byUnit[scope.unit];
     // Only a real answer (not the previous one kept on screen) that lists this item as unpriced, and only for an item the history knows.
     const unpricedIn = priced.data && !priced.isPlaceholderData && priced.data.unlisted.includes(itemId) ? priced.data.league.name : undefined;
 
@@ -118,7 +112,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
             <ItemHeading item={item} league={answer?.league ?? shown?.league} watch={controls} />
-            {unpricedIn ? <NoItemPriceState league={unpricedIn} /> : <ItemStats shown={shown} unit={scope.unit} prices={prices} />}
+            {unpricedIn ? <NoItemPriceState league={unpricedIn} /> : <ItemStats shown={shown} />}
             <HistoryCard history={answer} itemName={item.name} range={range} onRange={setRange} />
         </div>
     );
