@@ -93,19 +93,17 @@ function TabDialogs({
     );
 }
 
-/** The empty page. `onAdd` is absent where the dashboard cannot be edited. */
+/** The empty page. `onAdd` is absent where the dashboard cannot be edited, and the tab row says so. */
 function EmptyDashboard({ onAdd }: { onAdd?: () => void }) {
     return (
         <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-16 text-center">
             <LayoutDashboard aria-hidden="true" className="size-6" />
             <p className="text-foreground font-semibold">This dashboard is empty</p>
             <p className="text-sm">Panels hold the prices and notes you want in one place.</p>
-            {onAdd ? (
+            {onAdd && (
                 <Button type="button" onClick={onAdd}>
                     Add a panel
                 </Button>
-            ) : (
-                <p className="text-sm">{EDIT_HINT}</p>
             )}
         </div>
     );

@@ -10,6 +10,11 @@ export function toSizeText(panel: Pick<Panel, 'w' | 'h'>): string {
     return panel.w + ' columns · ' + panel.h + ' rows';
 }
 
+/** "6×10": the same size in less room, for a bar too narrow for the words. */
+export function toShortSizeText(panel: Pick<Panel, 'w' | 'h'>): string {
+    return panel.w + '×' + panel.h;
+}
+
 /**
  * The bar across the top of a panel in Layout mode. Dragging it moves the panel; focusing it and pressing Enter picks the
  * panel up, then arrows move it and Shift with arrows resizes it.
@@ -40,12 +45,17 @@ export function PanelBar({
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             className={cn(
-                'bg-popover border-border focus-visible:ring-ring/50 flex h-[30px] shrink-0 cursor-grab touch-none items-center gap-2 border-b pr-1.5 pl-2.5 outline-none select-none focus-visible:ring-[3px] focus-visible:ring-inset',
+                '@container bg-popover border-border focus-visible:ring-ring/50 flex h-[30px] shrink-0 cursor-grab touch-none items-center gap-2 border-b pr-1.5 pl-2.5 outline-none select-none focus-visible:ring-[3px] focus-visible:ring-inset',
                 (picked || isDragging) && 'bg-accent cursor-grabbing',
             )}
         >
             <GripVertical aria-hidden="true" className="text-muted-foreground size-3.5 shrink-0" />
-            <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">{toSizeText(panel)}</span>
+            <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
+                <span className="@max-[240px]:hidden">{toSizeText(panel)}</span>
+                <span className="hidden @max-[240px]:inline" title={toSizeText(panel)}>
+                    {toShortSizeText(panel)}
+                </span>
+            </span>
             <Button
                 type="button"
                 variant="outline"
