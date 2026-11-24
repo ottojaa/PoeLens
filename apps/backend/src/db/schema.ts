@@ -135,6 +135,12 @@ export interface PasswordResetsTable {
     used_at: Date | null;
 }
 
+export interface WatchlistItemsTable {
+    user_id: string;
+    item_id: number;
+    created_at: Generated<Date>;
+}
+
 export interface Database {
     leagues: LeaguesTable;
     items: ItemsTable;
@@ -147,4 +153,5 @@ export interface Database {
     refresh_tokens: RefreshTokensTable;
     invites: InvitesTable;
     password_resets: PasswordResetsTable;
+    watchlist_items: WatchlistItemsTable;
 }

@@ -1,7 +1,8 @@
-import type { Category, PriceRow, SearchResponse, Unit } from '@poelens/shared';
+import type { Category, ItemRef, PriceRow, Unit } from '@poelens/shared';
 import { Change } from '@/components/economy/Change';
 import { ItemIcon } from '@/components/economy/ItemIcon';
 import { CommandGroup, CommandItem } from '@/components/ui/command';
+import { StarIcon } from '@/components/watchlist/WatchStar';
 import { UNIT_SHORT } from '@/lib/economy/units';
 import { formatPrice } from '@/lib/format';
 
@@ -16,20 +17,22 @@ function PriceAndChange({ row, unit }: { row: PriceRow; unit: Unit }) {
     );
 }
 
-/** The search matches in the API's order, each with its price and 7-day change once those have loaded. */
-export function BestMatches({
+/** Items in the order given, each with its price and 7-day change once those are known. */
+export function ItemResults({
+    heading,
     matches,
     prices,
     unit,
     onOpen,
 }: {
-    matches: SearchResponse['results'];
+    heading: string;
+    matches: readonly { item: ItemRef }[];
     prices: ReadonlyMap<number, PriceRow>;
     unit: Unit;
     onOpen: (itemId: number) => void;
 }) {
     return (
-        <CommandGroup heading="Best matches">
+        <CommandGroup heading={heading}>
             {matches.map(({ item }) => {
                 const row = prices.get(item.id);
 
@@ -48,12 +51,30 @@ export function BestMatches({
     );
 }
 
-/** The categories whose names match, to jump to. */
-export function GoToCategories({ categories, onOpen }: { categories: readonly Category[]; onOpen: (categoryId: string) => void }) {
+/** Where to jump to: the watchlist (when offered) and the categories whose names match. */
+export function GoTo({
+    categories,
+    watchlistCount,
+    onOpenCategory,
+    onOpenWatchlist,
+}: {
+    categories: readonly Category[];
+    /** The watchlist's size, or undefined to leave the entry out. */
+    watchlistCount: number | undefined;
+    onOpenCategory: (categoryId: string) => void;
+    onOpenWatchlist: () => void;
+}) {
     return (
         <CommandGroup heading="Go to">
+            {watchlistCount !== undefined && (
+                <CommandItem value="watchlist" onSelect={onOpenWatchlist} className="gap-3">
+                    <StarIcon filled={false} />
+                    <span className="flex-1">Watchlist</span>
+                    <span className="text-muted-foreground text-xs">{watchlistCount === 1 ? '1 item' : `${watchlistCount} items`}</span>
+                </CommandItem>
+            )}
             {categories.map((category) => (
-                <CommandItem key={category.id} value={'category:' + category.id} onSelect={() => onOpen(category.id)}>
+                <CommandItem key={category.id} value={'category:' + category.id} onSelect={() => onOpenCategory(category.id)}>
                     {category.label}
                 </CommandItem>
             ))}

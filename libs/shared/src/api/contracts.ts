@@ -2,3 +2,4 @@
 export * from './schemas/auth.js';
 export * from './schemas/health.js';
 export * from './schemas/prices.js';
+export * from './schemas/watchlist.js';

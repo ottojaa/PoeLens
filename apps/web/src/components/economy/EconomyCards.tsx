@@ -6,7 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { COLUMN_LABELS, SORT_KEYS, type SortKey } from '@/lib/economy/columns';
 import { UNIT_SHORT } from '@/lib/economy/units';
-import { formatLiquidity, formatPrice } from '@/lib/format';
+import { formatLiquidity, formatLiquidityWithUnit, formatPrice } from '@/lib/format';
+import { WatchStar } from '@/components/watchlist/WatchStar';
+import type { WatchControls } from '@/lib/watchlist/controls';
+import { cn } from '@/lib/utils';
+import { AnimatedList, canAnimateLayout } from '@/motion/AnimatedList';
 import { AnimatedNumber } from '@/motion/AnimatedNumber';
 import { Change } from './Change';
 import { ItemIcon } from './ItemIcon';
@@ -22,13 +26,34 @@ function Labelled({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-function Card({ row, unit, scopeKey, liquidityLabel }: { row: TableRow; unit: Unit; scopeKey: string; liquidityLabel: string }) {
+interface CardOptions {
+    watch?: WatchControls;
+    liquidityUnits?: boolean;
+    /** Cards fade out when removed and glide up: for short lists only. */
+    animate?: boolean;
+}
+
+function Card({ row, unit, scopeKey, liquidityLabel, options }: { row: TableRow; unit: Unit; scopeKey: string; liquidityLabel: string; options: CardOptions }) {
+    const { watch, liquidityUnits } = options;
+
     return (
-        <li className="border-t first:border-t-0">
+        <div className="relative">
+            {/* Beside the link, not inside it: a tap on the star must not open the item. */}
+            {watch && (
+                <WatchStar
+                    name={row.item.name}
+                    watched={watch.isWatched(row.item.id)}
+                    onToggle={(watched) => watch.onToggle(row.item, watched)}
+                    className="absolute top-3 left-2 z-10"
+                />
+            )}
             <Link
                 to="/items/$itemId"
                 params={{ itemId: String(row.item.id) }}
-                className="active:bg-accent focus-visible:ring-ring/50 flex flex-col gap-2.5 px-4 py-3 outline-none focus-visible:ring-[3px] focus-visible:ring-inset"
+                className={cn(
+                    'active:bg-accent focus-visible:ring-ring/50 flex flex-col gap-2.5 py-3 pr-4 outline-none focus-visible:ring-[3px] focus-visible:ring-inset',
+                    watch ? 'pl-12' : 'pl-4',
+                )}
             >
                 <span className="flex items-center gap-3">
                     <ItemIcon item={row.item} />
@@ -62,19 +87,39 @@ function Card({ row, unit, scopeKey, liquidityLabel }: { row: TableRow; unit: Un
                     <Sparkline points={row.sparkline} change={row.change.d7} />
                 </span>
                 <Labelled label={liquidityLabel}>
-                    <span className="text-foreground/80 text-sm">{row.liquidity ? formatLiquidity(row.liquidity) : '—'}</span>
+                    <span className="text-foreground/80 text-sm">
+                        {row.liquidity ? (liquidityUnits ? formatLiquidityWithUnit(row.liquidity) : formatLiquidity(row.liquidity)) : '—'}
+                    </span>
                 </Labelled>
             </Link>
-        </li>
+        </div>
     );
 }
 
 /** The phone layout of the price list: one tappable card per item instead of a table. */
-export function EconomyCards({ rows, unit, scopeKey, liquidityLabel }: { rows: readonly TableRow[]; unit: Unit; scopeKey: string; liquidityLabel: string }) {
+export function EconomyCards({
+    rows,
+    unit,
+    scopeKey,
+    liquidityLabel,
+    options = {},
+}: {
+    rows: readonly TableRow[];
+    unit: Unit;
+    scopeKey: string;
+    liquidityLabel: string;
+    options?: CardOptions;
+}) {
+    const renderCard = (row: TableRow) => <Card row={row} unit={unit} scopeKey={scopeKey} liquidityLabel={liquidityLabel} options={options} />;
+
+    if (options.animate && canAnimateLayout(rows.length)) {
+        return <AnimatedList items={rows} getKey={(row) => String(row.item.id)} renderItem={renderCard} className="divide-y" />;
+    }
+
     return (
-        <ul>
+        <ul className="divide-y">
             {rows.map((row) => (
-                <Card key={row.item.id} row={row} unit={unit} scopeKey={scopeKey} liquidityLabel={liquidityLabel} />
+                <li key={row.item.id}>{renderCard(row)}</li>
             ))}
         </ul>
     );

@@ -4,6 +4,9 @@ import { ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api/client';
 import { useHistory, useLatest } from '@/lib/api/prices';
+import { useWatchlist } from '@/lib/api/watchlist';
+import type { WatchControls } from '@/lib/watchlist/controls';
+import { WatchButton } from '@/components/watchlist/WatchButton';
 import { type Range } from '@/lib/economy/search-params';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
@@ -58,21 +61,24 @@ function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel:
     );
 }
 
-function ItemHeading({ item, league }: { item: ItemRef; league: LeagueRef | undefined }) {
+function ItemHeading({ item, league, watch }: { item: ItemRef; league: LeagueRef | undefined; watch: WatchControls }) {
     const category = CATEGORIES[GAME].find((candidate) => candidate.id === item.category);
     const categoryLabel = category?.label ?? item.category;
 
     return (
         <>
             <ItemBreadcrumb item={item} categoryLabel={categoryLabel} />
-            <div className="flex items-center gap-4">
-                <ItemIcon item={item} size="lg" />
-                <div>
-                    <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
-                    <p className="text-muted-foreground text-sm">
-                        {[item.baseType, categoryLabel, league && toLeagueLabel(league)].filter(Boolean).join(' · ')}
-                    </p>
+            <div className="flex flex-wrap items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                    <ItemIcon item={item} size="lg" />
+                    <div>
+                        <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
+                        <p className="text-muted-foreground text-sm">
+                            {[item.baseType, categoryLabel, league && toLeagueLabel(league)].filter(Boolean).join(' · ')}
+                        </p>
+                    </div>
                 </div>
+                <WatchButton watched={watch.isWatched(item.id)} onToggle={(watched) => watch.onToggle(item, watched)} />
             </div>
         </>
     );
@@ -82,6 +88,7 @@ function ItemHeading({ item, league }: { item: ItemRef; league: LeagueRef | unde
 export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     const { scope, leagues, league } = useEconomyContext();
     const navigate = useNavigate();
+    const { controls } = useWatchlist();
     const history = useHistory(scope, itemId, range, league?.firstSeen);
     // One cached `latest` query per unit: the chosen one is large, the other two sit small beneath it.
     const byUnit: Record<Unit, LatestQuery> = {
@@ -110,7 +117,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
-            <ItemHeading item={item} league={answer?.league ?? shown?.league} />
+            <ItemHeading item={item} league={answer?.league ?? shown?.league} watch={controls} />
             {unpricedIn ? <NoItemPriceState league={unpricedIn} /> : <ItemStats shown={shown} unit={scope.unit} prices={prices} />}
             <HistoryCard history={answer} itemName={item.name} range={range} onRange={setRange} />
         </div>

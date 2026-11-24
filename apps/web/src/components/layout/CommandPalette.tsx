@@ -6,7 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { SEARCH_MIN_LENGTH, useLatest, usePriceSearch, type PriceScope } from '@/lib/api/prices';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { useDebouncedValue } from '@/lib/use-debounced';
-import { BestMatches, GoToCategories } from './PaletteResults';
+import { useWatchlist } from '@/lib/api/watchlist';
+import { toRecentlyAdded } from '@/lib/watchlist/recent';
+import { GoTo, ItemResults } from './PaletteResults';
 
 /** Opens and closes the palette on Cmd+K and on Ctrl+K. */
 export function useCommandShortcut(toggle: () => void) {
@@ -26,20 +28,31 @@ export function useCommandShortcut(toggle: () => void) {
 
 const SEARCH_DEBOUNCE_MS = 200;
 
-/** What the palette lists for what was typed: the name matches with their prices, and the categories to jump to. */
+const RECENT_WATCHED = 5;
+
+/** What the palette lists for what was typed: the name matches with their prices, the watched ones set apart, and where to jump. */
 function usePaletteResults(needle: string, scope: PriceScope) {
     const debounced = useDebouncedValue(needle, SEARCH_DEBOUNCE_MS);
     const search = usePriceSearch(GAME, debounced);
-    const matches = debounced.length >= SEARCH_MIN_LENGTH ? (search.data?.results ?? []) : [];
+    const watchlist = useWatchlist();
+    const found = debounced.length >= SEARCH_MIN_LENGTH ? (search.data?.results ?? []) : [];
     const latest = useLatest(
         scope,
-        matches.map((match) => match.item.id),
+        found.map((match) => match.item.id),
     );
     const prices = new Map(latest.data?.rows.map((row) => [row.item.id, row]));
-    const categories = CATEGORIES[GAME].filter((category) => category.label.toLowerCase().includes(needle.toLowerCase()));
+
+    for (const row of watchlist.rows) prices.set(row.item.id, row);
+
+    // With a query the watched results are lifted out of the best matches; with none, the newest additions stand in.
+    const watched = needle ? found.filter((match) => watchlist.isWatched(match.item.id)) : toRecentlyAdded(watchlist.rows, watchlist.unlisted, RECENT_WATCHED);
+    const matches = found.filter((match) => !watchlist.isWatched(match.item.id));
+    const lowered = needle.toLowerCase();
+    const categories = CATEGORIES[GAME].filter((category) => category.label.toLowerCase().includes(lowered));
+    const offersWatchlist = watchlist.answer !== undefined && 'watchlist'.includes(lowered);
     const searching = needle.length >= SEARCH_MIN_LENGTH && (needle !== debounced || search.isFetching);
 
-    return { matches, prices, categories, searching };
+    return { matches, watched, prices, categories, searching, watchlistCount: offersWatchlist ? watchlist.count : undefined };
 }
 
 /**
@@ -51,7 +64,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     const { scope } = useEconomyContext();
     const navigate = useNavigate();
     const needle = text.trim();
-    const { matches, prices, categories, searching } = usePaletteResults(needle, scope);
+    const { matches, watched, prices, categories, searching, watchlistCount } = usePaletteResults(needle, scope);
+    const hasResults = matches.length > 0 || watched.length > 0;
 
     function close(next: boolean) {
         onOpenChange(next);
@@ -62,6 +76,11 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     function openItem(itemId: number) {
         close(false);
         void navigate({ to: '/items/$itemId', params: { itemId: String(itemId) } });
+    }
+
+    function openWatchlist() {
+        close(false);
+        void navigate({ to: '/watchlist' });
     }
 
     function openCategory(category: string) {
@@ -80,10 +99,17 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 <Command shouldFilter={false} loop>
                     <CommandInput value={text} onValueChange={setText} placeholder="Search every currency and item" />
                     <CommandList>
-                        {matches.length > 0 && <BestMatches matches={matches} prices={prices} unit={scope.unit} onOpen={openItem} />}
-                        {categories.length > 0 && <GoToCategories categories={categories} onOpen={openCategory} />}
-                        {matches.length === 0 && categories.length === 0 && !searching && <CommandEmpty>Nothing matches “{needle}”.</CommandEmpty>}
-                        {matches.length === 0 && searching && (
+                        {matches.length > 0 && <ItemResults heading="Best matches" matches={matches} prices={prices} unit={scope.unit} onOpen={openItem} />}
+                        {watched.length > 0 && (
+                            <ItemResults heading="On your watchlist" matches={watched} prices={prices} unit={scope.unit} onOpen={openItem} />
+                        )}
+                        {(categories.length > 0 || watchlistCount !== undefined) && (
+                            <GoTo categories={categories} watchlistCount={watchlistCount} onOpenCategory={openCategory} onOpenWatchlist={openWatchlist} />
+                        )}
+                        {!hasResults && categories.length === 0 && watchlistCount === undefined && !searching && (
+                            <CommandEmpty>Nothing matches “{needle}”.</CommandEmpty>
+                        )}
+                        {!hasResults && searching && (
                             <p role="status" className="text-muted-foreground py-6 text-center text-sm">
                                 Searching…
                             </p>

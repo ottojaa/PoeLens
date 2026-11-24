@@ -43,6 +43,33 @@ describe('sortRows', () => {
         expect(names(sortRows(items, 'liquidity', 'asc'))).toEqual(['A', 'C', 'B']);
     });
 
+    it('sorts liquidity by kind first when the list mixes categories: traded rows, then listings, in both directions', () => {
+        const items = [
+            row('Listed big', { liquidity: { kind: 'listings', value: 900 } }),
+            row('Traded small', { liquidity: { kind: 'volume', value: 2 } }),
+            row('Listed small', { liquidity: { kind: 'listings', value: 10 } }),
+            row('Traded big', { liquidity: { kind: 'volume', value: 50 } }),
+            row('None'),
+        ];
+
+        expect(names(sortRows(items, 'liquidity', 'desc', { liquidityByKind: true }))).toEqual([
+            'Traded big',
+            'Traded small',
+            'Listed big',
+            'Listed small',
+            'None',
+        ]);
+        expect(names(sortRows(items, 'liquidity', 'asc', { liquidityByKind: true }))).toEqual([
+            'Traded small',
+            'Traded big',
+            'Listed small',
+            'Listed big',
+            'None',
+        ]);
+        // Without the option the two kinds are compared by raw value, which is what a single category wants.
+        expect(names(sortRows(items, 'liquidity', 'desc'))[0]).toBe('Listed big');
+    });
+
     it('sorts the trend column by the sparkline net change, rows without a line last', () => {
         const items = [row('Up', { sparkline: [1, 2] }), row('Short', { sparkline: [1] }), row('Down', { sparkline: [2, 1] })];
 

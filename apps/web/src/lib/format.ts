@@ -44,6 +44,13 @@ export function formatLiquidity(liquidity: { kind: 'listings' | 'volume'; value:
     return liquidity.kind === 'volume' ? formatPrice(liquidity.value) : formatCount(liquidity.value);
 }
 
+/** A row's liquidity with its own unit, for lists that mix categories: "10.4 div" traded, or "868 listings". */
+export function formatLiquidityWithUnit(liquidity: { kind: 'listings' | 'volume'; value: number }): string {
+    return liquidity.kind === 'volume'
+        ? `${formatPrice(liquidity.value)} div`
+        : `${formatCount(liquidity.value)} ${liquidity.value === 1 ? 'listing' : 'listings'}`;
+}
+
 /** A change in percent with an arrow, so direction never rests on colour alone: "▲ +29.6%", "▼ −3.9%". Null is "—". */
 export function formatChange(percent: number | null): string {
     if (percent === null) return '—';

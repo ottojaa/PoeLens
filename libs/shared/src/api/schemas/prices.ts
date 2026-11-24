@@ -51,7 +51,7 @@ export const PriceRowSchema = z.object({
 });
 
 /** What every price answer resolved: the game, the league `'current'` pointed at, and the unit prices are in. */
-const envelope = {
+export const priceEnvelope = {
     game: GameSchema,
     league: LeagueRefSchema,
     unit: UnitSchema,
@@ -140,13 +140,13 @@ export const TableRowSchema = PriceRowSchema.extend({
 });
 
 export const TableResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     category: z.string(),
     rows: z.array(TableRowSchema),
 });
 
 export const LatestResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     rows: z.array(PriceRowSchema),
     /** Requested items missing from the newest snapshot of their category (or unknown, or low confidence). */
     unlisted: z.array(z.number().int()),
@@ -161,7 +161,7 @@ export const HistoryPointSchema = z.object({
 });
 
 export const HistoryResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     item: ItemRefSchema,
     bucket: HistoryBucketSchema,
     from: z.string().datetime(),
@@ -170,7 +170,7 @@ export const HistoryResponseSchema = z.object({
 });
 
 export const MoversResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     window: MoverWindowSchema,
     risers: z.array(PriceRowSchema),
     fallers: z.array(PriceRowSchema),
