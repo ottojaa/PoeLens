@@ -20,12 +20,29 @@ async function resolveChart(db: Kysely<Database>, context: ResolverContext, bloc
     if (!window) return null;
 
     if (block.quote !== null) {
-        const series = await getPairSeries(db, { game: context.game, league: context.league, a: block.item, b: block.quote, bucket: window.bucket, from: new Date(window.from), to: context.now });
+        const series = await getPairSeries(db, {
+            game: context.game,
+            league: context.league,
+            a: block.item,
+            b: block.quote,
+            bucket: window.bucket,
+            from: new Date(window.from),
+            to: context.now,
+        });
 
         return { type: 'chart', item: series.a, quote: series.b, unit: null, points: series.points };
     }
 
-    const history = await getHistory(db, { game: context.game, league: context.league, item: block.item, unit, bucket: window.bucket, from: window.from, to: context.now.toISOString(), includeLowConfidence: false });
+    const history = await getHistory(db, {
+        game: context.game,
+        league: context.league,
+        item: block.item,
+        unit,
+        bucket: window.bucket,
+        from: window.from,
+        to: context.now.toISOString(),
+        includeLowConfidence: false,
+    });
 
     return { type: 'chart', item: history.item, quote: null, unit: history.unit, points: history.points };
 }

@@ -112,16 +112,28 @@ describe.skipIf(SKIP_DB_TESTS)('the screener and pair series against TimescaleDB
         });
 
         it('wants the minimum liquidity: listings, or volume for an exchange item', async () => {
-            const volume = (await test.db.selectFrom('prices').select('volume').where('item_id', '=', ids['Divine Orb']!).where('time', '=', new Date(T)).executeTakeFirstOrThrow())
-                .volume!;
+            const volume = (
+                await test.db
+                    .selectFrom('prices')
+                    .select('volume')
+                    .where('item_id', '=', ids['Divine Orb']!)
+                    .where('time', '=', new Date(T))
+                    .executeTakeFirstOrThrow()
+            ).volume!;
 
             expect(await names({ minLiquidity: volume + 1 })).not.toContain('Divine Orb');
             expect(await names({ minLiquidity: volume })).toContain('Divine Orb');
         });
 
         it('wants the minimum worth in divine', async () => {
-            const worth = (await test.db.selectFrom('prices').select('divine').where('item_id', '=', ids['Exalted Orb']!).where('time', '=', new Date(T)).executeTakeFirstOrThrow())
-                .divine;
+            const worth = (
+                await test.db
+                    .selectFrom('prices')
+                    .select('divine')
+                    .where('item_id', '=', ids['Exalted Orb']!)
+                    .where('time', '=', new Date(T))
+                    .executeTakeFirstOrThrow()
+            ).divine;
 
             expect(await names({ minDivine: worth * 2 })).not.toContain('Exalted Orb');
             expect(await names({ minDivine: worth / 2 })).toContain('Exalted Orb');
@@ -162,14 +174,27 @@ describe.skipIf(SKIP_DB_TESTS)('the screener and pair series against TimescaleDB
 
     describe('pair series', () => {
         const series = (a: string, b: string, bucket: 'hour' | 'day' = 'hour') =>
-            getPairSeries(test.db, { game: 'poe2', league: 'current', a: ids[a]!, b: ids[b]!, bucket, from: new Date(T - 48 * 3_600_000), to: new Date(T + 3_600_000) });
+            getPairSeries(test.db, {
+                game: 'poe2',
+                league: 'current',
+                a: ids[a]!,
+                b: ids[b]!,
+                bucket,
+                from: new Date(T - 48 * 3_600_000),
+                to: new Date(T + 3_600_000),
+            });
 
         it('divides the two sides bucket by bucket, in divine, and keeps the newest point', async () => {
             await seed('Divine Orb', 2, { divineFactor: 2 });
             await seed('Exalted Orb', 2, { divineFactor: 4 });
 
             const { points, a, b } = await series('Divine Orb', 'Exalted Orb');
-            const now = await test.db.selectFrom('prices').select(['item_id', 'divine']).where('time', '=', new Date(T)).where('item_id', 'in', [ids['Divine Orb']!, ids['Exalted Orb']!]).execute();
+            const now = await test.db
+                .selectFrom('prices')
+                .select(['item_id', 'divine'])
+                .where('time', '=', new Date(T))
+                .where('item_id', 'in', [ids['Divine Orb']!, ids['Exalted Orb']!])
+                .execute();
             const divine = now.find((row) => row.item_id === ids['Divine Orb'])!.divine;
             const exalted = now.find((row) => row.item_id === ids['Exalted Orb'])!.divine;
 
@@ -194,7 +219,17 @@ describe.skipIf(SKIP_DB_TESTS)('the screener and pair series against TimescaleDB
             await sql`DELETE FROM prices WHERE item_id = ${ids['Chaos Orb']!}`.execute(test.db);
 
             expect((await series('Divine Orb', 'Chaos Orb')).points).toEqual([]);
-            await expect(getPairSeries(test.db, { game: 'poe2', league: 'current', a: ids['Divine Orb']!, b: 2_000_000, bucket: 'hour', from: new Date(T - 3_600_000), to: new Date(T + 1) })).rejects.toMatchObject({
+            await expect(
+                getPairSeries(test.db, {
+                    game: 'poe2',
+                    league: 'current',
+                    a: ids['Divine Orb']!,
+                    b: 2_000_000,
+                    bucket: 'hour',
+                    from: new Date(T - 3_600_000),
+                    to: new Date(T + 1),
+                }),
+            ).rejects.toMatchObject({
                 statusCode: 404,
             });
         });

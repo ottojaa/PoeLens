@@ -64,7 +64,17 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
     const stored = () => test.db.selectFrom('dashboards').selectAll().where('user_id', '=', userId).orderBy('position').execute();
 
     describe('table', () => {
-        const base = { id: 't', type: 'table' as const, category: 'Currency', sort: 'price' as const, dir: 'desc' as const, q: '', minLiquidity: 0, hideLowConfidence: true, limit: 5 };
+        const base = {
+            id: 't',
+            type: 'table' as const,
+            category: 'Currency',
+            sort: 'price' as const,
+            dir: 'desc' as const,
+            q: '',
+            minLiquidity: 0,
+            hideLowConfidence: true,
+            limit: 5,
+        };
 
         it("shows the top rows of the economy view's own sort and filter, and says how many matched", async () => {
             for (const view of [
@@ -74,7 +84,14 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
                 { sort: 'h24' as const, dir: 'asc' as const, q: 'of', minLiquidity: 0 },
             ]) {
                 const answered = (await data([{ ...base, ...view }])).blocks['t'] as TableBlockData;
-                const table = await getTable(test.db, { game: 'poe2', league: 'current', category: 'Currency', unit: 'exalted', includeLowConfidence: false, sparkline: true });
+                const table = await getTable(test.db, {
+                    game: 'poe2',
+                    league: 'current',
+                    category: 'Currency',
+                    unit: 'exalted',
+                    includeLowConfidence: false,
+                    sparkline: true,
+                });
                 const expected = sortRows(filterRows(table.rows, view.q, view.minLiquidity), view.sort, view.dir);
 
                 expect(expected.length).toBeGreaterThan(0);
@@ -83,7 +100,7 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
             }
         });
 
-        it('carries each row\'s sparkline, so the trend column never needs a second request', async () => {
+        it("carries each row's sparkline, so the trend column never needs a second request", async () => {
             await insertEarlierPrice(test.db, earlier, ids['Divine Orb']!, 30, { divineFactor: 2 });
 
             const answered = (await data([{ ...base, q: 'divine' }])).blocks['t'] as TableBlockData;
@@ -125,7 +142,17 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
             await insertEarlierPrice(test.db, earlier, ids['Exalted Orb']!, 24, { divineFactor: 0.8 });
         });
 
-        const screener = { id: 's', type: 'screener' as const, scope: { categories: ['Currency'] }, windowHours: 3, direction: 'up' as const, minChangePct: 20, minLiquidity: 0, minDivine: null, limit: 5 };
+        const screener = {
+            id: 's',
+            type: 'screener' as const,
+            scope: { categories: ['Currency'] },
+            windowHours: 3,
+            direction: 'up' as const,
+            minChangePct: 20,
+            minLiquidity: 0,
+            minDivine: null,
+            limit: 5,
+        };
 
         it('lists the screener rows with the change over the window', async () => {
             const answered = (await data([screener], 'divine')).blocks['s'];
@@ -181,7 +208,19 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
     });
 
     describe('appending a block', () => {
-        const table: Block = { id: 'client', v: 1, type: 'table', category: 'Currency', sort: 'price', dir: 'desc', q: '', minLiquidity: 0, hideLowConfidence: true, columns: [], limit: 10 };
+        const table: Block = {
+            id: 'client',
+            v: 1,
+            type: 'table',
+            category: 'Currency',
+            sort: 'price',
+            dir: 'desc',
+            q: '',
+            minLiquidity: 0,
+            hideLowConfidence: true,
+            columns: [],
+            limit: 10,
+        };
 
         it('puts it in a new panel on the starter, stores the starter and bumps the revision', async () => {
             const id = toStarterId(userId, 'poe2');
@@ -204,7 +243,11 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
 
         it('adds to an existing panel, last, and keeps every other block as it was', async () => {
             const id = toStarterId(userId, 'poe2');
-            const saved = await saveDashboard(test.db, userId, id, { revision: 0, name: 'Trading', panels: [panel('a', [note('n1')]), panel('b', [note('n2')], { x: 4 })] });
+            const saved = await saveDashboard(test.db, userId, id, {
+                revision: 0,
+                name: 'Trading',
+                panels: [panel('a', [note('n1')]), panel('b', [note('n2')], { x: 4 })],
+            });
             const added = await appendBlock(test.db, userId, id, { block: table, panelId: 'b' });
             const after = (await listDashboards(test.db, userId, 'poe2')).dashboards[0]!;
 
@@ -235,16 +278,22 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
             expect(second.panelId).not.toBe(first.panelId);
         });
 
-        it('refuses an unknown panel, a full panel, a full dashboard, other categories, other items and someone else\'s dashboard', async () => {
+        it("refuses an unknown panel, a full panel, a full dashboard, other categories, other items and someone else's dashboard", async () => {
             const id = toStarterId(userId, 'poe2');
             const full = Array.from({ length: MAX_BLOCKS }, (_, index) => note('f' + index));
-            const crowded = Array.from({ length: MAX_PANELS }, (_, index) => panel('p' + index, [], { x: (index % 3) * 4, y: Math.floor(index / 3) * 2, w: 4, h: 2 }));
+            const crowded = Array.from({ length: MAX_PANELS }, (_, index) =>
+                panel('p' + index, [], { x: (index % 3) * 4, y: Math.floor(index / 3) * 2, w: 4, h: 2 }),
+            );
 
             await saveDashboard(test.db, userId, id, { revision: 0, name: 'Trading', panels: [panel('full', full)] });
             await expect(appendBlock(test.db, userId, id, { block: table, panelId: 'nope' })).rejects.toBeInstanceOf(NotFoundError);
             await expect(appendBlock(test.db, userId, id, { block: table, panelId: 'full' })).rejects.toBeInstanceOf(ValidationError);
-            await expect(appendBlock(test.db, userId, id, { block: { ...table, category: 'Nothing' } })).rejects.toMatchObject({ details: { categories: ['Nothing'] } });
-            await expect(appendBlock(test.db, userId, id, { block: { id: 'c', v: 1, type: 'chart', item: 2_000_000, quote: null, range: '7d' } })).rejects.toMatchObject({
+            await expect(appendBlock(test.db, userId, id, { block: { ...table, category: 'Nothing' } })).rejects.toMatchObject({
+                details: { categories: ['Nothing'] },
+            });
+            await expect(
+                appendBlock(test.db, userId, id, { block: { id: 'c', v: 1, type: 'chart', item: 2_000_000, quote: null, range: '7d' } }),
+            ).rejects.toMatchObject({
                 details: { itemIds: [2_000_000] },
             });
             await saveDashboard(test.db, userId, id, { revision: 1, name: 'Trading', panels: crowded });
@@ -279,7 +328,7 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
             }
         };
 
-        it('has the five templates with the design\'s descriptions, in order', async () => {
+        it("has the five templates with the design's descriptions, in order", async () => {
             const { templates } = await listTemplates(test.db, 'poe2');
 
             expect(templates.map((template) => [template.name, template.description])).toEqual([
@@ -291,7 +340,7 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
             ]);
         });
 
-        it('points at the catalog\'s real item ids', async () => {
+        it("points at the catalog's real item ids", async () => {
             await catalog(['Headhunter', 'Original Sin']);
 
             const { templates } = await listTemplates(test.db, 'poe2');

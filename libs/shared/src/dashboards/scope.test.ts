@@ -14,7 +14,7 @@ describe('toScopeCategories', () => {
         expect([...economy, ...uniques].sort()).toEqual([...all].sort());
     });
 
-    it('keeps the game\'s order for a list, and leaves out a category the game does not have', () => {
+    it("keeps the game's order for a list, and leaves out a category the game does not have", () => {
         expect(toScopeCategories('poe2', { categories: ['UniqueWeapons', 'Currency', 'Nope'] })).toEqual(['Currency', 'UniqueWeapons']);
     });
 });

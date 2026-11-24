@@ -5,12 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Segmented } from '@/components/ui/segmented';
+import { GAME } from '@/lib/economy/use-economy-context';
 import type { BlockPatch } from '@/lib/dashboard/editor';
 import { cn } from '@/lib/utils';
-import { toItemName, toPairName } from '../blocks/block-format';
+import { toChartTitle, toItemName, toMoversTitle, toPairName, toScreenerRule, toTableTitle } from '../blocks/block-format';
 import { useSortableItem } from '../dnd';
+import { ChartSettings, MoversSettings, ScreenerSettings, TableSettings } from './BlockSettingsForms';
 
-const KIND_LABEL: Record<Block['type'], string> = { item: 'Item', pair: 'Pair', note: 'Note', heading: 'Heading' };
+const KIND_LABEL: Record<Block['type'], string> = {
+    item: 'Item',
+    pair: 'Pair',
+    note: 'Note',
+    heading: 'Heading',
+    table: 'Table',
+    movers: 'Movers',
+    screener: 'Screener',
+    chart: 'Chart',
+};
+
+/** The blocks that have a display name field: everything that shows prices. */
+type NamedBlock = Exclude<Block, { type: 'note' | 'heading' }>;
 
 /** What a block is called in the list: its own name, else what it shows. */
 export function toBlockLabel(block: Block, data: BlockData | null | undefined): string {
@@ -20,6 +34,14 @@ export function toBlockLabel(block: Block, data: BlockData | null | undefined): 
 
     if (block.type === 'heading') return block.text || 'Heading';
 
+    if (block.type === 'table') return toTableTitle(GAME, block);
+
+    if (block.type === 'movers') return toMoversTitle(GAME, block);
+
+    if (block.type === 'screener') return block.name || 'Screener · ' + toScreenerRule(block).join(', ');
+
+    if (block.type === 'chart') return toChartTitle(block, data?.type === 'chart' ? data : undefined);
+
     return (
         block.markdown
             .split('\n')
@@ -28,7 +50,7 @@ export function toBlockLabel(block: Block, data: BlockData | null | undefined): 
     );
 }
 
-function NameField({ block, fallback, onPatch }: { block: Extract<Block, { type: 'item' | 'pair' }>; fallback: string; onPatch: (patch: BlockPatch) => void }) {
+function NameField({ block, fallback, onPatch }: { block: NamedBlock; fallback: string; onPatch: (patch: BlockPatch) => void }) {
     const id = 'name-' + block.id;
 
     return (
@@ -102,6 +124,10 @@ function BlockSettings({ block, fallback, onPatch }: { block: Block; fallback: s
                     />
                 </div>
             )}
+            {block.type === 'table' && <TableSettings block={block} onPatch={onPatch} />}
+            {block.type === 'movers' && <MoversSettings block={block} onPatch={onPatch} />}
+            {block.type === 'screener' && <ScreenerSettings block={block} onPatch={onPatch} />}
+            {block.type === 'chart' && <ChartSettings block={block} onPatch={onPatch} />}
         </>
     );
 }

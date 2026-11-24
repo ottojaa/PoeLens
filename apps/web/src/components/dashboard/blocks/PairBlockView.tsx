@@ -4,6 +4,8 @@ import { ItemIcon } from '@/components/economy/ItemIcon';
 import { Sparkline } from '@/components/economy/Sparkline';
 import { Badge } from '@/components/ui/badge';
 import { formatPrice } from '@/lib/format';
+import { useIsTruncated } from '@/lib/use-is-truncated';
+import { cn } from '@/lib/utils';
 import { toPairName } from './block-format';
 import { BlockMessage, ItemLink } from './DataRow';
 
@@ -28,15 +30,22 @@ function Figure({ data }: { data: PairBlockData }) {
  * panel narrower than 260px the name moves to a line of its own instead of being cut to a few letters.
  */
 export function PairBlockView({ block, data }: { block: PairBlock; data: PairBlockData | null | undefined }) {
+    const name = toPairName(block, data ?? undefined);
+    const { ref, truncated } = useIsTruncated<HTMLSpanElement>(name);
+
     if (data === undefined) return <BlockMessage>Loading…</BlockMessage>;
 
-    if (data === null) return <BlockMessage>{toPairName(block, data)}: no price in this league</BlockMessage>;
+    if (data === null) return <BlockMessage>{name}: no price in this league</BlockMessage>;
 
     return (
         <ItemLink item={data.a} className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
             <Figure data={data} />
             <span className="flex min-w-0 flex-1 flex-col gap-0.5 @max-[260px]:order-last @max-[260px]:basis-full">
-                <span className="text-muted-foreground truncate text-[13px]">{toPairName(block, data)}</span>
+                {/* A generated label that would be cut ("Divine Orb / E…") says less than the icons do, so it is hidden; a name the user typed always shows. */}
+                <span ref={ref} className={cn('text-muted-foreground truncate text-[13px]', truncated && !block.name && 'invisible')}>
+                    {name}
+                </span>
+                {truncated && !block.name && <span className="sr-only">{name}</span>}
                 {data.lowConfidence && (
                     <Badge
                         variant="outline"

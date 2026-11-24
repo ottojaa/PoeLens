@@ -50,12 +50,7 @@ export async function loadItemId(db: Kysely<Database>, name: string, category = 
  * it wants ("doubled since") and not the absolute numbers.
  */
 export async function insertEarlierPrice(db: Kysely<Database>, rawId: number, itemId: number, hoursAgo: number, price: EarlierPrice): Promise<void> {
-    const current = await db
-        .selectFrom('prices')
-        .selectAll()
-        .where('item_id', '=', itemId)
-        .where('time', '=', new Date(T))
-        .executeTakeFirstOrThrow();
+    const current = await db.selectFrom('prices').selectAll().where('item_id', '=', itemId).where('time', '=', new Date(T)).executeTakeFirstOrThrow();
 
     await db
         .insertInto('prices')

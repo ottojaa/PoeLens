@@ -1,11 +1,19 @@
-import { MAX_DASHBOARDS, type Dashboard, type DashboardsResponse, type Panel } from '@poelens/shared';
+import { MAX_DASHBOARDS, type Dashboard, type DashboardsResponse, type Panel, type PanelTemplate } from '@poelens/shared';
 import { LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import { ErrorState } from '@/components/economy/states';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useDashboardData, useDashboards, useCreateDashboard, useDeleteDashboard, useReorderDashboards, useSaveDashboard } from '@/lib/api/dashboards';
-import { newPanel } from '@/lib/dashboard/editor';
+import {
+    useCreateDashboard,
+    useDashboardData,
+    useDashboardTemplates,
+    useDashboards,
+    useDeleteDashboard,
+    useReorderDashboards,
+    useSaveDashboard,
+} from '@/lib/api/dashboards';
+import { fromTemplate, newPanel } from '@/lib/dashboard/editor';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { DashboardGrid } from './DashboardGrid';
 import { DashboardTabs } from './DashboardTabs';
@@ -159,8 +167,10 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
     const level = canEdit && edit?.level === 'content' && selected ? 'content' : 'layout';
     const mode = !edit ? 'view' : level === 'content' ? 'content' : canEdit ? 'layout' : 'view';
 
-    const addPanel = () => {
-        const panel = newPanel(draft.panels);
+    const templates = useDashboardTemplates(scope.game).data?.templates;
+
+    const addPanel = (template: PanelTemplate | undefined) => {
+        const panel = template ? fromTemplate(template, draft.panels) : newPanel(draft.panels);
 
         if (panel) dispatch({ type: 'addPanel', panel });
     };
@@ -176,6 +186,7 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
                         canLayout={canEdit}
                         hint={canEdit ? undefined : EDIT_HINT}
                         canAddPanel={canEdit && newPanel(draft.panels) !== undefined}
+                        templates={templates}
                         saving={editing.saving}
                         onLevel={(next) => (next === 'content' && !selected ? panels[0] && editing.openContent(panels[0].id) : editing.setLevel(next))}
                         onAddPanel={addPanel}
@@ -191,7 +202,12 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
                             onOpenBlock={editing.setOpenBlock}
                             onClose={() => editing.setLevel('layout')}
                             onPatchPanel={(patch) => dispatch({ type: 'patchPanel', id: selected.id, patch })}
-                            onAddBlock={(block) => dispatch({ type: 'addBlock', panelId: selected.id, block })}
+                            onAddBlock={(block) => {
+                                dispatch({ type: 'addBlock', panelId: selected.id, block });
+
+                                // These start with defaults that are rarely what is wanted: open their settings.
+                                if (block.type === 'table' || block.type === 'movers' || block.type === 'screener') editing.setOpenBlock(block.id);
+                            }}
                             onPatchBlock={(blockId, patch) => dispatch({ type: 'patchBlock', panelId: selected.id, blockId, patch })}
                             onRemoveBlock={(blockId) => dispatch({ type: 'removeBlock', panelId: selected.id, blockId })}
                             onMoveBlock={(from, to) => dispatch({ type: 'moveBlock', panelId: selected.id, from, to })}

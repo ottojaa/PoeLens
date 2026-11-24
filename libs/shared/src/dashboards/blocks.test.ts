@@ -134,7 +134,7 @@ describe('toDataBlock', () => {
         });
     });
 
-    it('leaves a table\'s columns out: showing a column never refetches', () => {
+    it("leaves a table's columns out: showing a column never refetches", () => {
         const data = toDataBlock({ ...SAMPLES.table, name: 'Mine' });
         const withColumns = toDataBlock({ ...SAMPLES.table, columns: ['h1'] });
 

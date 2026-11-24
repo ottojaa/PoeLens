@@ -1,9 +1,13 @@
 import type { Block, BlockData } from '@poelens/shared';
 import { BlockFrame } from './BlockFrame';
+import { ChartBlockView } from './ChartBlockView';
 import { HeadingBlockView } from './HeadingBlockView';
 import { ItemBlockView } from './ItemBlockView';
+import { MoversBlockView } from './MoversBlockView';
 import { NoteBlockView } from './NoteBlockView';
 import { PairBlockView } from './PairBlockView';
+import { ScreenerBlockView } from './ScreenerBlockView';
+import { TableBlockView } from './TableBlockView';
 
 function BlockBody({ block, data }: { block: Block; data: BlockData | null | undefined }) {
     switch (block.type) {
@@ -11,6 +15,14 @@ function BlockBody({ block, data }: { block: Block; data: BlockData | null | und
             return <ItemBlockView block={block} data={data?.type === 'item' ? data : data === undefined ? undefined : null} />;
         case 'pair':
             return <PairBlockView block={block} data={data?.type === 'pair' ? data : data === undefined ? undefined : null} />;
+        case 'table':
+            return <TableBlockView block={block} data={data?.type === 'table' ? data : data === undefined ? undefined : null} />;
+        case 'movers':
+            return <MoversBlockView block={block} data={data?.type === 'movers' ? data : data === undefined ? undefined : null} />;
+        case 'screener':
+            return <ScreenerBlockView block={block} data={data?.type === 'screener' ? data : data === undefined ? undefined : null} />;
+        case 'chart':
+            return <ChartBlockView block={block} data={data?.type === 'chart' ? data : data === undefined ? undefined : null} />;
         case 'note':
             return <NoteBlockView block={block} />;
         case 'heading':

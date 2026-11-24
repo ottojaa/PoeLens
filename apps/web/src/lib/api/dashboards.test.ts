@@ -61,3 +61,26 @@ describe('dashboard data key', () => {
         expect(JSON.stringify(toDataKey(toDataBody({ ...scope, league: 'Standard' }, [panel()])))).not.toBe(base);
     });
 });
+
+describe('dashboard data key of the data blocks', () => {
+    it("ignores a table's columns and every data block's name, and changes with its settings", () => {
+        const table = {
+            id: 't',
+            type: 'table',
+            v: 1,
+            category: 'Currency',
+            sort: 'price',
+            dir: 'desc',
+            q: '',
+            minLiquidity: 0,
+            hideLowConfidence: true,
+            columns: ['d7'],
+            limit: 10,
+        } as const;
+        const base = keyOf([panel({ blocks: [table] })]);
+
+        expect(keyOf([panel({ blocks: [{ ...table, columns: ['h1', 'trend'], name: 'Mine' }] })])).toBe(base);
+        expect(keyOf([panel({ blocks: [{ ...table, sort: 'd7' }] })])).not.toBe(base);
+        expect(keyOf([panel({ blocks: [{ ...table, limit: 11 }] })])).not.toBe(base);
+    });
+});

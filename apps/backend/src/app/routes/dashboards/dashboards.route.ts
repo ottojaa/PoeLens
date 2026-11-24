@@ -102,7 +102,7 @@ export default async function (fastify: FastifyInstance) {
         {
             schema: {
                 tags: ['dashboards'],
-                description: 'The panels Add panel offers, with the ids of the items they hold looked up in the game\'s catalog',
+                description: "The panels Add panel offers, with the ids of the items they hold looked up in the game's catalog",
                 querystring: TemplatesQuerySchema,
                 response: { 200: TemplatesResponseSchema },
             },

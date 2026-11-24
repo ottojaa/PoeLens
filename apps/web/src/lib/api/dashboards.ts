@@ -1,9 +1,12 @@
 import {
+    AppendBlockResponseSchema,
     DASHBOARD_CHANGED_CODE,
     DashboardDataResponseSchema,
     DashboardSchema,
     DashboardsResponseSchema,
+    TemplatesResponseSchema,
     toDataPanels,
+    type AppendBlockBody,
     type CreateDashboardBody,
     type Dashboard,
     type DashboardDataBody,
@@ -78,6 +81,26 @@ export function useSaveDashboard(game: Game) {
     return useMutation({
         mutationFn: ({ id, ...body }: SaveDashboardBody & { id: string }) => fetchApi('/dashboards/' + id, DashboardSchema, { method: 'PUT', json: body }),
         onSuccess: (dashboard) => queryClient.setQueryData(dashboardsKey(game), (list: DashboardsResponse | undefined) => withDashboard(list, dashboard)),
+    });
+}
+
+/** Ready-made panels of a game, with their items resolved to the ids this server knows. They change only with the data, so they are read once. */
+export function useDashboardTemplates(game: Game) {
+    return useQuery({
+        queryKey: ['dashboard-templates', game],
+        queryFn: () => fetchApi('/dashboards/templates?game=' + game, TemplatesResponseSchema),
+        staleTime: Infinity,
+    });
+}
+
+/** Adds one block to a stored dashboard, in a panel it names or a new one, without the page holding the dashboard's layout. */
+export function useAppendBlock(game: Game) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ dashboardId, ...body }: AppendBlockBody & { dashboardId: string }) =>
+            fetchApi('/dashboards/' + dashboardId + '/blocks', AppendBlockResponseSchema, { method: 'POST', json: body }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardsKey(game) }),
     });
 }
 
