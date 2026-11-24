@@ -1,4 +1,4 @@
-import { CATEGORIES, type ItemRef, type LeagueRef } from '@poelens/shared';
+import type { ItemRef, LeagueRef } from '@poelens/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,6 +7,7 @@ import { useHistory, useLatest } from '@/lib/api/prices';
 import { useWatchlist } from '@/lib/api/watchlist';
 import type { WatchControls } from '@/lib/watchlist/controls';
 import { WatchButton } from '@/components/watchlist/WatchButton';
+import { toCategoryLabel } from '@/lib/economy/category-label';
 import { type Range } from '@/lib/economy/search-params';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
@@ -62,8 +63,7 @@ function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel:
 }
 
 function ItemHeading({ item, league, watch }: { item: ItemRef; league: LeagueRef | undefined; watch: WatchControls }) {
-    const category = CATEGORIES[GAME].find((candidate) => candidate.id === item.category);
-    const categoryLabel = category?.label ?? item.category;
+    const categoryLabel = toCategoryLabel(GAME, item.category);
 
     return (
         <>
