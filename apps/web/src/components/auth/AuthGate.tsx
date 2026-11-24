@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/lib/auth';
 
 /** Pages a signed-out visitor may open: the sign-in page, and the pages behind an invite link and a reset link. */
-function isPublicPath(pathname: string): boolean {
+export function isPublicPath(pathname: string): boolean {
     return pathname === '/login' || pathname.startsWith('/invite/') || pathname.startsWith('/reset/');
 }
 

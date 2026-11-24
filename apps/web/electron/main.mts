@@ -5,8 +5,10 @@ import { decideNavigation } from './navigation.mjs';
 // The desktop app is a window onto the hosted web app, so a web release reaches desktop users without a new install.
 const APP_URL = app.isPackaged ? 'https://poelens.com' : 'http://localhost:4300';
 
-// Matches --background in dark mode, so a slow first frame doesn't flash white.
-const WINDOW_BACKGROUND = '#15130f';
+// Matches --background in the dark variant of src/theme/reverie.css, so a slow first frame doesn't flash white. This is
+// a hex literal outside src/ on purpose: the Electron main process cannot read the web app's CSS, and the colour check
+// (src/theme/theme.test.ts) only scans src/. Change it together with the theme's dark --background.
+const WINDOW_BACKGROUND = '#121212';
 
 function createWindow(): void {
     const mainWindow = new BrowserWindow({

@@ -1,0 +1,88 @@
+/*
+ * Reverie: charcoal surfaces, a teal accent, Geist.
+ *
+ * Dark follows the design. Light starts from Reverie's own light values, and the contrast check (theme.test.ts) wins
+ * where they disagree: teal, blue and orange are darker here than on the dark side, so text in them stays readable on
+ * the pale surfaces.
+ *
+ * Surfaces: --background is the page, --card (and --popover) the panels, --secondary and --muted the raised level,
+ * --accent the hover level. --primary is the teal accent. Up and down are blue and orange, always shown with an arrow.
+ */
+
+[data-theme='reverie'] {
+    --font-title: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Geist', ui-sans-serif, system-ui, sans-serif;
+
+    /* Light */
+    --background: #f8f7f4;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --popover: #ffffff;
+    --popover-foreground: #1a1a1a;
+
+    --primary: #0f766e;
+    --primary-foreground: #ffffff;
+    --secondary: #f0efe9;
+    --secondary-foreground: #1a1a1a;
+    --muted: #e8e6e1;
+    --muted-foreground: #5c5c5c;
+    --accent: #e8e6e1;
+    --accent-foreground: #1a1a1a;
+
+    --destructive: #c62828;
+    --destructive-foreground: #ffffff;
+    --success: #15803d;
+    --warning: #8a5300;
+
+    --border: #d4d2cc;
+    --input: #bdbab2;
+    --ring: #0f766e;
+
+    --up: #1d62a8;
+    --down: #a64b00;
+    --scrim: #1a1a1a73;
+
+    --chart-1: #0f766e;
+    --chart-2: #1d62a8;
+    --chart-3: #a64b00;
+    --chart-4: #6b46c1;
+    --chart-5: #b83280;
+}
+
+[data-theme='reverie'].dark {
+    --background: #121212;
+    --foreground: #f5f5f5;
+    --card: #1a1a1a;
+    --card-foreground: #f5f5f5;
+    --popover: #1a1a1a;
+    --popover-foreground: #f5f5f5;
+
+    --primary: #4fd1c5;
+    --primary-foreground: #121212;
+    --secondary: #242424;
+    --secondary-foreground: #f5f5f5;
+    --muted: #242424;
+    --muted-foreground: #a0a0a0;
+    --accent: #2e2e2e;
+    --accent-foreground: #f5f5f5;
+
+    --destructive: #f87171;
+    --destructive-foreground: #121212;
+    --success: #48bb78;
+    --warning: #e8b339;
+
+    --border: #2a2a2a;
+    --input: #3a3a3a;
+    --ring: #4fd1c5;
+
+    --up: #4299e1;
+    --down: #ed8936;
+    --scrim: #0000008c;
+
+    --chart-1: #4fd1c5;
+    --chart-2: #4299e1;
+    --chart-3: #ed8936;
+    --chart-4: #b794f4;
+    --chart-5: #f687b3;
+}

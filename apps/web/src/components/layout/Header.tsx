@@ -1,44 +1,44 @@
-import { Link, useNavigate } from '@tanstack/react-router';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth';
+import { DEFAULT_UNIT } from '@poelens/shared';
+import { Link } from '@tanstack/react-router';
+import { Menu, Search } from 'lucide-react';
+import { Wordmark } from '@/components/brand/Logo';
+import { Button } from '@/components/ui/button';
+import { AccountMenu } from './AccountMenu';
+import { LeagueSwitcher } from './LeagueSwitcher';
 import { ThemeToggle } from './ThemeToggle';
+import { UnitToggle } from './UnitToggle';
 
-export function Header() {
-    const { state, signOut } = useAuth();
-    const navigate = useNavigate();
-    const user = state.status === 'signedIn' ? state.user : null;
+const noop = () => undefined;
 
-    async function onSignOut() {
-        await signOut();
-        await navigate({ to: '/login' });
-    }
-
+export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; onOpenSearch: () => void }) {
     return (
-        <header className="border-b bg-background/80 sticky top-0 z-10 backdrop-blur">
-            <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-4">
-                <Link
-                    to="/"
-                    className="flex items-center gap-2 rounded-md text-lg font-semibold tracking-tight outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                >
-                    <img src="/favicon.svg" alt="" className="size-6" />
-                    PoeLens
-                </Link>
-                <div className="flex items-center gap-1">
-                    {user?.role === 'admin' && (
-                        <Link to="/admin" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-                            Admin
-                        </Link>
-                    )}
-                    {user && (
-                        <>
-                            <span className="text-muted-foreground hidden max-w-40 truncate text-sm sm:inline">{user.displayName}</span>
-                            <Button variant="ghost" size="sm" onClick={() => void onSignOut()}>
-                                Sign out
-                            </Button>
-                        </>
-                    )}
-                    <ThemeToggle />
-                </div>
+        <header className="bg-card sticky top-0 z-30 min-h-(--header-height) flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-3 md:px-6">
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu" onClick={onOpenMenu}>
+                <Menu />
+            </Button>
+            <Link to="/" aria-label="PoeLens home" className="focus-visible:ring-ring/50 mr-2 rounded-md outline-none focus-visible:ring-[3px]">
+                <Wordmark />
+            </Link>
+            <div className="hidden lg:block">
+                <LeagueSwitcher leagues={[]} value={null} onChange={noop} disabled />
+            </div>
+            <Button
+                type="button"
+                variant="outline"
+                onClick={onOpenSearch}
+                className="bg-card text-muted-foreground ml-auto h-10 justify-start gap-2.5 rounded-[10px] px-3.5 font-normal md:ml-0 md:max-w-[520px] md:flex-1"
+            >
+                <Search className="size-4 shrink-0" aria-hidden="true" />
+                <span className="hidden flex-1 text-left md:inline">Search every currency and item</span>
+                <span className="sr-only md:hidden">Search</span>
+                <kbd className="border-input hidden rounded-md border px-1.5 py-0.5 font-sans text-xs sm:inline">⌘K</kbd>
+            </Button>
+            <div className="hidden items-center gap-2 lg:ml-auto lg:flex">
+                <UnitToggle value={DEFAULT_UNIT.poe2} onChange={noop} disabled />
+            </div>
+            <div className="flex items-center gap-1">
+                <ThemeToggle />
+                <AccountMenu />
             </div>
         </header>
     );

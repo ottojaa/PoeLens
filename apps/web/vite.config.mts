@@ -27,6 +27,8 @@ export default defineConfig(({ command, mode }) => {
         server: {
             port: 4300,
             host: 'localhost',
+            // Fonts come from the repo-root node_modules, which Vite's default allow list (apps/web) refuses to serve.
+            fs: { allow: [ENV_DIR] },
         },
         preview: {
             port: 4300,
