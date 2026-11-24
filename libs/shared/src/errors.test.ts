@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { AppError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError, ValidationError } from './errors.js';
+import {
+    ApiTokensFullError,
+    AppError,
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    TooManyRequestsError,
+    UnauthorizedError,
+    ValidationError,
+} from './errors.js';
 
 describe('AppError family', () => {
     it('serialises to the wire format the clients read', () => {
@@ -16,6 +25,8 @@ describe('AppError family', () => {
         [new ForbiddenError('Not yet'), 403, 'FORBIDDEN', 'Not yet'],
         [new UnauthorizedError('Sign in'), 401, 'UNAUTHORIZED', 'Sign in'],
         [new UnauthorizedError('Bad login', 'INVALID_CREDENTIALS'), 401, 'INVALID_CREDENTIALS', 'Bad login'],
+        [new ApiTokensFullError(10), 409, 'API_TOKENS_FULL', 'You have reached the limit of API tokens: revoke one first'],
+        [new TooManyRequestsError(30), 429, 'RATE_LIMITED', 'Too many requests: retry in 30 seconds'],
     ])('%s maps to its status and code', (error, statusCode, code, message) => {
         expect(error).toBeInstanceOf(AppError);
         expect(error).toBeInstanceOf(Error);

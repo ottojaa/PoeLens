@@ -1,6 +1,7 @@
 import { ConflictError, NotFoundError, type ResetLinkResponse } from '@poelens/shared';
 import { sql, type Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
+import { deleteApiTokens } from '../api-tokens/index.js';
 import { invalidLinkError } from './link-errors.js';
 import { hashPassword } from './passwords.js';
 import { deleteRefreshTokens } from './sessions.js';
@@ -33,9 +34,10 @@ export function issueResetLink(db: Kysely<Database>, input: { userId: string; cr
 }
 
 /**
- * Sets the new password and ends every session of the user, in the same transaction as the conditional consume of the
- * link: a replayed link finds nothing, and a failure anywhere leaves the link usable. The user row is updated before the
- * tokens are deleted, for the reason given in startSession. Does not sign the user in.
+ * Sets the new password and ends every session and API token of the user, in the same transaction as the conditional consume of the
+ * link: a replayed link finds nothing, and a failure anywhere leaves the link usable. API tokens end with the sessions: a
+ * reset is what an admin does for an account that may be compromised. The user row is updated before the tokens are
+ * deleted, for the reason given in startSession. Does not sign the user in.
  */
 export async function redeemReset(db: Kysely<Database>, input: { token: string; password: string }): Promise<void> {
     const passwordHash = await hashPassword(input.password);
@@ -64,5 +66,6 @@ export async function redeemReset(db: Kysely<Database>, input: { token: string; 
         if (!user) throw invalidLinkError('reset');
 
         await deleteRefreshTokens(trx, user.id);
+        await deleteApiTokens(trx, user.id);
     });
 }

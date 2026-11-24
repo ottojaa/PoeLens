@@ -2,6 +2,7 @@ import { ForbiddenError, NotFoundError, type User } from '@poelens/shared';
 import { sql, type Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import { verifyPassword } from './passwords.js';
+import { deleteApiTokens } from '../api-tokens/index.js';
 import { deleteRefreshTokens, startSession, type StartedSession, type UserRow } from './sessions.js';
 
 export function toUser(row: UserRow): User {
@@ -42,7 +43,7 @@ export async function login(db: Kysely<Database>, email: string, password: strin
     return startSession(db, usable.id, usable.password_hash);
 }
 
-/** Deactivation ends every session. An admin cannot deactivate themselves, so the only admin cannot lock the app out. */
+/** Deactivation ends every session and every API token. An admin cannot deactivate themselves, so the only admin cannot lock the app out. */
 export function deactivateUser(db: Kysely<Database>, actorId: string, userId: string): Promise<UserRow> {
     if (actorId === userId) throw new ForbiddenError('You cannot deactivate yourself');
 
@@ -58,6 +59,7 @@ export function deactivateUser(db: Kysely<Database>, actorId: string, userId: st
         if (!user) throw new NotFoundError('User', userId);
 
         await deleteRefreshTokens(trx, userId);
+        await deleteApiTokens(trx, userId);
 
         return user;
     });

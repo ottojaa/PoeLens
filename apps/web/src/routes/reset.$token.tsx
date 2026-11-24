@@ -49,7 +49,10 @@ function ResetPage() {
     }
 
     return (
-        <AuthCard title="Choose a new password" description="You'll be signed out everywhere and can sign in with the new password.">
+        <AuthCard
+            title="Choose a new password"
+            description="You'll be signed out everywhere, your API tokens stop working, and you can sign in with the new password."
+        >
             <form onSubmit={(event) => void onSubmit(event)} className="flex flex-col gap-4">
                 <Field
                     id="password"

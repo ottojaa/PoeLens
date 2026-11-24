@@ -104,3 +104,14 @@ export async function watchItem(db: Kysely<Database>, userId: string, itemId: nu
 export async function unwatchItem(db: Kysely<Database>, userId: string, itemId: number): Promise<void> {
     await db.deleteFrom('watchlist_items').where('user_id', '=', userId).where('item_id', '=', itemId).execute();
 }
+
+/** How many items the user watches, across games: the number the limit counts. */
+export async function countWatchedItems(db: Kysely<Database>, userId: string): Promise<number> {
+    const { count } = await db
+        .selectFrom('watchlist_items')
+        .select((eb) => eb.fn.countAll<string>().as('count'))
+        .where('user_id', '=', userId)
+        .executeTakeFirstOrThrow();
+
+    return Number(count);
+}

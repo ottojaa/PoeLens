@@ -5,12 +5,15 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import { env } from '../../config/env.js';
 import { db } from '../../db/kysely.js';
+import type { Principal } from '../../services/api-tokens/index.js';
 import { ACCESS_TOKEN_TTL_SECONDS } from '../../services/auth/tokens.js';
 
 export interface AccessTokenPayload {
     /** The user's id. */
     sub: string;
     email: string;
+    /** When the token was issued, in seconds since the epoch (set by the signer). */
+    iat?: number;
 }
 
 export interface AuthUser {
@@ -18,9 +21,19 @@ export interface AuthUser {
     email: string;
 }
 
+/** The signed-in user of a request: the token's user, and when that token was issued (seconds since the epoch). */
+export interface SessionUser extends AuthUser {
+    issuedAt: number;
+}
+
 // Interface names in a module augmentation are flagged by no-unused-vars.
 /* eslint-disable no-unused-vars */
 declare module 'fastify' {
+    interface FastifyRequest {
+        /** Who an API token authenticated, on the routes that accept one (`/mcp`). Never set by a session: that is `user`. */
+        principal: Principal | undefined;
+    }
+
     interface FastifyInstance {
         /** preHandler/onRequest check: a valid access token in `Authorization: Bearer`. Sets `request.user`. */
         authenticate: (request: FastifyRequest) => Promise<void>;
@@ -33,7 +46,7 @@ declare module 'fastify' {
 declare module '@fastify/jwt' {
     interface FastifyJWT {
         payload: AccessTokenPayload;
-        user: AuthUser;
+        user: SessionUser;
     }
 }
 /* eslint-enable no-unused-vars */
@@ -50,6 +63,7 @@ export default fp(async function (fastify: FastifyInstance) {
     await fastify.register(fastifyCookie);
     await fastify.register(fastifyJwt, { secret: env.JWT_SECRET, sign: { expiresIn: ACCESS_TOKEN_TTL_SECONDS } });
 
+    fastify.decorateRequest('principal', undefined);
     fastify.decorate('signAccessToken', (user: AuthUser) => fastify.jwt.sign({ sub: user.id, email: user.email }));
 
     // Does not read the database: deactivation and resets delete the refresh tokens, so access ends within the access
@@ -59,7 +73,7 @@ export default fp(async function (fastify: FastifyInstance) {
 
         if (!payload?.sub) throw new UnauthorizedError('Sign in to continue', 'TOKEN_INVALID');
 
-        request.user = { id: payload.sub, email: payload.email };
+        request.user = { id: payload.sub, email: payload.email, issuedAt: payload.iat ?? 0 };
     });
 
     // Admin actions check the database each time: a demoted or deactivated admin loses them at once.

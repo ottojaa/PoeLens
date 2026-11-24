@@ -419,6 +419,16 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
 
             expect(response.risers).toEqual([]);
         });
+
+        // The answer the REST route sends, in full, so a change to how movers are computed cannot alter it unnoticed.
+        it.each([
+            ['the defaults', {}],
+            ['an hour', { window: '1h' }],
+            ['chaos, including low confidence', { unit: 'chaos', includeLowConfidence: 'true' }],
+            ['one category and a limit', { category: 'Currency', limit: '1' }],
+        ])('answers %s exactly as before', async (_name, query) => {
+            expect(await movers(query)).toMatchSnapshot();
+        });
     });
 
     describe('search', () => {

@@ -1,10 +1,9 @@
 import { CATEGORIES } from '@poelens/shared';
 import { Link, useParams, useRouterState } from '@tanstack/react-router';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { LeagueSwitcher } from './LeagueSwitcher';
 import { CategoryNav, NAV_ITEM_CLASS, NavHeading } from './CategoryNav';
-import { Soon } from './Soon';
 import { useWatchlist } from '@/lib/api/watchlist';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { cn } from '@/lib/utils';
@@ -28,7 +27,24 @@ function WatchlistLink({ onNavigate }: { onNavigate?: () => void }) {
     );
 }
 
-/** The category list plus the personal sections (the tokens arrive later, so they stay a placeholder). */
+/** The way to the page where a user makes the tokens Claude connects with. */
+function TokensLink({ onNavigate }: { onNavigate?: () => void }) {
+    const { location } = useRouterState();
+    const isCurrent = location.pathname === '/tokens';
+
+    return (
+        <Link
+            to="/tokens"
+            aria-current={isCurrent ? 'page' : undefined}
+            onClick={onNavigate}
+            className={cn(buttonVariants({ variant: 'ghost' }), NAV_ITEM_CLASS, isCurrent && 'bg-accent text-foreground')}
+        >
+            MCP &amp; API tokens
+        </Link>
+    );
+}
+
+/** The category list plus the personal sections. */
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     const { category } = useParams({ strict: false });
 
@@ -37,9 +53,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             <CategoryNav categories={CATEGORIES[GAME]} value={category ?? null} onNavigate={onNavigate} />
             <NavHeading>Yours</NavHeading>
             <WatchlistLink onNavigate={onNavigate} />
-            <Button type="button" variant="ghost" disabled className={NAV_ITEM_CLASS}>
-                MCP &amp; API tokens <Soon />
-            </Button>
+            <TokensLink onNavigate={onNavigate} />
         </nav>
     );
 }

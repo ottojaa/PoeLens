@@ -21,7 +21,8 @@ export function UsersPanel() {
                     People
                 </CardTitle>
                 <CardDescription>
-                    Deactivating someone signs them out everywhere within 15 minutes. A reset link lets them choose a new password.
+                    Deactivating someone signs them out everywhere within 15 minutes and ends their API tokens at once. A reset link lets them choose a new
+                    password, and ends their tokens too.
                 </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">

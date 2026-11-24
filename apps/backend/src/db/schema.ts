@@ -141,6 +141,18 @@ export interface WatchlistItemsTable {
     created_at: Generated<Date>;
 }
 
+export interface ApiTokensTable {
+    id: Generated<string>;
+    user_id: string;
+    name: string;
+    /** sha256 of the whole secret, `pl_` included. The secret itself is never stored. */
+    token_hash: string;
+    /** The secret's first characters, for the list. */
+    prefix: string;
+    created_at: Generated<Date>;
+    last_used_at: Date | null;
+}
+
 export interface Database {
     leagues: LeaguesTable;
     items: ItemsTable;
@@ -154,4 +166,5 @@ export interface Database {
     invites: InvitesTable;
     password_resets: PasswordResetsTable;
     watchlist_items: WatchlistItemsTable;
+    api_tokens: ApiTokensTable;
 }
