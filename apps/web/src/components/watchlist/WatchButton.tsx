@@ -16,7 +16,7 @@ export function WatchButton({ ready, watched, onToggle }: { ready: boolean; watc
     return (
         <button
             type="button"
-            aria-pressed={watched}
+            aria-pressed={ready ? watched : undefined}
             disabled={!ready}
             onClick={() => onToggle(!watched)}
             className={cn(
@@ -24,7 +24,7 @@ export function WatchButton({ ready, watched, onToggle }: { ready: boolean; watc
                 watched ? 'bg-primary text-primary-foreground font-semibold' : 'border-input text-foreground hover:bg-accent border',
             )}
         >
-            <TogglePop state={watched}>
+            <TogglePop key={String(ready)} state={watched}>
                 <StarIcon filled={watched} strokeWidth={watched ? 0 : 1.6} />
             </TogglePop>
             {toLabel(ready, watched)}

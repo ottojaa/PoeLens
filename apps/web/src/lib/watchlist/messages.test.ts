@@ -1,4 +1,4 @@
-import { MAX_WATCHLIST_ITEMS, WATCHLIST_FULL_CODE } from '@poelens/shared';
+import { WATCHLIST_FULL_CODE } from '@poelens/shared';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/api/client';
 import { FULL_LIST_MESSAGE, toToggleErrorMessage } from './messages';
@@ -8,7 +8,7 @@ describe('toToggleErrorMessage', () => {
         const error = new ApiError(409, '/watchlist/1', WATCHLIST_FULL_CODE, null);
 
         expect(toToggleErrorMessage(error)).toBe(FULL_LIST_MESSAGE);
-        expect(FULL_LIST_MESSAGE).toBe(`Your watchlist is full (${MAX_WATCHLIST_ITEMS} items). Remove one to add another.`);
+        expect(FULL_LIST_MESSAGE).toBe('Your watchlist is full (100 items). Remove one to add another.');
     });
 
     it('gives the generic message for any other failure', () => {
