@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type GridItem, move, normalize, nudge, overlaps, phoneOrder, place, resize, stretch } from './grid.js';
+import { type GridItem, move, normalize, nudge, overlaps, phoneOrder, place, resize, stretch, tabletFlow } from './grid.js';
 
 function item(id: string, x: number, y: number, w: number, h: number): GridItem {
     return { id, x, y, w, h };
@@ -241,5 +241,30 @@ describe('random layouts', () => {
             expect(hasOverlap(resized)).toBe(false);
             expect(moved.find((entry) => entry.id === target.id)).toMatchObject({ w: target.w, h: target.h });
         }
+    });
+});
+
+describe('tabletFlow', () => {
+    it('keeps the phone order and gives a panel up to half the grid one column', () => {
+        const items = [item('c', 0, 4, 12, 2), item('b', 6, 0, 6, 4), item('a', 0, 0, 6, 4)];
+
+        expect(tabletFlow(items).map((cell) => [cell.item.id, cell.span])).toEqual([
+            ['a', 1],
+            ['b', 1],
+            ['c', 2],
+        ]);
+    });
+
+    it('gives a panel wider than half the grid the full row', () => {
+        expect(tabletFlow([item('a', 0, 0, 7, 3)])[0]?.span).toBe(2);
+        expect(tabletFlow([item('a', 0, 0, 6, 3)])[0]?.span).toBe(1);
+    });
+
+    it('shows panels that are hidden on a phone, and does not change the input', () => {
+        const hidden = { ...item('b', 6, 0, 6, 4), hideOnPhone: true };
+        const items = [hidden, item('a', 0, 0, 6, 4)];
+
+        expect(tabletFlow(items).map((cell) => cell.item.id)).toEqual(['a', 'b']);
+        expect(items.map((entry) => entry.id)).toEqual(['b', 'a']);
     });
 });

@@ -122,3 +122,21 @@ export function stretch<T extends GridItem>(items: readonly T[], id: string, dw:
 export function phoneOrder<T extends GridItem>(items: readonly T[]): T[] {
     return [...items].sort(byPosition);
 }
+
+/** The widest a panel can be and still take half a tablet's width. */
+export const TABLET_HALF_MAX_COLUMNS = GRID_COLUMNS / 2;
+
+/** One panel in the tablet flow: `span` is how many of the flow's two columns it takes. */
+export interface TabletCell<T extends GridItem> {
+    item: T;
+    span: 1 | 2;
+}
+
+/**
+ * The two-column flow a tablet shows instead of the grid: panels in `phoneOrder`, a panel at most half the grid wide
+ * takes one column and a wider one the full row. Heights are not part of it, as each panel grows to fit its blocks.
+ * Every panel is shown, whether or not it is hidden on a phone.
+ */
+export function tabletFlow<T extends GridItem>(items: readonly T[]): TabletCell<T>[] {
+    return phoneOrder(items).map((item) => ({ item, span: item.w <= TABLET_HALF_MAX_COLUMNS ? 1 : 2 }));
+}

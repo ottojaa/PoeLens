@@ -23,16 +23,19 @@ function Figure({ data }: { data: PairBlockData }) {
     );
 }
 
-/** One item priced in another: how many B one A buys, with its 24 hour change and, in a wide panel, a week's trend. */
+/**
+ * One item priced in another: how many B one A buys, with its 24 hour change and, in a wide panel, a week's trend. In a
+ * panel narrower than 260px the name moves to a line of its own instead of being cut to a few letters.
+ */
 export function PairBlockView({ block, data }: { block: PairBlock; data: PairBlockData | null | undefined }) {
     if (data === undefined) return <BlockMessage>Loading…</BlockMessage>;
 
     if (data === null) return <BlockMessage>{toPairName(block, data)}: no price in this league</BlockMessage>;
 
     return (
-        <ItemLink item={data.a} className="flex items-center gap-3">
+        <ItemLink item={data.a} className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
             <Figure data={data} />
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5 @max-[260px]:order-last @max-[260px]:basis-full">
                 <span className="text-muted-foreground truncate text-[13px]">{toPairName(block, data)}</span>
                 {data.lowConfidence && (
                     <Badge
@@ -47,7 +50,7 @@ export function PairBlockView({ block, data }: { block: PairBlock; data: PairBlo
             <span className="hidden shrink-0 @min-[320px]:block">
                 <Sparkline points={data.sparkline} change={data.h24} width={64} height={24} />
             </span>
-            <Change percent={data.h24} className="min-w-[58px] shrink-0 text-right text-[13px]" />
+            <Change percent={data.h24} className="min-w-[58px] shrink-0 text-right text-[13px] @max-[260px]:ml-auto" />
         </ItemLink>
     );
 }

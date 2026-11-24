@@ -1,4 +1,4 @@
-import { GRID_COLUMNS, GRID_GAP_PX, GRID_ROW_PX, phoneOrder, type BlockData, type Panel as PanelModel } from '@poelens/shared';
+import { GRID_COLUMNS, GRID_GAP_PX, GRID_ROW_PX, phoneOrder, tabletFlow, type BlockData, type Panel as PanelModel } from '@poelens/shared';
 import { useMemo, useRef } from 'react';
 import { moveByPixels, resizeByPixels, toColumnWidth } from '@/lib/dashboard/geometry';
 import { GridPanel } from '@/motion/GridPanel';
@@ -7,7 +7,7 @@ import { PanelBar, ResizeHandle } from './edit/PanelChrome';
 import { Panel, type PanelMode } from './Panel';
 import { useElementWidth } from './use-grid-width';
 import { usePanelKeyboard } from './use-panel-keyboard';
-import { useWideGrid } from './use-wide-grid';
+import { useGridTier } from './use-grid-tier';
 
 function HiddenOnPhone({ panels }: { panels: readonly PanelModel[] }) {
     if (panels.length === 0) return null;
@@ -38,10 +38,11 @@ interface GridProps {
     selectedId?: string | null;
     openBlockId?: string | null;
     onLayout: (panels: PanelModel[]) => void;
-    onEditContent: (panelId: string) => void;
+    /** Absent where the dashboard cannot be edited, which also leaves out each panel's menu. */
+    onEditContent?: (panelId: string) => void;
 }
 
-/** Below 1024px: one column in reading order, each panel as tall as its blocks, and the hidden ones named at the bottom. */
+/** On a phone: one column in reading order, each panel as tall as its blocks, and the hidden ones named at the bottom. */
 function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent }: GridProps) {
     const shown = phoneOrder(panels).filter((panel) => !panel.hideOnPhone);
 
@@ -56,11 +57,32 @@ function PhoneStack({ panels, data, mode, selectedId, openBlockId, onEditContent
                         selected={panel.id === selectedId}
                         openBlockId={openBlockId}
                         fitContent
-                        onEditContent={() => onEditContent(panel.id)}
+                        onEditContent={onEditContent && (() => onEditContent(panel.id))}
                     />
                 </section>
             ))}
             <HiddenOnPhone panels={panels.filter((panel) => panel.hideOnPhone)} />
+        </div>
+    );
+}
+
+/** On a tablet: two columns, a panel up to half the grid wide taking one and a wider one the row, hidden panels included. */
+function TabletFlow({ panels, data, mode, selectedId, openBlockId, onEditContent }: GridProps) {
+    return (
+        <div className="grid grid-cols-2 gap-4">
+            {tabletFlow(panels).map(({ item, span }) => (
+                <section key={item.id} aria-label={item.title} className={span === 2 ? 'col-span-2' : undefined}>
+                    <Panel
+                        panel={item}
+                        data={data}
+                        mode={mode}
+                        selected={item.id === selectedId}
+                        openBlockId={openBlockId}
+                        fitContent
+                        onEditContent={onEditContent && (() => onEditContent(item.id))}
+                    />
+                </section>
+            ))}
         </div>
     );
 }
@@ -115,14 +137,14 @@ function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEdi
                             selected={panel.id === selectedId}
                             openBlockId={openBlockId}
                             fitContent={false}
-                            onEditContent={() => onEditContent(panel.id)}
+                            onEditContent={onEditContent && (() => onEditContent(panel.id))}
                             bar={
                                 <PanelBar
                                     panel={panel}
                                     picked={keyboard.pickedId === panel.id}
                                     onKeyDown={(event) => keyboard.onKeyDown(panel, event)}
                                     onBlur={keyboard.drop}
-                                    onEditContent={() => onEditContent(panel.id)}
+                                    onEditContent={() => onEditContent?.(panel.id)}
                                 />
                             }
                             resizeHandle={<ResizeHandle panel={panel} />}
@@ -137,11 +159,13 @@ function WideGrid({ panels, data, mode, selectedId, openBlockId, onLayout, onEdi
     );
 }
 
-/** The panels of a dashboard, as a grid from 1024px and as one stacked column below it. */
+/** The panels of a dashboard: a grid on a desktop, a two-column flow on a tablet and one column on a phone. */
 export function DashboardGrid(props: GridProps) {
-    const isWide = useWideGrid();
+    const tier = useGridTier();
 
-    if (!isWide) return <PhoneStack {...props} />;
+    if (tier === 'phone') return <PhoneStack {...props} />;
+
+    if (tier === 'tablet') return <TabletFlow {...props} />;
 
     return <WideGrid {...props} />;
 }

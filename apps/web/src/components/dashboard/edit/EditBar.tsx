@@ -10,6 +10,7 @@ export function EditBar({
     level,
     contentTitle,
     canLayout,
+    hint,
     canAddPanel,
     saving,
     onLevel,
@@ -23,6 +24,8 @@ export function EditBar({
     contentTitle: string | undefined;
     /** Panels are placed on a grid, which a phone does not draw. */
     canLayout: boolean;
+    /** Replaces the usual line of help, e.g. when the window has been narrowed while editing. */
+    hint?: string;
     canAddPanel: boolean;
     saving: boolean;
     onLevel: (level: EditLevel) => void;
@@ -48,10 +51,11 @@ export function EditBar({
                     ]}
                 />
             )}
-            <span className="text-muted-foreground hidden text-[13px] xl:inline">
-                {level === 'content'
-                    ? 'Reorder, add and set up the blocks in this panel.'
-                    : 'Drag a panel by its top bar, resize it from the corner, or open its content.'}
+            <span className={hint ? 'text-muted-foreground text-[13px]' : 'text-muted-foreground hidden text-[13px] xl:inline'}>
+                {hint ??
+                    (level === 'content'
+                        ? 'Reorder, add and set up the blocks in this panel.'
+                        : 'Drag a panel by its top bar, resize it from the corner, or open its content.')}
             </span>
             <div className="ml-auto flex items-center gap-2">
                 <Button type="button" variant="outline" onClick={onAddPanel} disabled={!canAddPanel} className="gap-2">

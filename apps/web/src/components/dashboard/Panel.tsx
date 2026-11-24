@@ -62,7 +62,8 @@ export function Panel({
     fitContent: boolean;
     bar?: ReactNode;
     resizeHandle?: ReactNode;
-    onEditContent: () => void;
+    /** Absent where the dashboard cannot be edited: the panel then has no menu. */
+    onEditContent?: () => void;
 }) {
     const dimmed = mode === 'content' && !selected;
 
@@ -85,7 +86,7 @@ export function Panel({
                     </span>
                 )}
                 {panel.unit && <UnitPill unit={panel.unit} />}
-                <PanelMenu title={panel.title} onEditContent={onEditContent} />
+                {onEditContent && <PanelMenu title={panel.title} onEditContent={onEditContent} />}
             </div>
             <div className={cn('@container px-1 pb-1.5', !fitContent && 'min-h-0 flex-1 overflow-y-auto')}>
                 {panel.blocks.length === 0 && <p className="text-muted-foreground px-3 py-2.5 text-[13px]">No blocks yet</p>}

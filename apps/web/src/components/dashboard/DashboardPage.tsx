@@ -14,7 +14,10 @@ import { ContentSheet } from './edit/ContentSheet';
 import { EditBar } from './edit/EditBar';
 import { DeleteDialog, NameDialog } from './TabDialogs';
 import { useDashboardEditing } from './use-dashboard-editing';
-import { useWideGrid } from './use-wide-grid';
+import { useGridTier } from './use-grid-tier';
+
+/** Shown in place of the Edit button below 1024px, where a dashboard is only viewed. */
+const EDIT_HINT = 'Edit on a wider screen';
 
 type TabDialog = { kind: 'new' } | { kind: 'rename'; dashboard: Dashboard } | { kind: 'delete'; dashboard: Dashboard };
 
@@ -90,22 +93,27 @@ function TabDialogs({
     );
 }
 
-function EmptyDashboard({ onAdd }: { onAdd: () => void }) {
+/** The empty page. `onAdd` is absent where the dashboard cannot be edited. */
+function EmptyDashboard({ onAdd }: { onAdd?: () => void }) {
     return (
         <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-16 text-center">
             <LayoutDashboard aria-hidden="true" className="size-6" />
             <p className="text-foreground font-semibold">This dashboard is empty</p>
             <p className="text-sm">Panels hold the prices and notes you want in one place.</p>
-            <Button type="button" onClick={onAdd}>
-                Add a panel
-            </Button>
+            {onAdd ? (
+                <Button type="button" onClick={onAdd}>
+                    Add a panel
+                </Button>
+            ) : (
+                <p className="text-sm">{EDIT_HINT}</p>
+            )}
         </div>
     );
 }
 
 function Dashboards({ list, reload }: { list: DashboardsResponse; reload: () => void }) {
     const { scope } = useEconomyContext();
-    const isWide = useWideGrid();
+    const canEdit = useGridTier() === 'desktop';
     const reorder = useReorderDashboards(GAME);
     const [activeId, setActiveId] = useState('');
     const [dialog, setDialog] = useState<TabDialog | undefined>(undefined);
@@ -120,7 +128,7 @@ function Dashboards({ list, reload }: { list: DashboardsResponse; reload: () => 
             dashboards={list.dashboards}
             max={list.max}
             scope={scope}
-            isWide={isWide}
+            canEdit={canEdit}
             dialog={dialog}
             reload={reload}
             onSelect={setActiveId}
@@ -135,7 +143,8 @@ interface ViewProps {
     dashboards: readonly Dashboard[];
     max: number;
     scope: ReturnType<typeof useEconomyContext>['scope'];
-    isWide: boolean;
+    /** Dashboards are edited from 1024px only. */
+    canEdit: boolean;
     dialog: TabDialog | undefined;
     reload: () => void;
     onSelect: (id: string) => void;
@@ -143,14 +152,14 @@ interface ViewProps {
     onReorder: (ids: string[]) => void;
 }
 
-function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload, onSelect, onDialog, onReorder }: ViewProps) {
+function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload, onSelect, onDialog, onReorder }: ViewProps) {
     const editing = useDashboardEditing(active, reload);
     const { edit, draft, dispatch } = editing;
     const panels: readonly Panel[] = edit ? draft.panels : active.panels;
     const data = useDashboardData(scope, panels).data?.blocks;
     const selected = panels.find((panel) => panel.id === edit?.panelId);
-    const level = edit?.level === 'content' && selected ? 'content' : 'layout';
-    const mode = !edit ? 'view' : level === 'content' ? 'content' : isWide ? 'layout' : 'view';
+    const level = canEdit && edit?.level === 'content' && selected ? 'content' : 'layout';
+    const mode = !edit ? 'view' : level === 'content' ? 'content' : canEdit ? 'layout' : 'view';
 
     const addPanel = () => {
         const panel = newPanel(draft.panels);
@@ -166,8 +175,9 @@ function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload,
                         name={draft.name}
                         level={level}
                         contentTitle={selected?.title}
-                        canLayout={isWide}
-                        canAddPanel={newPanel(draft.panels) !== undefined}
+                        canLayout={canEdit}
+                        hint={canEdit ? undefined : EDIT_HINT}
+                        canAddPanel={canEdit && newPanel(draft.panels) !== undefined}
                         saving={editing.saving}
                         onLevel={(next) => (next === 'content' && !selected ? panels[0] && editing.openContent(panels[0].id) : editing.setLevel(next))}
                         onAddPanel={addPanel}
@@ -205,14 +215,15 @@ function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload,
                     onRename={(dashboard) => onDialog({ kind: 'rename', dashboard })}
                     onDelete={(dashboard) => onDialog({ kind: 'delete', dashboard })}
                 />
-                {!edit && (
+                {!edit && canEdit && (
                     <Button type="button" variant="outline" className="mb-1.5 gap-2" onClick={() => editing.begin()}>
                         <LayoutDashboard aria-hidden="true" />
                         Edit
                     </Button>
                 )}
+                {!edit && !canEdit && <span className="text-muted-foreground mb-2.5 ml-auto text-[13px]">{EDIT_HINT}</span>}
             </div>
-            {panels.length === 0 && !edit && <EmptyDashboard onAdd={() => editing.begin()} />}
+            {panels.length === 0 && !edit && <EmptyDashboard onAdd={canEdit ? () => editing.begin() : undefined} />}
             {panels.length > 0 && (
                 <DashboardGrid
                     panels={panels}
@@ -220,7 +231,7 @@ function DashboardView({ active, dashboards, max, scope, isWide, dialog, reload,
                     mode={mode}
                     selectedId={level === 'content' ? selected?.id : undefined}
                     onLayout={(next) => dispatch({ type: 'layout', panels: next })}
-                    onEditContent={(panelId) => (edit ? editing.openContent(panelId) : editing.begin(panelId))}
+                    onEditContent={canEdit ? (panelId) => (edit ? editing.openContent(panelId) : editing.begin(panelId)) : undefined}
                 />
             )}
             <ConflictDialog open={editing.conflict !== undefined} saving={editing.saving} onReload={editing.reloadStored} onOverwrite={editing.overwrite} />
