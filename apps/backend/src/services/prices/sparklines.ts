@@ -1,4 +1,4 @@
-import type { Game, Unit } from '@poelens/shared';
+import { UNITS, type Game, type PriceRow, type Unit } from '@poelens/shared';
 import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import { DAY_MS, loadBucketedPrices } from './series.js';
@@ -23,22 +23,38 @@ export function toSparklineWindow(latest: Date): SparklineWindow {
 export interface SparklineQuery {
     game: Game;
     league: string;
-    unit: Unit;
-    itemIds: number[];
+    /** The rows to draw: each item's line is in its row's unit. */
+    rows: readonly PriceRow[];
     /** The fetch time of the newest snapshot the table shows. */
     latest: Date;
 }
 
+/** The ids of the rows that read in each unit: under Auto a table mixes units, a fixed unit gives one group. */
+function groupByUnit(rows: readonly PriceRow[]): Map<Unit, number[]> {
+    const groups = new Map<Unit, number[]>();
+
+    for (const row of rows) groups.set(row.unit, [...(groups.get(row.unit) ?? []), row.item.id]);
+
+    return groups;
+}
+
 /**
- * The last week of daily closing prices for many items in one query, by item id. Low-confidence prices are left out, so
- * a day without a confident price has no point, and an item with fewer than two points has no line to draw.
+ * The last week of daily closing prices for many items by item id, each in its row's unit: one query per unit the rows
+ * use, three at most. Low-confidence prices are left out, so a day without a confident price has no point, and an item
+ * with fewer than two points has no line to draw.
  */
 export async function loadSparklines(db: Kysely<Database>, query: SparklineQuery): Promise<Map<number, number[]>> {
-    const { latest, ...series } = query;
-    const points = await loadBucketedPrices(db, { ...series, ...toSparklineWindow(latest), bucket: 'day', includeLowConfidence: false });
+    const { latest, rows, ...series } = query;
+    const window = toSparklineWindow(latest);
+    const groups = groupByUnit(rows);
+    const unitSeries = await Promise.all(
+        UNITS.map((unit) =>
+            loadBucketedPrices(db, { ...series, ...window, unit, itemIds: groups.get(unit) ?? [], bucket: 'day', includeLowConfidence: false }),
+        ),
+    );
     const byItem = new Map<number, number[]>();
 
-    for (const point of points) byItem.set(point.itemId, [...(byItem.get(point.itemId) ?? []), point.price]);
+    for (const point of unitSeries.flat()) byItem.set(point.itemId, [...(byItem.get(point.itemId) ?? []), point.price]);
 
     return byItem;
 }

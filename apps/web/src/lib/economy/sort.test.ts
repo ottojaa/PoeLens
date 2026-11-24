@@ -4,11 +4,13 @@ import { filterRows, sortRows } from './sort';
 
 function row(
     name: string,
-    overrides: Partial<Pick<TableRow, 'price' | 'liquidity' | 'sparkline'>> & { d7?: number | null; baseType?: string | null } = {},
+    overrides: Partial<Pick<TableRow, 'price' | 'unit' | 'liquidity' | 'sparkline'>> & { divine?: number; d7?: number | null; baseType?: string | null } = {},
 ): TableRow {
     return {
         item: { id: name.length * 1000 + name.charCodeAt(0), name, baseType: overrides.baseType ?? null, category: 'Currency', icon: null },
         price: overrides.price ?? 1,
+        unit: overrides.unit ?? 'divine',
+        prices: { divine: overrides.divine ?? overrides.price ?? 1, exalted: 0, chaos: 0 },
         asOf: '2026-11-24T00:00:00.000Z',
         liquidity: overrides.liquidity ?? null,
         lowConfidence: false,
@@ -34,6 +36,17 @@ describe('sortRows', () => {
         const tied = [row('Zed', { price: 2 }), row('Ann', { price: 2 }), row('Mid', { price: 9 })];
 
         expect(names(sortRows(tied, 'price', 'desc'))).toEqual(['Mid', 'Ann', 'Zed']);
+    });
+
+    it('sorts price by the real value, not the number shown: 2 div above 12 c above 20 ex', () => {
+        const mixed = [
+            row('Cheap', { price: 20, unit: 'exalted', divine: 0.04 }),
+            row('Mid', { price: 12, unit: 'chaos', divine: 0.9 }),
+            row('Dear', { price: 2, unit: 'divine', divine: 2 }),
+        ];
+
+        expect(names(sortRows(mixed, 'price', 'desc'))).toEqual(['Dear', 'Mid', 'Cheap']);
+        expect(names(sortRows(mixed, 'price', 'asc'))).toEqual(['Cheap', 'Mid', 'Dear']);
     });
 
     it('sorts liquidity with null last in both directions', () => {

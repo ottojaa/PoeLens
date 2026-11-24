@@ -9,7 +9,7 @@ export default async function (fastify: FastifyInstance) {
         {
             schema: {
                 tags: ['prices'],
-                description: 'The biggest risers and fallers over 1h, 24h or 7d, in one category or all of them',
+                description: 'The biggest risers and fallers over 1h, 24h or 7d, in one category or all of them, in one fixed unit (not auto)',
                 querystring: MoversQuerySchema,
                 response: { 200: MoversResponseSchema },
             },

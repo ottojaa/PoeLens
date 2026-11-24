@@ -32,7 +32,8 @@ export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; o
             >
                 <Search className="size-4 shrink-0" aria-hidden="true" />
                 <span className="hidden flex-1 truncate text-left lg:inline">Search every currency and item</span>
-                <span className="sr-only md:not-sr-only md:flex-1 md:truncate md:text-left lg:hidden">Search</span>
+                {/* The four-segment picker leaves md too little room for the word: it shows from 900px, so it is never cut to "Se…". */}
+                <span className="sr-only min-[900px]:not-sr-only min-[900px]:flex-1 min-[900px]:truncate min-[900px]:text-left lg:hidden">Search</span>
                 <kbd className="border-input hidden rounded-md border px-1.5 py-0.5 font-sans text-xs sm:inline md:hidden lg:inline">⌘K</kbd>
             </Button>
             <div className="flex shrink-0 items-center gap-2 md:ml-auto">

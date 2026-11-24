@@ -1,4 +1,4 @@
-import { UNITS, type LeagueRef, type PriceRow, type Unit } from '@poelens/shared';
+import { UNITS, type LeagueRef, type PriceRow } from '@poelens/shared';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,7 @@ import { Change } from './Change';
 /** An item's newest price row with the key of the answer it came from, so a number only counts when the same answer updates. */
 export interface ShownPrice {
     row: PriceRow;
-    /** Item, league and unit of the answer: a new one remounts the number instead of counting from the old one. */
+    /** Item, league and the row's unit: a new one (a league, or the price crossing into another unit) remounts the number instead of counting from the old one. */
     key: string;
     /** The league the answer is for, which can lag the URL while a new league loads. */
     league: LeagueRef;
@@ -28,33 +28,33 @@ function StatCard({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** The item's price in the other two units, small, under the large one. */
-function OtherUnits({ unit, prices }: { unit: Unit; prices: Partial<Record<Unit, number>> }) {
+function OtherUnits({ row }: { row: PriceRow }) {
     return (
         <div className="text-muted-foreground flex flex-wrap gap-x-4 text-sm">
-            {UNITS.filter((candidate) => candidate !== unit).map((other) => (
+            {UNITS.filter((candidate) => candidate !== row.unit).map((other) => (
                 <span key={other}>
-                    {prices[other] === undefined ? '…' : formatPrice(prices[other])} {UNIT_SHORT[other]}
+                    {formatPrice(row.prices[other])} {UNIT_SHORT[other]}
                 </span>
             ))}
         </div>
     );
 }
 
-function PriceCard({ shown, unit, prices }: { shown: ShownPrice | undefined; unit: Unit; prices: Partial<Record<Unit, number>> }) {
+function PriceCard({ shown }: { shown: ShownPrice | undefined }) {
     if (!shown) return <Skeleton className="h-9 w-32" />;
 
     return (
         <>
             <span className={BIG_NUMBER}>
                 <AnimatedNumber key={shown.key} value={shown.row.price} format={formatPrice} />
-                <span className="text-muted-foreground ml-1.5 text-base font-medium">{UNIT_SHORT[unit]}</span>
+                <span className="text-muted-foreground ml-1.5 text-base font-medium">{UNIT_SHORT[shown.row.unit]}</span>
             </span>
-            <OtherUnits unit={unit} prices={prices} />
+            <OtherUnits row={shown.row} />
         </>
     );
 }
 
-function ChangeCard({ row, unit }: { row: PriceRow | undefined; unit: Unit }) {
+function ChangeCard({ row }: { row: PriceRow | undefined }) {
     if (!row) return <Skeleton className="h-9 w-32" />;
 
     const from = row.change.d7 === null ? null : row.price / (1 + row.change.d7 / 100);
@@ -62,7 +62,9 @@ function ChangeCard({ row, unit }: { row: PriceRow | undefined; unit: Unit }) {
     return (
         <>
             <Change percent={row.change.d7} className={BIG_NUMBER} />
-            <span className="text-muted-foreground text-sm">{from === null ? 'Not enough history yet' : `from ${formatPrice(from)} ${UNIT_SHORT[unit]}`}</span>
+            <span className="text-muted-foreground text-sm">
+                {from === null ? 'Not enough history yet' : `from ${formatPrice(from)} ${UNIT_SHORT[row.unit]}`}
+            </span>
         </>
     );
 }
@@ -100,16 +102,16 @@ function UpdatedCard({ row }: { row: PriceRow | undefined }) {
 }
 
 /** The four cards under the title: price (large, with the other units), 7-day change, liquidity and freshness. */
-export function ItemStats({ shown, unit, prices }: { shown: ShownPrice | undefined; unit: Unit; prices: Partial<Record<Unit, number>> }) {
+export function ItemStats({ shown }: { shown: ShownPrice | undefined }) {
     const row = shown?.row;
 
     return (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
             <StatCard label="Price">
-                <PriceCard shown={shown} unit={unit} prices={prices} />
+                <PriceCard shown={shown} />
             </StatCard>
             <StatCard label="Change, 7 days">
-                <ChangeCard row={row} unit={unit} />
+                <ChangeCard row={row} />
             </StatCard>
             <StatCard label={row?.liquidity?.kind === 'listings' ? 'Listings' : 'Volume'}>
                 <LiquidityCard row={row} />

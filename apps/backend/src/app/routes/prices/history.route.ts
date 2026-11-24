@@ -9,7 +9,8 @@ export default async function (fastify: FastifyInstance) {
         {
             schema: {
                 tags: ['prices'],
-                description: "One item's price over time, bucketed by hour or day (last price, low and high of each bucket)",
+                description:
+                    "One item's price over time, bucketed by hour or day (last price, low and high of each bucket). unit=auto picks one unit for the whole chart from the item's newest price, and the answer names it",
                 querystring: HistoryQuerySchema,
                 response: { 200: HistoryResponseSchema },
             },

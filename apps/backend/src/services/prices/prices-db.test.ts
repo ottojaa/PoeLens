@@ -59,19 +59,19 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
         return row.id;
     }
 
-    /** One earlier price of Divine Orb: its current price times `factor`, so a factor of 2 means the price has halved since. */
-    async function insertDivinePoint(rawId: number, time: number, factor: number, lowConfidence = false) {
+    /** One earlier price of a Currency item, `divine` in divine and the other units at the fixture's rates. */
+    async function insertPoint(rawId: number, name: string, time: number, divine: number, lowConfidence = false) {
         await test.db
             .insertInto('prices')
             .values({
                 time: new Date(time),
                 game: 'poe2',
                 league: 'Forbidden Rites',
-                item_id: await itemId('Divine Orb'),
+                item_id: await itemId(name),
                 source: 'poe.ninja',
-                divine: factor,
-                exalted: 445.9 * factor,
-                chaos: 13.44 * factor,
+                divine,
+                exalted: 445.9 * divine,
+                chaos: 13.44 * divine,
                 listings: null,
                 volume: 10_397,
                 low_confidence: lowConfidence,
@@ -79,6 +79,10 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
             })
             .execute();
     }
+
+    /** One earlier price of Divine Orb: its current price times `factor`, so a factor of 2 means the price has halved since. */
+    const insertDivinePoint = (rawId: number, time: number, factor: number, lowConfidence = false) =>
+        insertPoint(rawId, 'Divine Orb', time, factor, lowConfidence);
 
     beforeEach(async () => {
         ninja = new FakeNinja();
@@ -91,6 +95,8 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
         await insertDivinePoint(earlier, T - 24 * HOUR, 0.5);
         await insertDivinePoint(earlier, T - 24 * HOUR + 10 * 60_000, 0.001, true);
         await insertDivinePoint(earlier, T - 7 * 24 * HOUR, 1);
+        // Annulment Orb reads in chaos under Auto: it was worth 1.5x as much a day ago.
+        await insertPoint(earlier, 'Orb of Annulment', T - 24 * HOUR, 0.2398 * 1.5);
     });
 
     const table = (query: Record<string, string>) => getTable(test.db, TableQuerySchema.parse({ game: 'poe2', category: 'Currency', ...query }));
@@ -152,6 +158,73 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
         it('answers a league with no data with no rows, and an unknown league with not found', async () => {
             expect((await table({ league: 'HC Forbidden Rites' })).rows).toEqual([]);
             await expect(table({ league: 'Nowhere' })).rejects.toBeInstanceOf(NotFoundError);
+        });
+
+        describe('under Auto', () => {
+            const auto = () => table({ unit: 'auto', sparkline: 'true' });
+            const byName = (rows: Awaited<ReturnType<typeof auto>>['rows'], name: string) => rows.find((row) => row.item.name === name);
+
+            it('echoes auto and gives each row the unit its price reads best in', async () => {
+                const response = await auto();
+                const unitOf = (name: string) => byName(response.rows, name)?.unit;
+
+                expect(response.unit).toBe('auto');
+                expect(unitOf('Mirror of Kalandra')).toBe('divine');
+                expect(unitOf('Divine Orb')).toBe('divine');
+                expect(unitOf('Orb of Annulment')).toBe('chaos');
+                expect(unitOf('Chaos Orb')).toBe('chaos');
+                expect(unitOf('Orb of Alchemy')).toBe('exalted');
+                expect(unitOf('Exalted Orb')).toBe('exalted');
+            });
+
+            it("puts each row's price, change and sparkline in its own unit", async () => {
+                const response = await auto();
+                const fixed = {
+                    divine: await table({ unit: 'divine', sparkline: 'true' }),
+                    exalted: await table({ unit: 'exalted', sparkline: 'true' }),
+                    chaos: await table({ unit: 'chaos', sparkline: 'true' }),
+                };
+
+                for (const row of response.rows) {
+                    const same = byName(fixed[row.unit].rows, row.item.name);
+
+                    expect(row.price).toBe(row.prices[row.unit]);
+                    expect({ price: row.price, change: row.change, sparkline: row.sparkline }).toEqual({
+                        price: same?.price,
+                        change: same?.change,
+                        sparkline: same?.sparkline,
+                    });
+                }
+
+                expect(byName(response.rows, 'Orb of Annulment')?.sparkline).toEqual([0.2398 * 1.5 * 13.44, 0.2398 * 13.44]);
+                expect(byName(response.rows, 'Orb of Annulment')?.change.h24).toBe(-33.33);
+            });
+
+            it('orders rows by their real value, not by the number shown', async () => {
+                const { rows } = await auto();
+                const worth = rows.map((row) => row.prices.divine);
+
+                expect(worth).toEqual([...worth].sort((a, b) => b - a));
+                // Annulment (3.2 c) comes after the Divine Orb (1 div), so the shown numbers alone would not be in order.
+                const shown = rows.map((row) => row.price);
+
+                expect(shown).not.toEqual([...shown].sort((a, b) => b - a));
+                expect(rows[0]?.item.name).toBe('Mirror of Kalandra');
+            });
+
+            it('answers latest in the same units', async () => {
+                const ids = await Promise.all(['Mirror of Kalandra', 'Orb of Annulment', 'Orb of Alchemy'].map((name) => itemId(name)));
+                const response = await getLatest(test.db, LatestQuerySchema.parse({ game: 'poe2', items: ids.join(','), unit: 'auto' }));
+
+                expect(response.unit).toBe('auto');
+                expect(response.rows.map((row) => row.unit)).toEqual(['divine', 'chaos', 'exalted']);
+            });
+        });
+
+        it('adds the unit and every unit price to the rows of a fixed unit without changing its values', async () => {
+            const divine = (await table({ unit: 'chaos' })).rows.find((row) => row.item.name === 'Divine Orb');
+
+            expect(divine).toMatchObject({ price: 13.44, unit: 'chaos', prices: { divine: 1, exalted: 445.9, chaos: 13.44 } });
         });
 
         describe('sparklines', () => {
@@ -274,6 +347,44 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
             expect(response.from).toBe(new Date(T + HOUR - 7 * 24 * HOUR).toISOString());
         });
 
+        describe('under Auto', () => {
+            const names = async (name: string, query: Record<string, string> = {}) =>
+                getHistory(
+                    test.db,
+                    HistoryQuerySchema.parse({ game: 'poe2', item: String(await itemId(name)), unit: 'auto', bucket: 'day', ...query }),
+                    new Date(T + HOUR),
+                );
+
+            it("picks one unit for the whole chart from the item's newest price, and draws its points in it", async () => {
+                const divine = await names('Divine Orb');
+                const annulment = await names('Orb of Annulment');
+                const alchemy = await names('Orb of Alchemy');
+
+                expect([divine.unit, annulment.unit, alchemy.unit]).toEqual(['divine', 'chaos', 'exalted']);
+                expect(divine.points.at(-1)?.price).toBe(1);
+                expect(annulment.points.map((point) => point.price)).toEqual([0.2398 * 1.5 * 13.44, 0.2398 * 13.44]);
+            });
+
+            it('keeps the last tier of an item that has dropped out of its category', async () => {
+                const body = JSON.parse(fixture('exchange-currency.json').toString('utf8')) as { lines: { id: string }[] };
+
+                body.lines = body.lines.filter((line) => line.id !== 'mirror');
+                ninja.overrides.set(CURRENCY_URL, { body: Buffer.from(JSON.stringify(body)) });
+                await cycleAt(T + HOUR);
+
+                const response = await names('Mirror of Kalandra');
+
+                expect(response.unit).toBe('divine');
+                expect(response.points[0]?.price).toBe(5715);
+            });
+
+            it('falls back to the default unit for an item with no price in the league', async () => {
+                const response = await names('Divine Orb', { league: 'HC Forbidden Rites' });
+
+                expect(response).toMatchObject({ unit: 'exalted', points: [] });
+            });
+        });
+
         it('refuses a range with too many points, an empty range and an unknown item', async () => {
             await expect(history({ bucket: 'hour', from: '2026-01-01T00:00:00.000Z' })).rejects.toBeInstanceOf(ValidationError);
             await expect(history({ from: '2026-11-23T00:00:00.000Z', to: '2026-11-22T00:00:00.000Z' })).rejects.toBeInstanceOf(ValidationError);
@@ -290,7 +401,8 @@ describe.skipIf(SKIP_DB_TESTS)('the price read side against TimescaleDB', () => 
 
             expect(day.window).toBe('24h');
             expect(day.risers.map((row) => [row.item.name, row.change.h24])).toEqual([['Divine Orb', 100]]);
-            expect(day.fallers).toEqual([]);
+            expect(day.fallers.map((row) => [row.item.name, row.change.h24])).toEqual([['Orb of Annulment', -33.33]]);
+            expect(day.risers[0]).toMatchObject({ unit: 'exalted', prices: { divine: 1, exalted: 445.9, chaos: 13.44 } });
             expect(hour.fallers.map((row) => [row.item.name, row.change.h1])).toEqual([['Divine Orb', -50]]);
             expect(hour.risers).toEqual([]);
         });

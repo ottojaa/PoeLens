@@ -1,23 +1,23 @@
-import { UNITS, type Unit } from '@poelens/shared';
+import { UNIT_CHOICES, type UnitChoice } from '@poelens/shared';
 import { motion } from 'motion/react';
 import { useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { SPRING } from '@/motion/tokens';
 import { cn } from '@/lib/utils';
 
-const SHORT_LABEL: Record<Unit, string> = { divine: 'div', exalted: 'ex', chaos: 'c' };
+const SHORT_LABEL: Record<UnitChoice, string> = { auto: 'Auto', divine: 'div', exalted: 'ex', chaos: 'c' };
 
 /**
- * Switches the currency prices are quoted in. Controlled: the economy context owns the value. Below `lg` the labels are
- * short (div / ex / c) so the control fits a phone's header; the buttons keep the full name for screen readers.
+ * Switches the unit prices are quoted in: Auto (each price in the unit it reads best in) or one fixed unit. Controlled: the economy context owns the value. Below `lg` the labels are
+ * short (Auto / div / ex / c) so the control fits a phone's header; the buttons keep the full name for screen readers.
  */
-export function UnitToggle({ value, onChange }: { value: Unit; onChange: (unit: Unit) => void }) {
+export function UnitToggle({ value, onChange }: { value: UnitChoice; onChange: (unit: UnitChoice) => void }) {
     const pillId = useId();
 
     return (
         <div className="flex items-center gap-2">
             <div role="group" aria-label="Price unit" className="border-input bg-card flex gap-0.5 rounded-[10px] border p-[3px]">
-                {UNITS.map((unit) => (
+                {UNIT_CHOICES.map((unit) => (
                     <Button
                         key={unit}
                         type="button"

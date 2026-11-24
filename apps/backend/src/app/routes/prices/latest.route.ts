@@ -9,7 +9,8 @@ export default async function (fastify: FastifyInstance) {
         {
             schema: {
                 tags: ['prices'],
-                description: 'The latest price of specific items; items missing from their category\'s newest snapshot are listed as "unlisted"',
+                description:
+                    'The latest price of specific items, in one unit or unit=auto (each row in its own); items missing from their category\'s newest snapshot are listed as "unlisted"',
                 querystring: LatestQuerySchema,
                 response: { 200: LatestResponseSchema },
             },
