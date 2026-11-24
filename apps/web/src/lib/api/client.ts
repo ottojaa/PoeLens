@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import { expireSession, getAccessToken, refreshSession } from './session';
 
 // A production build always has VITE_API_URL (vite.config.mts refuses to build without it); dev and tests use the local API.
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3100';
+export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3100';
 
 export interface ApiInit extends Omit<RequestInit, 'body'> {
     /** Sent as a JSON body. */

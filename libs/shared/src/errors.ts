@@ -63,3 +63,18 @@ export class WatchlistFullError extends AppError {
         super(409, WATCHLIST_FULL_CODE, 'The watchlist is full', { limit });
     }
 }
+
+/** The error code of a refused create at the API token limit, for clients to recognise. */
+export const API_TOKENS_FULL_ERROR_CODE = 'API_TOKENS_FULL';
+
+export class ApiTokensFullError extends AppError {
+    constructor(limit: number) {
+        super(409, API_TOKENS_FULL_ERROR_CODE, 'You have reached the limit of API tokens: revoke one first', { limit });
+    }
+}
+
+export class TooManyRequestsError extends AppError {
+    constructor(retryAfterSeconds: number) {
+        super(429, 'RATE_LIMITED', 'Too many requests: retry in ' + retryAfterSeconds + ' seconds', { retryAfterSeconds });
+    }
+}

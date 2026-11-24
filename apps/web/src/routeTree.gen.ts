@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
+import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,6 +22,11 @@ import { Route as EconomyCategoryRouteImport } from './routes/economy.$category'
 const WatchlistRoute = WatchlistRouteImport.update({
   id: '/watchlist',
   path: '/watchlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TokensRoute = TokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/tokens': typeof TokensRoute
   '/watchlist': typeof WatchlistRoute
   '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/tokens': typeof TokensRoute
   '/watchlist': typeof WatchlistRoute
   '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/tokens': typeof TokensRoute
   '/watchlist': typeof WatchlistRoute
   '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/tokens'
     | '/watchlist'
     | '/economy/$category'
     | '/invite/$token'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/tokens'
     | '/watchlist'
     | '/economy/$category'
     | '/invite/$token'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/tokens'
     | '/watchlist'
     | '/economy/$category'
     | '/invite/$token'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
+  TokensRoute: typeof TokensRoute
   WatchlistRoute: typeof WatchlistRoute
   EconomyCategoryRoute: typeof EconomyCategoryRoute
   InviteTokenRoute: typeof InviteTokenRoute
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/watchlist'
       fullPath: '/watchlist'
       preLoaderRoute: typeof WatchlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tokens': {
+      id: '/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof TokensRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
+  TokensRoute: TokensRoute,
   WatchlistRoute: WatchlistRoute,
   EconomyCategoryRoute: EconomyCategoryRoute,
   InviteTokenRoute: InviteTokenRoute,

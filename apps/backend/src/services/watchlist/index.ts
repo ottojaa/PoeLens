@@ -1,1 +1,1 @@
-export { getWatchlist, unwatchItem, watchItem } from './watchlist.js';
+export { countWatchedItems, getWatchlist, unwatchItem, watchItem } from './watchlist.js';

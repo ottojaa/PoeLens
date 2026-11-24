@@ -1,0 +1,257 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the price read side against TimescaleDB > movers > answers an hour exactly as before 1`] = `
+{
+  "fallers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": 0,
+        "h1": -50,
+        "h24": 100,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png",
+        "id": 4,
+        "name": "Divine Orb",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 10397,
+      },
+      "lowConfidence": false,
+      "price": 445.9,
+      "prices": {
+        "chaos": 13.44,
+        "divine": 1,
+        "exalted": 445.9,
+      },
+      "unit": "exalted",
+    },
+  ],
+  "game": "poe2",
+  "league": {
+    "current": true,
+    "hardcore": false,
+    "name": "Forbidden Rites",
+  },
+  "risers": [],
+  "unit": "exalted",
+  "window": "1h",
+}
+`;
+
+exports[`the price read side against TimescaleDB > movers > answers chaos, including low confidence exactly as before 1`] = `
+{
+  "fallers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": null,
+        "h1": null,
+        "h24": -33.33,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQW5udWxsT3JiIiwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/2daba8ccca/AnnullOrb.png",
+        "id": 5,
+        "name": "Orb of Annulment",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 1340,
+      },
+      "lowConfidence": false,
+      "price": 3.222912,
+      "prices": {
+        "chaos": 3.222912,
+        "divine": 0.2398,
+        "exalted": 106.92682,
+      },
+      "unit": "chaos",
+    },
+  ],
+  "game": "poe2",
+  "league": {
+    "current": true,
+    "hardcore": false,
+    "name": "Forbidden Rites",
+  },
+  "risers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": 0,
+        "h1": -50,
+        "h24": 100,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png",
+        "id": 4,
+        "name": "Divine Orb",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 10397,
+      },
+      "lowConfidence": false,
+      "price": 13.44,
+      "prices": {
+        "chaos": 13.44,
+        "divine": 1,
+        "exalted": 445.9,
+      },
+      "unit": "chaos",
+    },
+  ],
+  "unit": "chaos",
+  "window": "24h",
+}
+`;
+
+exports[`the price read side against TimescaleDB > movers > answers one category and a limit exactly as before 1`] = `
+{
+  "fallers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": null,
+        "h1": null,
+        "h24": -33.33,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQW5udWxsT3JiIiwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/2daba8ccca/AnnullOrb.png",
+        "id": 5,
+        "name": "Orb of Annulment",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 1340,
+      },
+      "lowConfidence": false,
+      "price": 106.92682,
+      "prices": {
+        "chaos": 3.222912,
+        "divine": 0.2398,
+        "exalted": 106.92682,
+      },
+      "unit": "exalted",
+    },
+  ],
+  "game": "poe2",
+  "league": {
+    "current": true,
+    "hardcore": false,
+    "name": "Forbidden Rites",
+  },
+  "risers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": 0,
+        "h1": -50,
+        "h24": 100,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png",
+        "id": 4,
+        "name": "Divine Orb",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 10397,
+      },
+      "lowConfidence": false,
+      "price": 445.9,
+      "prices": {
+        "chaos": 13.44,
+        "divine": 1,
+        "exalted": 445.9,
+      },
+      "unit": "exalted",
+    },
+  ],
+  "unit": "exalted",
+  "window": "24h",
+}
+`;
+
+exports[`the price read side against TimescaleDB > movers > answers the defaults exactly as before 1`] = `
+{
+  "fallers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": null,
+        "h1": null,
+        "h24": -33.33,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQW5udWxsT3JiIiwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/2daba8ccca/AnnullOrb.png",
+        "id": 5,
+        "name": "Orb of Annulment",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 1340,
+      },
+      "lowConfidence": false,
+      "price": 106.92682,
+      "prices": {
+        "chaos": 3.222912,
+        "divine": 0.2398,
+        "exalted": 106.92682,
+      },
+      "unit": "exalted",
+    },
+  ],
+  "game": "poe2",
+  "league": {
+    "current": true,
+    "hardcore": false,
+    "name": "Forbidden Rites",
+  },
+  "risers": [
+    {
+      "asOf": "2026-11-23T12:00:00.000Z",
+      "change": {
+        "d7": 0,
+        "h1": -50,
+        "h24": 100,
+      },
+      "item": {
+        "baseType": null,
+        "category": "Currency",
+        "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png",
+        "id": 4,
+        "name": "Divine Orb",
+      },
+      "liquidity": {
+        "kind": "volume",
+        "value": 10397,
+      },
+      "lowConfidence": false,
+      "price": 445.9,
+      "prices": {
+        "chaos": 13.44,
+        "divine": 1,
+        "exalted": 445.9,
+      },
+      "unit": "exalted",
+    },
+  ],
+  "unit": "exalted",
+  "window": "24h",
+}
+`;

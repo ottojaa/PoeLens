@@ -59,10 +59,22 @@ function changeOf(row: PriceRow, window: MoversQuery['window']): number | null {
     return row.change[WINDOW_KEY[window]];
 }
 
-/** The biggest risers and fallers over a window among the latest prices, in one category or all of them. */
-export async function getMovers(db: Kysely<Database>, query: MoversQuery): Promise<MoversResponse> {
+export interface MoversInQuery {
+    game: MoversQuery['game'];
+    league: string;
+    /** Only these categories; every category of the league when left out. */
+    categories?: string[];
+    window: MoversQuery['window'];
+    /** A fixed unit: changes measured in different units would not rank against each other. */
+    unit?: MoversQuery['unit'];
+    limit: number;
+    includeLowConfidence: boolean;
+}
+
+/** The biggest risers and fallers over a window among the latest prices of some categories (or all of them). */
+export async function getMoversIn(db: Kysely<Database>, query: MoversInQuery): Promise<MoversResponse> {
     const context = { ...(await resolveLeague(db, query)), unit: query.unit ?? DEFAULT_UNIT[query.game] };
-    const snapshots = await loadLatestSnapshots(db, context.game, context.league.name, query.category ? [query.category] : undefined);
+    const snapshots = await loadLatestSnapshots(db, context.game, context.league.name, query.categories);
     const rows = await loadPriceRows(db, {
         game: context.game,
         unit: context.unit,
@@ -82,4 +94,11 @@ export async function getMovers(db: Kysely<Database>, query: MoversQuery): Promi
         risers: risers.slice(0, query.limit).map((entry) => entry.row),
         fallers: fallers.slice(0, query.limit).map((entry) => entry.row),
     };
+}
+
+/** The biggest risers and fallers over a window among the latest prices, in one category or all of them. */
+export function getMovers(db: Kysely<Database>, query: MoversQuery): Promise<MoversResponse> {
+    const { category, ...rest } = query;
+
+    return getMoversIn(db, { ...rest, ...(category && { categories: [category] }) });
 }
