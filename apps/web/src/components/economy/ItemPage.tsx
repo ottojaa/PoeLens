@@ -31,7 +31,7 @@ function toLeagueLabel(league: LeagueRef): string {
 function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel: string }) {
     return (
         <HeaderBreadcrumb>
-            <nav aria-label="Breadcrumb" className="text-muted-foreground flex items-center gap-1.5 text-sm whitespace-nowrap">
+            <nav aria-label="Breadcrumb" className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-sm whitespace-nowrap">
                 <Link to="/" className="hover:text-foreground rounded-sm underline-offset-4 hover:underline">
                     Economy
                 </Link>

@@ -19,7 +19,7 @@ export function BreadcrumbProvider({ children }: { children: ReactNode }) {
 export function BreadcrumbSlot() {
     const slot = useContext(SlotContext);
 
-    return <div ref={slot?.setElement} className="order-last min-w-0 basis-full empty:hidden md:order-none md:basis-auto md:shrink" />;
+    return <div ref={slot?.setElement} className="order-last min-w-0 basis-full empty:hidden xl:order-none xl:max-w-80 xl:basis-auto xl:shrink" />;
 }
 
 /** Renders its children in the header's breadcrumb slot. */
