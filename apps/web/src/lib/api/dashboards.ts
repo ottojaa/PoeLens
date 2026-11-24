@@ -105,7 +105,8 @@ export function useAppendBlock(game: Game) {
     return useMutation({
         mutationFn: ({ dashboardId, ...body }: AppendBlockBody & { dashboardId: string }) =>
             fetchApi('/dashboards/' + dashboardId + '/blocks', AppendBlockResponseSchema, { method: 'POST', json: body }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardsKey(game) }),
+        // Read again after a refusal too: it means the list no longer matches what is stored.
+        onSettled: () => queryClient.invalidateQueries({ queryKey: dashboardsKey(game) }),
     });
 }
 
