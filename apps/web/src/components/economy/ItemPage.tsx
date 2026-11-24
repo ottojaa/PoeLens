@@ -68,7 +68,7 @@ function RangeToggle({ value, onChange }: { value: Range; onChange: (range: Rang
 
 /** One item: its price in all three units, how it moved, and its history over a chosen range. */
 export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
-    const { scope, leagueName, setUnit: _setUnit } = useEconomyContext();
+    const { scope, leagueName } = useEconomyContext();
     const navigate = useNavigate();
     const leagues = useLeagues(GAME);
     const leagueFirstSeen = leagues.data?.leagues.find((league) => league.name === leagueName)?.firstSeen;
@@ -117,7 +117,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
                 <ItemIcon item={item} size="lg" />
                 <div>
                     <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
-                    <p className="text-muted-foreground text-sm">{[item.baseType, category?.label ?? item.category].filter(Boolean).join(' · ')}</p>
+                    <p className="text-muted-foreground text-sm">{[item.baseType, category?.label ?? item.category, leagueName].filter(Boolean).join(' · ')}</p>
                 </div>
             </div>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
@@ -150,15 +150,24 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
                     {row ? (
                         <span className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]">
                             {row.liquidity ? formatCount(row.liquidity.value) : '—'}
+                            {row.liquidity?.kind === 'volume' && <span className="text-muted-foreground ml-1.5 text-lg font-medium">div</span>}
                         </span>
                     ) : (
                         <Skeleton className="h-9 w-24" />
+                    )}
+                    {row?.liquidity && (
+                        <span className="text-muted-foreground text-[13px]">
+                            {row.liquidity.kind === 'volume' ? 'traded on the currency exchange' : 'open listings'}
+                        </span>
                     )}
                     {row?.lowConfidence && <span className="text-warning text-sm">Low confidence: the price may be unreliable</span>}
                 </StatCard>
                 <StatCard label="Updated">
                     {row ? (
-                        <span className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]">{formatAgo(row.asOf)}</span>
+                        <span className="font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]">
+                            {formatAgo(row.asOf).replace(/ ago$/, '')}
+                            {formatAgo(row.asOf).endsWith(' ago') && <span className="text-muted-foreground ml-1.5 text-lg font-medium">ago</span>}
+                        </span>
                     ) : (
                         <Skeleton className="h-9 w-28" />
                     )}
@@ -196,13 +205,13 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
 function ItemSkeleton() {
     return (
-        <div className="flex flex-col gap-6" aria-busy="true" aria-label="Loading item">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6" aria-busy="true" aria-label="Loading item">
             <Skeleton className="h-4 w-48" />
             <div className="flex items-center gap-4">
                 <Skeleton className="size-[60px] rounded-2xl" />
                 <Skeleton className="h-8 w-64" />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
                 {[0, 1, 2, 3].map((index) => (
                     <Skeleton key={index} className="h-24 rounded-xl" />
                 ))}
