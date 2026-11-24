@@ -13,7 +13,7 @@ export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; o
     const { scope, leagues, league, setLeague, setUnit } = useEconomyContext();
 
     return (
-        <header className="bg-card sticky top-0 z-30 min-h-(--header-height) flex flex-wrap items-center md:flex-nowrap gap-x-2 gap-y-2 border-b px-3 py-3 sm:gap-x-4 sm:px-4 md:px-6">
+        <header className="bg-panel sticky top-0 z-30 min-h-(--header-height) flex flex-wrap items-center md:flex-nowrap gap-x-2 gap-y-2 border-b px-3 py-3 sm:gap-x-4 sm:px-4 md:px-6">
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu" onClick={onOpenMenu}>
                 <Menu />
             </Button>

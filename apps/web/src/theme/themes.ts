@@ -19,6 +19,7 @@ export const COLOR_TOKENS = [
     'card-foreground',
     'popover',
     'popover-foreground',
+    'panel',
     'primary',
     'primary-foreground',
     'secondary',

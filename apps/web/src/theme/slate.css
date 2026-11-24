@@ -4,10 +4,10 @@
  * Dark follows the design's board. Light is derived from it (the board has none): the same hues on pale surfaces, with
  * the violet, sky blue and orange darkened until the contrast check (theme.test.ts) passes.
  *
- * The board draws two panel levels (a header and sidebar one step darker than the table and cards). Here --card is the
- * board's surface, which is what the table and cards use, so the header and sidebar sit on it too. The board's
- * separate accent text colour is not a token: accent text is --primary. Destructive, success, warning and chart-4/5 are
- * not on the board and come from Reverie's set, with chart-4 moved off violet (the accent's own hue).
+ * The board draws two panel levels: the header and sidebar sit on --panel, one step darker than the table and cards,
+ * which use --card (the board's surface). The board's separate accent text colour is not a token: accent text is
+ * --primary. Light has one level, so --panel equals --card there. Destructive, success, warning and chart-4/5 are not on
+ * the board and come from Reverie's set, with chart-4 moved off violet (the accent's own hue).
  */
 
 [data-theme='slate'] {
@@ -21,6 +21,7 @@
     --card-foreground: #11141b;
     --popover: #ffffff;
     --popover-foreground: #11141b;
+    --panel: #ffffff;
 
     --primary: #6d4fd6;
     --primary-foreground: #ffffff;
@@ -58,6 +59,7 @@
     --card-foreground: #e6e9f0;
     --popover: #11141b;
     --popover-foreground: #e6e9f0;
+    --panel: #0e1117;
 
     --primary: #a78bfa;
     --primary-foreground: #0b0d12;

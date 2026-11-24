@@ -7,10 +7,10 @@
  * board (it has none): zinc surfaces with the board's blue, and the teal and orange darkened until the contrast check
  * (theme.test.ts) passes.
  *
- * The board draws two panel levels (a header and sidebar one step darker than the table and cards). Here --card is the
- * board's surface, which is what the table and cards use, so the header and sidebar sit on it too. The board's
- * separate accent text colour is not a token: accent text is --primary. Destructive, success, warning and chart-4/5 are
- * not on the board and come from Reverie's set, with chart-4 on violet to stay clear of the blue accent.
+ * The board draws two panel levels: the header and sidebar sit on --panel, one step darker than the table and cards,
+ * which use --card (the board's surface). The board's separate accent text colour is not a token: accent text is
+ * --primary. Light has one level, so --panel equals --card there. Destructive, success, warning and chart-4/5 are not on
+ * the board and come from Reverie's set, with chart-4 on violet to stay clear of the blue accent.
  */
 
 [data-theme='graphite'] {
@@ -24,6 +24,7 @@
     --card-foreground: #09090b;
     --popover: #ffffff;
     --popover-foreground: #09090b;
+    --panel: #ffffff;
 
     --primary: #2563eb;
     --primary-foreground: #ffffff;
@@ -61,6 +62,7 @@
     --card-foreground: #fafafa;
     --popover: #111113;
     --popover-foreground: #fafafa;
+    --panel: #0c0c0e;
 
     --primary: #3d7df1;
     --primary-foreground: #09090b;
