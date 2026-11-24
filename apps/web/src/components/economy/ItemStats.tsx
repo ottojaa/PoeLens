@@ -1,4 +1,4 @@
-import { UNITS, type PriceRow, type Unit } from '@poelens/shared';
+import { UNITS, type LeagueRef, type PriceRow, type Unit } from '@poelens/shared';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,7 +13,7 @@ export interface ShownPrice {
     /** Item, league and unit of the answer: a new one remounts the number instead of counting from the old one. */
     key: string;
     /** The league the answer is for, which can lag the URL while a new league loads. */
-    leagueName: string;
+    league: LeagueRef;
 }
 
 const BIG_NUMBER = 'font-heading text-[32px] leading-tight font-bold tracking-[-0.02em]';

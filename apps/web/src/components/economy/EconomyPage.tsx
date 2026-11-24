@@ -1,26 +1,43 @@
-import { CATEGORIES, type Category } from '@poelens/shared';
+import { CATEGORIES, type Category, type TableRow } from '@poelens/shared';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api/client';
-import { useTable } from '@/lib/api/prices';
+import { useCurrencyRows, useTable } from '@/lib/api/prices';
 import { DEFAULT_SORT } from '@/lib/economy/columns';
 import { toColumnsParam, type EconomyView } from '@/lib/economy/search-params';
 import { filterRows, sortRows } from '@/lib/economy/sort';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
+import { formatRates, toRates, type Rates } from '@/lib/economy/rates';
 import { formatAgo } from '@/lib/format';
+import { useMediaQuery } from '@/lib/use-media-query';
+import { EconomyCards, SortControl } from './EconomyCards';
 import { EconomyTable } from './EconomyTable';
 import { EconomyToolbar, type ViewChange } from './EconomyToolbar';
 import { ErrorState, NoDataState, NoMatchState, TableSkeleton } from './states';
 import type { SortKey } from '@/lib/economy/columns';
 
-/** A category's own label for what its liquidity column counts. */
+/** A category's own label for what its liquidity column counts: stash items have listings, exchange items a traded value in divine. */
 function toLiquidityLabel(category: Category): string {
-    return category.endpoint === 'stash' ? 'Listings' : 'Volume';
+    return category.endpoint === 'stash' ? 'Listings' : 'Traded (div)';
+}
+
+/** Where a category's prices come from, as the page's meta line names it. */
+function toSourceLabel(category: Category): string {
+    return category.endpoint === 'stash' ? 'Listed in stashes' : 'Currency exchange';
 }
 
 /** Writes the economy view into the URL, leaving out whatever equals the default so a plain view keeps a plain URL. */
+/** The line under the title: where the prices come from, how fresh they are and the exchange rates between the units. */
+function toMeta(category: Category, rows: readonly TableRow[] | undefined, rates: Rates | undefined): string {
+    if (!rows) return 'Loading prices';
+
+    const asOf = rows[0]?.asOf;
+
+    return [toSourceLabel(category), asOf && `updated ${formatAgo(asOf)}`, rates && formatRates(rates)].filter(Boolean).join(' · ');
+}
+
 function useViewNavigation(view: EconomyView) {
     const navigate = useNavigate();
 
@@ -91,26 +108,32 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
     // the answer itself, so they never describe one scope with another's numbers; a different category is not shown at all.
     const data = query.data?.category === category.id ? query.data : undefined;
     const navigation = useViewNavigation(view);
+    // From md up the table fits; below it each item is a card, and sorting moves to a menu.
+    const isWide = useMediaQuery('(min-width: 768px)');
     const liquidityLabel = toLiquidityLabel(category);
     const rows = data?.rows;
     const visible = useMemo(
         () => (rows ? sortRows(filterRows(rows, view.q, view.min), view.sort, view.dir) : []),
         [rows, view.q, view.min, view.sort, view.dir],
     );
-    const asOf = rows?.[0]?.asOf;
-    const meta = rows ? `${rows.length} items · updated ${asOf ? formatAgo(asOf) : 'just now'}` : 'Loading prices';
+    const rates = toRates(useCurrencyRows(scope, 'exalted').data?.rows, useCurrencyRows(scope, 'chaos').data?.rows);
+    const meta = toMeta(category, rows, rates);
 
     return (
         <div className="flex flex-col gap-5">
             <PageHeading title={category.label} meta={meta} hideLow={view.hideLow} onHideLow={navigation.setHideLow} />
             <EconomyToolbar view={view} liquidityLabel={liquidityLabel} onChange={navigation.change} />
+            {!isWide && <SortControl sort={{ key: view.sort, direction: view.dir }} liquidityLabel={liquidityLabel} onSort={navigation.sortBy} />}
             <div className="bg-card overflow-x-auto rounded-xl border">
-                <div className="min-w-[760px]">
+                <div className="md:min-w-[760px]">
                     {!data && !query.isError && <TableSkeleton />}
                     {query.isError && !rows && <TableError error={query.error} league={scope.league} onRetry={() => void query.refetch()} />}
                     {rows && rows.length === 0 && <NoDataState league={league?.name} />}
                     {rows && rows.length > 0 && visible.length === 0 && <NoMatchState onClear={navigation.clearFilters} />}
-                    {data && visible.length > 0 && (
+                    {data && visible.length > 0 && !isWide && (
+                        <EconomyCards rows={visible} unit={data.unit} scopeKey={`${data.league.name}:${data.unit}`} liquidityLabel={liquidityLabel} />
+                    )}
+                    {data && visible.length > 0 && isWide && (
                         <EconomyTable
                             rows={visible}
                             unit={data.unit}

@@ -4,6 +4,7 @@ import { Wordmark } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/button';
 import { useEconomyContext } from '@/lib/economy/use-economy-context';
 import { AccountMenu } from './AccountMenu';
+import { BreadcrumbSlot } from './HeaderBreadcrumb';
 import { LeagueSwitcher } from './LeagueSwitcher';
 import { ThemeToggle } from './ThemeToggle';
 import { UnitToggle } from './UnitToggle';
@@ -19,6 +20,7 @@ export function Header({ onOpenMenu, onOpenSearch }: { onOpenMenu: () => void; o
             <Link to="/" aria-label="PoeLens home" className="focus-visible:ring-ring/50 mr-2 rounded-md outline-none focus-visible:ring-[3px]">
                 <Wordmark />
             </Link>
+            <BreadcrumbSlot />
             <div className="hidden lg:block">
                 <LeagueSwitcher leagues={leagues ?? []} value={league?.name ?? null} onChange={setLeague} />
             </div>

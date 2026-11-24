@@ -1,4 +1,4 @@
-import { CATEGORIES, UNITS, type ItemRef, type Unit } from '@poelens/shared';
+import { CATEGORIES, UNITS, type ItemRef, type LeagueRef, type Unit } from '@poelens/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,6 +6,7 @@ import { ApiError } from '@/lib/api/client';
 import { useHistory, useLatest } from '@/lib/api/prices';
 import { type Range } from '@/lib/economy/search-params';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
+import { HeaderBreadcrumb } from '@/components/layout/HeaderBreadcrumb';
 import { HistoryCard } from './HistoryCard';
 import { ItemIcon } from './ItemIcon';
 import { ItemStats, type ShownPrice } from './ItemStats';
@@ -19,16 +20,22 @@ function toShownPrice(query: LatestQuery, itemId: number): ShownPrice | undefine
 
     if (!query.data || !row) return undefined;
 
-    return { row, key: `${itemId}:${query.data.league.name}:${query.data.unit}`, leagueName: query.data.league.name };
+    return { row, key: `${itemId}:${query.data.league.name}:${query.data.unit}`, league: query.data.league };
 }
 
-function ItemHeading({ item, leagueName }: { item: ItemRef; leagueName: string | undefined }) {
-    const category = CATEGORIES[GAME].find((candidate) => candidate.id === item.category);
-    const categoryLabel = category?.label ?? item.category;
+/** "Forbidden Rites (softcore)": the league and which of its two ladders the prices are from. */
+function toLeagueLabel(league: LeagueRef): string {
+    return `${league.name} (${league.hardcore ? 'hardcore' : 'softcore'})`;
+}
 
+function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel: string }) {
     return (
-        <>
-            <nav aria-label="Breadcrumb" className="text-muted-foreground flex items-center gap-1.5 text-sm">
+        <HeaderBreadcrumb>
+            <nav aria-label="Breadcrumb" className="text-muted-foreground flex items-center gap-1.5 text-sm whitespace-nowrap">
+                <Link to="/" className="hover:text-foreground rounded-sm underline-offset-4 hover:underline">
+                    Economy
+                </Link>
+                <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
                 <Link
                     to="/economy/$category"
                     params={{ category: item.category }}
@@ -36,16 +43,29 @@ function ItemHeading({ item, leagueName }: { item: ItemRef; leagueName: string |
                 >
                     {categoryLabel}
                 </Link>
-                <ChevronRight className="size-3.5" aria-hidden="true" />
-                <span className="text-foreground" aria-current="page">
+                <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="text-foreground truncate" aria-current="page">
                     {item.name}
                 </span>
             </nav>
+        </HeaderBreadcrumb>
+    );
+}
+
+function ItemHeading({ item, league }: { item: ItemRef; league: LeagueRef | undefined }) {
+    const category = CATEGORIES[GAME].find((candidate) => candidate.id === item.category);
+    const categoryLabel = category?.label ?? item.category;
+
+    return (
+        <>
+            <ItemBreadcrumb item={item} categoryLabel={categoryLabel} />
             <div className="flex items-center gap-4">
                 <ItemIcon item={item} size="lg" />
                 <div>
                     <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
-                    <p className="text-muted-foreground text-sm">{[item.baseType, categoryLabel, leagueName].filter(Boolean).join(' · ')}</p>
+                    <p className="text-muted-foreground text-sm">
+                        {[item.baseType, categoryLabel, league && toLeagueLabel(league)].filter(Boolean).join(' · ')}
+                    </p>
                 </div>
             </div>
         </>
@@ -84,7 +104,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
-            <ItemHeading item={item} leagueName={answer?.league.name ?? shown?.leagueName} />
+            <ItemHeading item={item} league={answer?.league ?? shown?.league} />
             {unpricedIn ? <NoItemPriceState league={unpricedIn} /> : <ItemStats shown={shown} unit={scope.unit} prices={prices} />}
             <HistoryCard history={answer} itemName={item.name} range={range} onRange={setRange} />
         </div>

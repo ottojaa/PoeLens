@@ -77,7 +77,7 @@ export function EconomyToolbar({ view, liquidityLabel, onChange }: { view: Econo
                 aria-label={`Minimum ${liquidityLabel.toLowerCase()}`}
                 className="h-10 w-40"
             />
-            <div className="ml-auto">
+            <div className="ml-auto hidden md:block">
                 <ColumnMenu columns={view.columns} onChange={(columns) => onChange({ columns })} />
             </div>
         </div>

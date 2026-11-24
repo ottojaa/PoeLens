@@ -51,6 +51,16 @@ export function useTable(scope: PriceScope, category: string, includeLowConfiden
     });
 }
 
+/** The Currency category in one unit, without sparklines: what the exchange rates between units are read from. */
+export function useCurrencyRows(scope: PriceScope, unit: Unit) {
+    return useQuery({
+        queryKey: ['currency-rows', scope.game, scope.league, unit],
+        queryFn: () => fetchApi('/prices/table' + toQuery({ ...scope, unit, category: 'Currency', includeLowConfidence: true }), TableResponseSchema),
+        // No placeholder: another league's rates would sit in this league's meta line until its own arrive.
+        refetchInterval: REFRESH_INTERVAL_MS,
+    });
+}
+
 /** The latest price of up to `MAX_LATEST_ITEMS` items, low-confidence ones included (they come back flagged). */
 export function useLatest(scope: PriceScope, items: readonly number[], options: { refresh?: boolean } = {}) {
     return useQuery({
