@@ -12,6 +12,14 @@ export function canAnimateLayout(count: number): boolean {
     return count <= MAX_ANIMATED_ITEMS;
 }
 
+/** The motion props of a list row that glides into place and fades out when removed (a `motion.tr` in a table). */
+export const GLIDING_ROW_PROPS = {
+    layout: 'position',
+    initial: false,
+    exit: { opacity: 0 },
+    transition: { layout: SPRING, opacity: { duration: DURATION.menu, ease: EASE_OUT } },
+} as const;
+
 /** A list whose items glide to their new place when the order changes, and fade in and out as they come and go. */
 export function AnimatedList<T>({
     items,

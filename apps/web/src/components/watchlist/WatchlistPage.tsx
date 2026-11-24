@@ -10,7 +10,7 @@ import type { EconomyView } from '@/lib/economy/search-params';
 import { filterRows, sortRows } from '@/lib/economy/sort';
 import { formatAgo } from '@/lib/format';
 import { useMediaQuery } from '@/lib/use-media-query';
-import { canAnimateLayout } from '@/motion/AnimatedList';
+import type { WatchControls } from '@/lib/watchlist/controls';
 import { EmptyWatchlist } from './EmptyWatchlist';
 import { UnlistedItems } from './UnlistedItems';
 
@@ -34,16 +34,17 @@ function PricedItems({
     scopeKey,
     view,
     onSort,
+    controls,
 }: {
+    controls: WatchControls;
     rows: readonly WatchlistRow[];
     unit: Unit;
     scopeKey: string;
     view: EconomyView;
     onSort: Parameters<typeof EconomyTable>[0]['onSort'];
 }) {
-    const { controls } = useWatchlist();
     const isWide = useMediaQuery('(min-width: 768px)');
-    const options = { watch: controls, liquidityUnits: true, animate: canAnimateLayout(rows.length) };
+    const options = { watch: controls, liquidityUnits: true, animate: true };
     const sort = { key: view.sort, direction: view.dir };
 
     if (!isWide) return <EconomyCards rows={rows} unit={unit} scopeKey={scopeKey} liquidityLabel={LIQUIDITY_LABEL} options={options} />;
@@ -98,7 +99,7 @@ export function WatchlistPage({ view }: { view: EconomyView }) {
                             {!loaded && <TableSkeleton rows={5} />}
                             {loaded && rows.length > 0 && visible.length === 0 && <NoMatchState onClear={navigation.clearFilters} />}
                             {answer && visible.length > 0 && (
-                                <PricedItems rows={visible} unit={answer.unit} scopeKey={scopeKey} view={view} onSort={navigation.sortBy} />
+                                <PricedItems rows={visible} unit={answer.unit} scopeKey={scopeKey} view={view} onSort={navigation.sortBy} controls={controls} />
                             )}
                             {loaded && rows.length === 0 && unlisted.length > 0 && (
                                 <p className="text-muted-foreground px-6 py-8 text-center text-sm">None of your items has a price in {answer.league}.</p>

@@ -2,6 +2,7 @@ import type { TableRow, Unit } from '@poelens/shared';
 import { Link } from '@tanstack/react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { OptionalColumn, SortDirection, SortKey } from '@/lib/economy/columns';
@@ -11,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { WatchStar } from '@/components/watchlist/WatchStar';
 import type { WatchControls } from '@/lib/watchlist/controls';
 import { AnimatedNumber } from '@/motion/AnimatedNumber';
-import { DURATION, EASE_OUT, SPRING } from '@/motion/tokens';
+import { canAnimateLayout, GLIDING_ROW_PROPS } from '@/motion/AnimatedList';
 import { Change } from './Change';
 import { ItemIcon } from './ItemIcon';
 import { Sparkline } from './Sparkline';
@@ -88,14 +89,7 @@ function Row({
     const shows = (column: OptionalColumn) => columns.includes(column);
     const { watch, liquidityUnits, animate } = options;
     const Tr = animate ? motion.tr : 'tr';
-    const motionProps = animate
-        ? {
-              layout: 'position' as const,
-              initial: false,
-              exit: { opacity: 0 },
-              transition: { layout: SPRING, opacity: { duration: DURATION.menu, ease: EASE_OUT } },
-          }
-        : {};
+    const motionProps = animate ? GLIDING_ROW_PROPS : {};
 
     return (
         <Tr className="hover:bg-accent border-t transition-colors" {...motionProps}>
@@ -162,6 +156,13 @@ function Row({
     );
 }
 
+/** Rows leave with a fade only where the table animates; a category table of hundreds of rows skips the bookkeeping. */
+function MaybePresence({ enabled, children }: { enabled: boolean; children: ReactNode }) {
+    if (!enabled) return children;
+
+    return <AnimatePresence initial={false}>{children}</AnimatePresence>;
+}
+
 /**
  * The price table: plain rows (no reorder animation, it would measure every row on every sort), a sortable header,
  * and only the columns the viewer chose. `scopeKey` changes with the league and unit.
@@ -186,6 +187,7 @@ export function EconomyTable({
     liquidityLabel: string;
 }) {
     const shows = (column: OptionalColumn) => columns.includes(column);
+    const rowOptions = { ...options, animate: options.animate === true && canAnimateLayout(rows.length) };
 
     return (
         <table className="w-full border-collapse text-sm">
@@ -206,11 +208,11 @@ export function EconomyTable({
                 </tr>
             </thead>
             <tbody>
-                <AnimatePresence initial={false}>
+                <MaybePresence enabled={rowOptions.animate}>
                     {rows.map((row) => (
-                        <Row key={row.item.id} row={row} unit={unit} scopeKey={scopeKey} columns={columns} options={options} />
+                        <Row key={row.item.id} row={row} unit={unit} scopeKey={scopeKey} columns={columns} options={rowOptions} />
                     ))}
-                </AnimatePresence>
+                </MaybePresence>
             </tbody>
         </table>
     );

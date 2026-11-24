@@ -78,7 +78,7 @@ function ItemHeading({ item, league, watch }: { item: ItemRef; league: LeagueRef
                         </p>
                     </div>
                 </div>
-                <WatchButton watched={watch.isWatched(item.id)} onToggle={(watched) => watch.onToggle(item, watched)} />
+                <WatchButton ready={watch.isReady} watched={watch.isWatched(item.id)} onToggle={(watched) => watch.onToggle(item, watched)} />
             </div>
         </>
     );

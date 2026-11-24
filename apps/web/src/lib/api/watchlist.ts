@@ -1,12 +1,12 @@
-import { WATCHLIST_FULL_CODE, WatchlistResponseSchema, type ItemRef, type Unit, type WatchlistRow, type WatchlistUnlisted } from '@poelens/shared';
+import { WatchlistResponseSchema, type ItemRef, type Unit, type WatchlistRow, type WatchlistUnlisted } from '@poelens/shared';
 import { keepPreviousData, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useEconomyContext } from '@/lib/economy/use-economy-context';
 import type { WatchControls } from '@/lib/watchlist/controls';
 import { isFullList, toWantedStates, toWatchedIds, withoutPendingRemovals, type PendingToggle } from '@/lib/watchlist/overlay';
-import { toToggleErrorMessage } from '@/lib/watchlist/messages';
-import { ApiError, fetchApi, sendApi } from './client';
+import { FULL_LIST_MESSAGE, toToggleErrorMessage } from '@/lib/watchlist/messages';
+import { fetchApi, sendApi } from './client';
 import { REFRESH_INTERVAL_MS, type PriceScope } from './prices';
 
 const TOGGLE_KEY = ['watchlist', 'toggle'] as const;
@@ -86,15 +86,15 @@ export function useWatchlist(): Watchlist {
     const setWatched = useCallback(
         (item: Pick<ItemRef, 'id'>, watched: boolean) => {
             // The server refuses too, but saying so at once keeps the star from flipping on and back.
-            if (watched && isFull && !watchedIds.has(item.id))
-                return void toast.error(toToggleErrorMessage(new ApiError(409, '/watchlist', WATCHLIST_FULL_CODE, null)), { id: ERROR_TOAST_ID });
+            if (watched && isFull && !watchedIds.has(item.id)) return void toast.error(FULL_LIST_MESSAGE, { id: ERROR_TOAST_ID });
 
             mutate({ itemId: item.id, watched });
         },
         [mutate, isFull, watchedIds],
     );
 
-    const controls = useMemo(() => ({ isWatched, onToggle: setWatched }), [isWatched, setWatched]);
+    const isReady = query.data !== undefined;
+    const controls = useMemo(() => ({ isReady, isWatched, onToggle: setWatched }), [isReady, isWatched, setWatched]);
 
     return {
         controls,
