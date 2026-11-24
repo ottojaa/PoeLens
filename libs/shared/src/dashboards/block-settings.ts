@@ -12,6 +12,10 @@ export const MAX_LIST_ROWS = 20;
 /** The longest a screener's window can be: a week. */
 export const MAX_SCREENER_HOURS = 168;
 
+/** The longest name filter and the highest minimum liquidity a price table takes; the economy view, which a table is saved from, takes no more. */
+export const MAX_FILTER_LENGTH = 100;
+export const MAX_MIN_LIQUIDITY = 1_000_000_000;
+
 const listLimit = z.number().int().min(1).max(MAX_LIST_ROWS);
 
 /** A category with the economy view's own filter, sort and columns, cut to its top rows. */
@@ -22,8 +26,8 @@ export const TableBlockSchema = z.object({
     category: z.string().min(1).max(60),
     sort: z.enum(SORT_KEYS).default('price'),
     dir: z.enum(['asc', 'desc']).default('desc'),
-    q: z.string().trim().max(100).default(''),
-    minLiquidity: z.number().min(0).max(1_000_000_000).default(0),
+    q: z.string().trim().max(MAX_FILTER_LENGTH).default(''),
+    minLiquidity: z.number().min(0).max(MAX_MIN_LIQUIDITY).default(0),
     hideLowConfidence: z.boolean().default(true),
     columns: z
         .array(z.enum(OPTIONAL_COLUMNS))

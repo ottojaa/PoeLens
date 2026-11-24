@@ -196,14 +196,32 @@ describe.skipIf(SKIP_DB_TESTS)('the data blocks and append against PostgreSQL', 
             expect(pair?.type === 'chart' ? pair.points.length : 0).toBe(2);
         });
 
-        it('answers an item the catalog no longer has as null, and starts a league range at the league', async () => {
+        it('answers an item the catalog no longer has as null', async () => {
+            const answered = await data([{ id: 'gone', type: 'chart', item: 2_000_000, quote: null, range: '7d' }]);
+
+            expect(answered.blocks['gone']).toBeNull();
+        });
+
+        it('starts a league range when the league was first seen, leaving out older prices a 7-day range shows', async () => {
+            // The league is first seen at the fixture cycle's time, so a price 30 hours older predates it.
+            await insertEarlierPrice(test.db, earlier, ids['Divine Orb']!, 30, { divineFactor: 2 });
+
             const answered = await data([
-                { id: 'gone', type: 'chart', item: 2_000_000, quote: null, range: '7d' },
+                { id: 'week', type: 'chart', item: ids['Divine Orb']!, quote: null, range: '7d' },
                 { id: 'league', type: 'chart', item: ids['Divine Orb']!, quote: null, range: 'league' },
             ]);
 
-            expect(answered.blocks['gone']).toBeNull();
-            expect(answered.blocks['league']).toMatchObject({ type: 'chart' });
+            const toTimes = (id: string) => {
+                const block = answered.blocks[id];
+
+                return block?.type === 'chart' ? block.points.map((point) => Date.parse(point.time)) : [];
+            };
+
+            // League points are daily, so the first one is stamped at the start of the day the league was first seen.
+            const firstDay = new Date(T).setUTCHours(0, 0, 0, 0);
+
+            expect(Math.min(...toTimes('week'))).toBeLessThan(firstDay);
+            expect(toTimes('league')).toEqual([firstDay]);
         });
     });
 

@@ -11,7 +11,7 @@ import type { Resolver } from './types.js';
  * unit it reads best in, with its change still the one it was ranked by.
  */
 export const resolveMovers: Resolver<'movers'> = (db, context, entries) =>
-    answerOnce(entries, async ({ block, unit }) => {
+    answerOnce(entries, context.log, async ({ block, unit }) => {
         const ranked = await getMoversIn(db, {
             game: context.game,
             league: context.league,

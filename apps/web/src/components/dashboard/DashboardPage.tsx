@@ -162,7 +162,7 @@ function DashboardView({ active, dashboards, max, scope, canEdit, dialog, reload
     const editing = useDashboardEditing(active, reload);
     const { edit, draft, dispatch } = editing;
     const panels: readonly Panel[] = edit ? draft.panels : active.panels;
-    const data = useDashboardData(scope, panels).data?.blocks;
+    const data = useDashboardData(scope, panels, edit !== null).data?.blocks;
     const selected = panels.find((panel) => panel.id === edit?.panelId);
     const level = canEdit && edit?.level === 'content' && selected ? 'content' : 'layout';
     const mode = !edit ? 'view' : level === 'content' ? 'content' : canEdit ? 'layout' : 'view';

@@ -8,7 +8,7 @@ import type { Resolver } from './types.js';
  * over the same rows), cut to the block's limit. Every row carries its sparkline, so showing the trend column never refetches.
  */
 export const resolveTables: Resolver<'table'> = (db, context, entries) =>
-    answerOnce(entries, async ({ block, unit }) => {
+    answerOnce(entries, context.log, async ({ block, unit }) => {
         const table = await getTable(db, {
             game: context.game,
             league: context.league,

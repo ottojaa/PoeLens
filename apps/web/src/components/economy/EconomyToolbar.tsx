@@ -1,3 +1,4 @@
+import { MAX_FILTER_LENGTH } from '@poelens/shared';
 import { Columns3, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -74,6 +75,7 @@ export function EconomyToolbar({
                 <Input
                     type="search"
                     value={text}
+                    maxLength={MAX_FILTER_LENGTH}
                     onChange={(event) => setText(event.target.value)}
                     placeholder={filterLabel}
                     aria-label={filterLabel}

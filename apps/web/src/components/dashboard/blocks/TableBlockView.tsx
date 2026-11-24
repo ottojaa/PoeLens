@@ -12,7 +12,7 @@ import { UnitMark } from './UnitMark';
 
 const CHANGE_KEY = { h1: 'h1', h24: 'h24', d7: 'd7' } as const;
 
-/** Trend shows from a 420px panel and listings from 520px; the first change column is always there. */
+/** Trend shows from a 420px panel and listings from 520px; `toColumnClass` says when a change column shows. */
 const COLUMN_CLASS: Record<OptionalColumn, string> = {
     h1: 'w-16 shrink-0 text-right',
     h24: 'w-16 shrink-0 text-right',
@@ -21,7 +21,7 @@ const COLUMN_CLASS: Record<OptionalColumn, string> = {
     liquidity: 'hidden w-[70px] shrink-0 text-right @min-[520px]:block',
 };
 
-/** The board draws no table under 320px: there the first change column waits for 300px and the others for 420px, so the item's name stays readable. */
+/** So the item's name stays readable in a narrow panel, the first change column shows from 300px and further ones from 420px. */
 function toColumnClass(column: OptionalColumn, index: number): string {
     const isChange = column === 'h1' || column === 'h24' || column === 'd7';
 

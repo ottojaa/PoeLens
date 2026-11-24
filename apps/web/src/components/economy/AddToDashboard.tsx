@@ -1,4 +1,4 @@
-import { MAX_BLOCKS, type Block } from '@poelens/shared';
+import { MAX_PANELS, type Block, type Dashboard } from '@poelens/shared';
 import { LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,29 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAppendBlock, useDashboards } from '@/lib/api/dashboards';
+import { toAddError } from '@/lib/dashboard/add-error';
+import { hasRoomForBlock } from '@/lib/dashboard/editor';
 import { GAME } from '@/lib/economy/use-economy-context';
+
+/** Where on one dashboard the block can go. A place with no room is disabled and says so. */
+function PlaceItems({ dashboard, onPick }: { dashboard: Dashboard; onPick: (panelId: string | undefined) => void }) {
+    const hasMaxPanels = dashboard.panels.length >= MAX_PANELS;
+
+    return (
+        <>
+            <DropdownMenuItem disabled={hasMaxPanels} onSelect={() => onPick(undefined)}>
+                New panel{hasMaxPanels && ' (full)'}
+            </DropdownMenuItem>
+            {dashboard.panels.length > 0 && <DropdownMenuSeparator />}
+            {dashboard.panels.map((panel) => (
+                <DropdownMenuItem key={panel.id} disabled={!hasRoomForBlock(panel)} onSelect={() => onPick(panel.id)}>
+                    <span className="truncate">{panel.title}</span>
+                    {!hasRoomForBlock(panel) && <span className="shrink-0">(full)</span>}
+                </DropdownMenuItem>
+            ))}
+        </>
+    );
+}
 
 /**
  * "Add to dashboard": puts the block it is given on one of the user's dashboards, in a new panel or one it already has.
@@ -30,7 +52,7 @@ export function AddToDashboard({ block, title }: { block: Block; title: string }
             { dashboardId, block, panelId, title },
             {
                 onSuccess: () => toast.success('Added to ' + dashboardName),
-                onError: () => toast.error('Could not add it to ' + dashboardName + '. Try again.'),
+                onError: (error) => toast.error(toAddError(error, dashboardName)),
             },
         );
 
@@ -51,17 +73,7 @@ export function AddToDashboard({ block, title }: { block: Block; title: string }
                     <DropdownMenuSub key={dashboard.id}>
                         <DropdownMenuSubTrigger>{dashboard.name}</DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="max-h-72 w-60 overflow-y-auto">
-                            <DropdownMenuItem onSelect={() => add(dashboard.id, dashboard.name, undefined)}>New panel</DropdownMenuItem>
-                            {dashboard.panels.length > 0 && <DropdownMenuSeparator />}
-                            {dashboard.panels.map((panel) => (
-                                <DropdownMenuItem
-                                    key={panel.id}
-                                    disabled={panel.blocks.length >= MAX_BLOCKS}
-                                    onSelect={() => add(dashboard.id, dashboard.name, panel.id)}
-                                >
-                                    <span className="truncate">{panel.title}</span>
-                                </DropdownMenuItem>
-                            ))}
+                            <PlaceItems dashboard={dashboard} onPick={(panelId) => add(dashboard.id, dashboard.name, panelId)} />
                         </DropdownMenuSubContent>
                     </DropdownMenuSub>
                 ))}

@@ -53,7 +53,7 @@ async function resolveChart(db: Kysely<Database>, context: ResolverContext, bloc
  * longer has answers null.
  */
 export const resolveCharts: Resolver<'chart'> = (db, context, entries) =>
-    answerOnce(entries, async ({ block, unit }) => {
+    answerOnce(entries, context.log, async ({ block, unit }) => {
         try {
             return await resolveChart(db, context, block, unit);
         } catch (error) {

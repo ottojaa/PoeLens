@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 export interface SegmentedOption<T extends string> {
     value: T;
     label: ReactNode;
+    disabled?: boolean;
 }
 
 /** A row of buttons of which one is pressed: the editor's switch between a few choices. */
@@ -30,6 +31,7 @@ export function Segmented<T extends string>({
                     variant="ghost"
                     size="sm"
                     aria-pressed={option.value === value}
+                    disabled={option.disabled}
                     onClick={() => onChange(option.value)}
                     className={cn(
                         'h-8 flex-1 rounded-lg px-3',

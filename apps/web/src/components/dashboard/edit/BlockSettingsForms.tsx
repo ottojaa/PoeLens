@@ -6,6 +6,7 @@ import {
     MAX_TABLE_ROWS,
     OPTIONAL_COLUMNS,
     SORT_KEYS,
+    UNITS,
     type ChartBlock,
     type MoversBlock,
     type ScreenerBlock,
@@ -16,8 +17,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { Switch } from '@/components/ui/switch';
-import { useCurrencyRows } from '@/lib/api/prices';
 import type { BlockPatch } from '@/lib/dashboard/editor';
+import { useUnitItemId } from '@/lib/dashboard/unit-item';
 import { UNIT_LABEL } from '@/lib/economy/units';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { SORT_LABEL } from '../blocks/block-format';
@@ -176,13 +177,14 @@ export function ScreenerSettings({ block, onPatch }: { block: ScreenerBlock; onP
     );
 }
 
-const UNIT_ITEM_NAME: Record<Unit, string> = { divine: 'Divine Orb', exalted: 'Exalted Orb', chaos: 'Chaos Orb' };
-
 export function ChartSettings({ block, onPatch }: { block: ChartBlock; onPatch: Patch }) {
     const { scope } = useEconomyContext();
-    const rows = useCurrencyRows(scope).data?.rows;
-    const quoteId = (unit: Unit) => rows?.find((row) => row.item.name === UNIT_ITEM_NAME[unit])?.item.id;
-    const quoted = (['divine', 'exalted', 'chaos'] as const).find((unit) => quoteId(unit) === block.quote);
+    const quoteIds: Record<Unit, number | undefined> = {
+        divine: useUnitItemId(scope, 'divine'),
+        exalted: useUnitItemId(scope, 'exalted'),
+        chaos: useUnitItemId(scope, 'chaos'),
+    };
+    const quoted = UNITS.find((unit) => quoteIds[unit] === block.quote);
 
     return (
         <>
@@ -205,9 +207,10 @@ export function ChartSettings({ block, onPatch }: { block: ChartBlock; onPatch: 
                     value={quoted ?? 'none'}
                     options={[
                         { value: 'none', label: 'Own unit' },
-                        ...(['divine', 'exalted', 'chaos'] as const).map((unit) => ({ value: unit, label: UNIT_LABEL[unit] })),
+                        // An item priced in itself is a flat line at 1.
+                        ...UNITS.map((unit) => ({ value: unit, label: UNIT_LABEL[unit], disabled: quoteIds[unit] === block.item })),
                     ]}
-                    onChange={(next) => onPatch({ quote: next === 'none' ? null : (quoteId(next) ?? block.quote) })}
+                    onChange={(next) => onPatch({ quote: next === 'none' ? null : (quoteIds[next] ?? block.quote) })}
                     className="[&_button]:px-1.5 [&_button]:text-xs"
                 />
             </Field>

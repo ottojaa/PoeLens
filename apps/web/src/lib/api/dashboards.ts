@@ -16,6 +16,7 @@ import {
     type SaveDashboardBody,
 } from '@poelens/shared';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDebouncedValue } from '@/lib/use-debounced';
 import { fetchApi, sendApi, ApiError } from './client';
 import { REFRESH_INTERVAL_MS, type PriceScope } from './prices';
 
@@ -42,9 +43,13 @@ export function toDataKey(body: DashboardDataBody) {
     return ['dashboard-data', body] as const;
 }
 
+/** How long edited blocks must stay unchanged before their prices are asked for: typing a setting asks once, not per key. */
+const EDIT_DEBOUNCE_MS = 300;
+
 /** The prices behind a set of panels. Keeps the old numbers on screen while a changed block or unit loads. */
-export function useDashboardData(scope: PriceScope, panels: readonly Pick<Panel, 'id' | 'unit' | 'blocks'>[]) {
-    const body = toDataBody(scope, panels);
+export function useDashboardData(scope: PriceScope, panels: readonly Pick<Panel, 'id' | 'unit' | 'blocks'>[], isEditing: boolean) {
+    const settled = useDebouncedValue(panels, EDIT_DEBOUNCE_MS);
+    const body = toDataBody(scope, isEditing ? settled : panels);
 
     return useQuery({
         queryKey: toDataKey(body),

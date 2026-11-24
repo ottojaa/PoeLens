@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SEARCH_MIN_LENGTH, usePriceSearch, useCurrencyRows, type PriceScope } from '@/lib/api/prices';
+import { SEARCH_MIN_LENGTH, usePriceSearch, type PriceScope } from '@/lib/api/prices';
 import {
     newChartBlock,
     newHeadingBlock,
@@ -15,13 +15,11 @@ import {
     newScreenerBlock,
     newTableBlock,
 } from '@/lib/dashboard/editor';
+import { useUnitItemId } from '@/lib/dashboard/unit-item';
 import { GAME } from '@/lib/economy/use-economy-context';
 import { UNIT_LABEL } from '@/lib/economy/units';
 import { useDebouncedValue } from '@/lib/use-debounced';
 import { ItemIcon } from '@/components/economy/ItemIcon';
-
-/** The currency item each unit is counted in, found by name among the Currency rows. */
-const UNIT_ITEM_NAME: Record<Unit, string> = { divine: 'Divine Orb', exalted: 'Exalted Orb', chaos: 'Chaos Orb' };
 
 /** The block types an item is searched for first: the rest need no item to start with. */
 type SearchKind = 'item' | 'pair' | 'chart';
@@ -52,12 +50,6 @@ const BLOCK_TYPES: readonly BlockTypeEntry[] = [
     { id: 'screener', label: 'Screener', description: 'Items that match a rule you set', icon: Filter, create: newScreenerBlock },
     { id: 'chart', label: 'Price chart', description: "One item's price history", icon: LineChart, search: 'chart' },
 ];
-
-function useUnitItemId(scope: PriceScope, unit: Unit): number | undefined {
-    const rows = useCurrencyRows(scope).data?.rows;
-
-    return rows?.find((row) => row.item.name === UNIT_ITEM_NAME[unit])?.item.id;
-}
 
 function SearchResults({
     text,

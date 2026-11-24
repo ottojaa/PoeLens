@@ -10,7 +10,7 @@ import type { Resolver } from './types.js';
  * is shown in the unit it reads best in, while `windowChange` stays the change the rule and the ranking used.
  */
 export const resolveScreeners: Resolver<'screener'> = (db, context, entries) =>
-    answerOnce(entries, async ({ block, unit }) => {
+    answerOnce(entries, context.log, async ({ block, unit }) => {
         const screened = await getScreener(db, {
             game: context.game,
             league: context.league,
