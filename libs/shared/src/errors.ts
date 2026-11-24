@@ -54,3 +54,12 @@ export class UnauthorizedError extends AppError {
         super(401, code, message);
     }
 }
+
+/** The error code of a refused add to a full watchlist, for clients to recognise. */
+export const WATCHLIST_FULL_CODE = 'WATCHLIST_FULL';
+
+export class WatchlistFullError extends AppError {
+    constructor(limit: number) {
+        super(409, WATCHLIST_FULL_CODE, 'The watchlist is full', { limit });
+    }
+}

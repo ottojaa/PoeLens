@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as EconomyCategoryRouteImport } from './routes/economy.$category'
 
+const WatchlistRoute = WatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/watchlist': typeof WatchlistRoute
   '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/watchlist': typeof WatchlistRoute
   '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/watchlist': typeof WatchlistRoute
   '/economy/$category': typeof EconomyCategoryRoute
   '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/watchlist'
     | '/economy/$category'
     | '/invite/$token'
     | '/items/$itemId'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/watchlist'
     | '/economy/$category'
     | '/invite/$token'
     | '/items/$itemId'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/watchlist'
     | '/economy/$category'
     | '/invite/$token'
     | '/items/$itemId'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
+  WatchlistRoute: typeof WatchlistRoute
   EconomyCategoryRoute: typeof EconomyCategoryRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
@@ -123,6 +136,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watchlist': {
+      id: '/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof WatchlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
+  WatchlistRoute: WatchlistRoute,
   EconomyCategoryRoute: EconomyCategoryRoute,
   InviteTokenRoute: InviteTokenRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,

@@ -11,6 +11,7 @@ import {
 import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
 import { resolveContext, resolveLeague } from './context.js';
+import { getItemRows } from './item-rows.js';
 import { loadPriceRows } from './rows.js';
 import { loadLatestSnapshots } from './snapshots.js';
 import { loadSparklines } from './sparklines.js';
@@ -38,27 +39,18 @@ export async function getTable(db: Kysely<Database>, query: TableQuery): Promise
     return { ...context, category: query.category, rows: rows.map((row) => ({ ...row, sparkline: sparklines.get(row.item.id) ?? [] })) };
 }
 
-/** The latest price of specific items (a watchlist). Items missing from their category's newest snapshot come back as `unlisted`. */
+/** The latest price of specific items. Items missing from their category's newest snapshot come back as `unlisted`. */
 export async function getLatest(db: Kysely<Database>, query: LatestQuery): Promise<LatestResponse> {
-    const context = await resolveContext(db, query);
-    const items = await db.selectFrom('items').select('category').distinct().where('game', '=', context.game).where('id', 'in', query.items).execute();
-    const snapshots = await loadLatestSnapshots(
-        db,
-        context.game,
-        context.league.name,
-        items.map((item) => item.category),
-    );
-    const rows = await loadPriceRows(db, {
-        game: context.game,
-        unit: context.unit,
-        rawIds: snapshots.map((snapshot) => snapshot.rawId),
-        times: snapshots.map((snapshot) => snapshot.time),
+    const { context, rows, unlistedIds } = await getItemRows(db, {
+        game: query.game,
+        league: query.league,
+        ...(query.unit && { unit: query.unit }),
         itemIds: query.items,
         includeLowConfidence: query.includeLowConfidence,
+        sparkline: false,
     });
-    const listed = new Set(rows.map((row) => row.item.id));
 
-    return { ...context, rows, unlisted: query.items.filter((id) => !listed.has(id)) };
+    return { ...context, rows, unlisted: unlistedIds };
 }
 
 const WINDOW_KEY = { '1h': 'h1', '24h': 'h24', '7d': 'd7' } as const;

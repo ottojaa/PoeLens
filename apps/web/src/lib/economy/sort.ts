@@ -28,14 +28,27 @@ function compareValues(a: number | string, b: number | string): number {
     return Number(a) - Number(b);
 }
 
+/** Traded rows (a value in divine) before listing counts: the two are not comparable, so a mixed list keeps them apart. */
+function toLiquidityRank(row: TableRow): number {
+    return row.liquidity?.kind === 'volume' ? 0 : 1;
+}
+
+export interface SortOptions {
+    /** For lists that mix categories: the liquidity column sorts by kind first, then by value. */
+    liquidityByKind?: boolean;
+}
+
 /**
  * Rows ordered by a column. A row with no value (no change yet, no liquidity) goes last in both directions, so
  * flipping the sort never lifts the empty rows to the top; ties keep alphabetical order.
  */
-export function sortRows(rows: readonly TableRow[], key: SortKey, direction: SortDirection): TableRow[] {
+export function sortRows<T extends TableRow>(rows: readonly T[], key: SortKey, direction: SortDirection, options: SortOptions = {}): T[] {
     const sign = direction === 'asc' ? 1 : -1;
+    const byKind = key === 'liquidity' && options.liquidityByKind;
 
     return [...rows].sort((a, b) => {
+        if (byKind && a.liquidity && b.liquidity && a.liquidity.kind !== b.liquidity.kind) return toLiquidityRank(a) - toLiquidityRank(b);
+
         const left = toSortValue(a, key);
         const right = toSortValue(b, key);
 
@@ -50,7 +63,7 @@ export function sortRows(rows: readonly TableRow[], key: SortKey, direction: Sor
 }
 
 /** The table filters: a text match on name or base type, and a minimum liquidity. */
-export function filterRows(rows: readonly TableRow[], text: string, minLiquidity: number): TableRow[] {
+export function filterRows<T extends TableRow>(rows: readonly T[], text: string, minLiquidity: number): T[] {
     const needle = text.trim().toLowerCase();
 
     return rows.filter((row) => {

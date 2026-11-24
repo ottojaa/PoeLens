@@ -50,7 +50,20 @@ function ColumnMenu({ columns, onChange }: { columns: readonly OptionalColumn[];
 }
 
 /** The filter field, the minimum-liquidity field and the column menu above the table. */
-export function EconomyToolbar({ view, liquidityLabel, onChange }: { view: EconomyView; liquidityLabel: string; onChange: (change: ViewChange) => void }) {
+export function EconomyToolbar({
+    view,
+    liquidityLabel,
+    onChange,
+    filterLabel = 'Filter this category',
+    hasMin = true,
+}: {
+    view: EconomyView;
+    liquidityLabel: string;
+    onChange: (change: ViewChange) => void;
+    filterLabel?: string;
+    /** Left out for lists that always show everything in them, like the watchlist. */
+    hasMin?: boolean;
+}) {
     const [text, setText] = useUrlBackedText(view.q, (value) => onChange({ q: value.trim() }));
     const [min, setMin] = useUrlBackedText(view.min ? String(view.min) : '', (value) => onChange({ min: Number(value) || 0 }));
 
@@ -62,21 +75,23 @@ export function EconomyToolbar({ view, liquidityLabel, onChange }: { view: Econo
                     type="search"
                     value={text}
                     onChange={(event) => setText(event.target.value)}
-                    placeholder="Filter this category"
-                    aria-label="Filter this category"
+                    placeholder={filterLabel}
+                    aria-label={filterLabel}
                     className="h-10 pl-9"
                 />
             </div>
-            <Input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                value={min}
-                onChange={(event) => setMin(event.target.value)}
-                placeholder={`Min. ${liquidityLabel.toLowerCase()}`}
-                aria-label={`Minimum ${liquidityLabel.toLowerCase()}`}
-                className="h-10 w-40"
-            />
+            {hasMin && (
+                <Input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    value={min}
+                    onChange={(event) => setMin(event.target.value)}
+                    placeholder={`Min. ${liquidityLabel.toLowerCase()}`}
+                    aria-label={`Minimum ${liquidityLabel.toLowerCase()}`}
+                    className="h-10 w-40"
+                />
+            )}
             <div className="ml-auto hidden md:block">
                 <ColumnMenu columns={view.columns} onChange={(columns) => onChange({ columns })} />
             </div>

@@ -56,7 +56,7 @@ export const PriceRowSchema = z.object({
 });
 
 /** What every price answer resolved: the game and the league `'current'` pointed at. Each answer adds the unit it was asked in. */
-const envelope = {
+export const priceEnvelope = {
     game: GameSchema,
     league: LeagueRefSchema,
 };
@@ -148,7 +148,7 @@ export const TableRowSchema = PriceRowSchema.extend({
 });
 
 export const TableResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     /** The unit asked for, so `auto` stays `auto`: each row says its own. */
     unit: UnitChoiceSchema,
     category: z.string(),
@@ -156,7 +156,7 @@ export const TableResponseSchema = z.object({
 });
 
 export const LatestResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     /** The unit asked for, so `auto` stays `auto`: each row says its own. */
     unit: UnitChoiceSchema,
     rows: z.array(PriceRowSchema),
@@ -173,7 +173,7 @@ export const HistoryPointSchema = z.object({
 });
 
 export const HistoryResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     /** The unit of every point: the one asked for, or under `auto` the one picked for the whole chart. */
     unit: UnitSchema,
     item: ItemRefSchema,
@@ -184,7 +184,7 @@ export const HistoryResponseSchema = z.object({
 });
 
 export const MoversResponseSchema = z.object({
-    ...envelope,
+    ...priceEnvelope,
     unit: UnitSchema,
     window: MoverWindowSchema,
     risers: z.array(PriceRowSchema),

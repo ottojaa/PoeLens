@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api/client';
 import { useCurrencyRows, useTable } from '@/lib/api/prices';
+import { useWatchlist } from '@/lib/api/watchlist';
 import { DEFAULT_SORT } from '@/lib/economy/columns';
 import { toColumnsParam, type EconomyView } from '@/lib/economy/search-params';
 import { filterRows, sortRows } from '@/lib/economy/sort';
@@ -38,7 +39,7 @@ function toMeta(category: Category, rows: readonly TableRow[] | undefined, rates
 }
 
 /** Writes the economy view into the URL, leaving out whatever equals the default so a plain view keeps a plain URL. */
-function useViewNavigation(view: EconomyView) {
+export function useViewNavigation(view: EconomyView) {
     const navigate = useNavigate();
 
     function replaceSearch(patch: Record<string, unknown>) {
@@ -104,6 +105,7 @@ export function EconomyPage({ categoryId, view }: { categoryId: string; view: Ec
 function CategoryView({ category, view }: { category: Category; view: EconomyView }) {
     const { scope, league } = useEconomyContext();
     const query = useTable(scope, category.id, !view.hideLow);
+    const { controls } = useWatchlist();
     // While a new category, league or unit loads, the query hands back the previous answer. Rows and labels come from
     // the answer itself, so they never describe one scope with another's numbers; a different category is not shown at all.
     const data = query.data?.category === category.id ? query.data : undefined;
@@ -131,7 +133,12 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
                     {rows && rows.length === 0 && <NoDataState league={league?.name} />}
                     {rows && rows.length > 0 && visible.length === 0 && <NoMatchState onClear={navigation.clearFilters} />}
                     {data && visible.length > 0 && !isWide && (
-                        <EconomyCards rows={visible} scopeKey={`${data.league.name}:${data.unit}`} liquidityLabel={liquidityLabel} />
+                        <EconomyCards
+                            rows={visible}
+                            scopeKey={`${data.league.name}:${data.unit}`}
+                            liquidityLabel={liquidityLabel}
+                            options={{ watch: controls }}
+                        />
                     )}
                     {data && visible.length > 0 && isWide && (
                         <EconomyTable
@@ -141,6 +148,7 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
                             sort={{ key: view.sort, direction: view.dir }}
                             onSort={navigation.sortBy}
                             liquidityLabel={liquidityLabel}
+                            options={{ watch: controls }}
                         />
                     )}
                 </div>

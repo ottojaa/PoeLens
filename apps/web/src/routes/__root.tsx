@@ -2,6 +2,7 @@ import { createRootRoute, Outlet, retainSearchParams, useRouterState } from '@ta
 import { AuthGate, isPublicPath } from '@/components/auth/AuthGate';
 import { AppShell } from '@/components/layout/AppShell';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { Toaster } from '@/components/ui/sonner';
 import { useAuth } from '@/lib/auth';
 import { parseRootSearch } from '@/lib/economy/search-params';
 import { PageTransition } from '@/motion/PageTransition';
@@ -26,12 +27,15 @@ function RootLayout() {
     const Frame = state.status === 'signedIn' && !isPublicPath(pathname) ? AppShell : PublicLayout;
 
     return (
-        <Frame>
-            <AuthGate>
-                <PageTransition>
-                    <Outlet />
-                </PageTransition>
-            </AuthGate>
-        </Frame>
+        <>
+            <Frame>
+                <AuthGate>
+                    <PageTransition>
+                        <Outlet />
+                    </PageTransition>
+                </AuthGate>
+            </Frame>
+            <Toaster />
+        </>
     );
 }

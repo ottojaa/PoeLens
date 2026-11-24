@@ -1,13 +1,34 @@
 import { CATEGORIES } from '@poelens/shared';
-import { useParams } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
+import { Link, useParams, useRouterState } from '@tanstack/react-router';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { LeagueSwitcher } from './LeagueSwitcher';
 import { CategoryNav, NAV_ITEM_CLASS, NavHeading } from './CategoryNav';
 import { Soon } from './Soon';
+import { useWatchlist } from '@/lib/api/watchlist';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
+import { cn } from '@/lib/utils';
 
-/** The category list plus the personal sections (Watchlist and tokens arrive later, so they stay placeholders). */
+/** The way to the watchlist, with how many items are on it once that is known. */
+function WatchlistLink({ onNavigate }: { onNavigate?: () => void }) {
+    const { count, answer } = useWatchlist();
+    const { location } = useRouterState();
+    const isCurrent = location.pathname === '/watchlist';
+
+    return (
+        <Link
+            to="/watchlist"
+            aria-current={isCurrent ? 'page' : undefined}
+            onClick={onNavigate}
+            className={cn(buttonVariants({ variant: 'ghost' }), NAV_ITEM_CLASS, isCurrent && 'bg-accent text-foreground')}
+        >
+            Watchlist
+            {answer && <span className="text-foreground font-semibold tabular-nums">{count}</span>}
+        </Link>
+    );
+}
+
+/** The category list plus the personal sections (the tokens arrive later, so they stay a placeholder). */
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     const { category } = useParams({ strict: false });
 
@@ -15,9 +36,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         <nav aria-label="Sections" className="flex flex-col gap-0.5">
             <CategoryNav categories={CATEGORIES[GAME]} value={category ?? null} onNavigate={onNavigate} />
             <NavHeading>Yours</NavHeading>
-            <Button type="button" variant="ghost" disabled className={NAV_ITEM_CLASS}>
-                Watchlist <Soon />
-            </Button>
+            <WatchlistLink onNavigate={onNavigate} />
             <Button type="button" variant="ghost" disabled className={NAV_ITEM_CLASS}>
                 MCP &amp; API tokens <Soon />
             </Button>

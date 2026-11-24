@@ -1,9 +1,13 @@
-import { CATEGORIES, type ItemRef, type LeagueRef } from '@poelens/shared';
+import type { ItemRef, LeagueRef } from '@poelens/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api/client';
 import { useHistory, useLatest } from '@/lib/api/prices';
+import { useWatchlist } from '@/lib/api/watchlist';
+import type { WatchControls } from '@/lib/watchlist/controls';
+import { WatchButton } from '@/components/watchlist/WatchButton';
+import { toCategoryLabel } from '@/lib/economy/category-label';
 import { type Range } from '@/lib/economy/search-params';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
@@ -58,21 +62,23 @@ function ItemBreadcrumb({ item, categoryLabel }: { item: ItemRef; categoryLabel:
     );
 }
 
-function ItemHeading({ item, league }: { item: ItemRef; league: LeagueRef | undefined }) {
-    const category = CATEGORIES[GAME].find((candidate) => candidate.id === item.category);
-    const categoryLabel = category?.label ?? item.category;
+function ItemHeading({ item, league, watch }: { item: ItemRef; league: LeagueRef | undefined; watch: WatchControls }) {
+    const categoryLabel = toCategoryLabel(GAME, item.category);
 
     return (
         <>
             <ItemBreadcrumb item={item} categoryLabel={categoryLabel} />
-            <div className="flex items-center gap-4">
-                <ItemIcon item={item} size="lg" />
-                <div>
-                    <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
-                    <p className="text-muted-foreground text-sm">
-                        {[item.baseType, categoryLabel, league && toLeagueLabel(league)].filter(Boolean).join(' · ')}
-                    </p>
+            <div className="flex flex-wrap items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                    <ItemIcon item={item} size="lg" />
+                    <div>
+                        <h1 className="font-heading text-[38px] leading-tight font-bold tracking-[-0.03em]">{item.name}</h1>
+                        <p className="text-muted-foreground text-sm">
+                            {[item.baseType, categoryLabel, league && toLeagueLabel(league)].filter(Boolean).join(' · ')}
+                        </p>
+                    </div>
                 </div>
+                <WatchButton ready={watch.isReady} watched={watch.isWatched(item.id)} onToggle={(watched) => watch.onToggle(item, watched)} />
             </div>
         </>
     );
@@ -82,6 +88,7 @@ function ItemHeading({ item, league }: { item: ItemRef; league: LeagueRef | unde
 export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
     const { scope, leagues, league } = useEconomyContext();
     const navigate = useNavigate();
+    const { controls } = useWatchlist();
     const history = useHistory(scope, itemId, range, league?.firstSeen);
     // One `latest` query: the row carries its price in every unit, the large number in the row's own.
     const priced = useLatest(scope, [itemId], { refresh: true });
@@ -104,7 +111,7 @@ export function ItemPage({ itemId, range }: { itemId: number; range: Range }) {
 
     return (
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
-            <ItemHeading item={item} league={answer?.league ?? shown?.league} />
+            <ItemHeading item={item} league={answer?.league ?? shown?.league} watch={controls} />
             {unpricedIn ? <NoItemPriceState league={unpricedIn} /> : <ItemStats shown={shown} />}
             <HistoryCard history={answer} itemName={item.name} range={range} onRange={setRange} />
         </div>
