@@ -13,3 +13,79 @@ export function formatUptime(totalSeconds: number): string {
 
     return parts.map(([unit, amount]) => amount + unit).join(' ');
 }
+
+const COUNT = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const MINUS = '−';
+
+/** A price for reading at a glance: fewer decimals the larger it gets, and millions as "1.25M". */
+export function formatPrice(value: number): string {
+    const magnitude = Math.abs(value);
+
+    if (magnitude >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
+
+    if (magnitude >= 10_000) return COUNT.format(value);
+
+    if (magnitude >= 100) return value.toFixed(1);
+
+    if (magnitude >= 1) return value.toFixed(2);
+
+    if (magnitude >= 0.001) return value.toFixed(3);
+
+    return value === 0 ? '0' : value.toPrecision(2);
+}
+
+/** A whole number with thousands separators. */
+export function formatCount(value: number): string {
+    return COUNT.format(value);
+}
+
+/** A change in percent with an arrow, so direction never rests on colour alone: "▲ +29.6%", "▼ −3.9%". Null is "—". */
+export function formatChange(percent: number | null): string {
+    if (percent === null) return '—';
+
+    const rounded = Math.abs(percent).toFixed(1);
+
+    if (rounded === '0.0') return '0.0%';
+
+    return percent > 0 ? `▲ +${rounded}%` : `▼ ${MINUS}${rounded}%`;
+}
+
+export type ChangeDirection = 'up' | 'down' | 'flat';
+
+/** Which way a change points, by what {@link formatChange} would show: a change that rounds to zero is flat. */
+export function toChangeDirection(percent: number | null): ChangeDirection {
+    if (percent === null || Math.abs(percent).toFixed(1) === '0.0') return 'flat';
+
+    return percent > 0 ? 'up' : 'down';
+}
+
+const AGO_STEPS = [
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+] as const;
+
+/** "just now", "12 minutes ago", "3 hours ago", "2 days ago". */
+export function formatAgo(from: Date | string, now: Date = new Date()): string {
+    const seconds = Math.max(0, (now.getTime() - new Date(from).getTime()) / 1000);
+    const step = AGO_STEPS.find(([, size]) => seconds >= size);
+
+    if (!step) return 'just now';
+
+    const amount = Math.floor(seconds / step[1]);
+
+    return `${amount} ${step[0]}${amount === 1 ? '' : 's'} ago`;
+}
+
+const DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const DATE_TIME = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' });
+
+/** "24 Nov 2026", in UTC like every bucket the API returns. */
+export function formatDate(value: Date | string): string {
+    return DATE.format(new Date(value));
+}
+
+/** "24 Nov, 14:00 UTC". */
+export function formatDateTime(value: Date | string): string {
+    return DATE_TIME.format(new Date(value)) + ' UTC';
+}

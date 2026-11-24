@@ -1,7 +1,7 @@
 import { CATEGORY_GROUP_LABELS, type Category, type CategoryGroup } from '@poelens/shared';
-import { Button } from '@/components/ui/button';
+import { Link } from '@tanstack/react-router';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Soon } from './Soon';
 
 const GROUP_ORDER: readonly CategoryGroup[] = ['economy', 'uniques'];
 
@@ -13,25 +13,19 @@ export function NavHeading({ children, className }: { children: string; classNam
     );
 }
 
-/** The economy categories, grouped. Controlled: the economy view will own the selection. */
+/** The economy categories, grouped, as links to each category's table. League and unit ride along in the URL. */
 export function CategoryNav({
     categories,
     value,
-    onChange,
-    disabled = false,
+    onNavigate,
 }: {
     categories: readonly Category[];
     value: string | null;
-    onChange: (categoryId: string) => void;
-    disabled?: boolean;
+    /** Called when a link is followed, so a drawer can close itself. */
+    onNavigate?: () => void;
 }) {
     return (
         <>
-            {disabled && (
-                <p className="text-muted-foreground flex items-center gap-2 px-3 pt-3 pb-1 text-xs">
-                    Browsing arrives with the economy view <Soon />
-                </p>
-            )}
             {GROUP_ORDER.map((group) => {
                 const inGroup = categories.filter((category) => category.group === group);
 
@@ -41,17 +35,16 @@ export function CategoryNav({
                     <div key={group} role="group" aria-label={CATEGORY_GROUP_LABELS[group]} className="flex flex-col gap-0.5">
                         <NavHeading>{CATEGORY_GROUP_LABELS[group]}</NavHeading>
                         {inGroup.map((category) => (
-                            <Button
+                            <Link
                                 key={category.id}
-                                type="button"
-                                variant="ghost"
-                                disabled={disabled}
+                                to="/economy/$category"
+                                params={{ category: category.id }}
                                 aria-current={category.id === value ? 'page' : undefined}
-                                onClick={() => onChange(category.id)}
-                                className={cn(NAV_ITEM_CLASS, category.id === value && 'bg-accent text-foreground')}
+                                onClick={onNavigate}
+                                className={cn(buttonVariants({ variant: 'ghost' }), NAV_ITEM_CLASS, category.id === value && 'bg-accent text-foreground')}
                             >
                                 {category.label}
-                            </Button>
+                            </Link>
                         ))}
                     </div>
                 );

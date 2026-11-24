@@ -13,7 +13,12 @@ export function AnimatedNumber({ value, format = String, className }: { value: n
     const shownRef = useRef<number | null>(null);
     const formatRef = useRef(format);
     const motionValue = useMotionValue(value);
-    const reduceMotion = useReducedMotion() ?? false;
+    // Read when a count starts, never a dependency of the count's effect: a setting that changes mid-count must not run
+    // the effect's cleanup, which would stop the count part way. Only a new value starts or stops a count.
+    const reduceMotionRef = useRef(false);
+
+    reduceMotionRef.current = useReducedMotion() ?? false;
+
     // The text node is written by the effects below, so React must never see its content change after the first render.
     const [initialText] = useState(() => format(value));
 
@@ -38,11 +43,13 @@ export function AnimatedNumber({ value, format = String, className }: { value: n
 
         if (!hasChanged(previous, value)) return;
 
+        const reduceMotion = reduceMotionRef.current;
+
         // Restart the underline: the keyframes live in CSS, so the class is removed, reflowed and set again.
         if (!reduceMotion) flash(underlineRef.current);
 
         return countTo(motionValue, value, reduceMotion);
-    }, [value, reduceMotion, motionValue]);
+    }, [value, motionValue]);
 
     return (
         <span className={'relative inline-block ' + (className ?? '')}>

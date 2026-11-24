@@ -1,7 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Soon } from './Soon';
 
 export interface LeagueOption {
     name: string;
@@ -12,18 +11,8 @@ function toModeLabel(league: LeagueOption) {
     return league.hardcore ? 'Hardcore' : 'Softcore';
 }
 
-/** Picks the league the page shows prices for. Controlled: the economy view will own the value and the list. */
-export function LeagueSwitcher({
-    leagues,
-    value,
-    onChange,
-    disabled = false,
-}: {
-    leagues: readonly LeagueOption[];
-    value: string | null;
-    onChange: (league: string) => void;
-    disabled?: boolean;
-}) {
+/** Picks the league the page shows prices for. Controlled: the value and the list come from the economy context. */
+export function LeagueSwitcher({ leagues, value, onChange }: { leagues: readonly LeagueOption[]; value: string | null; onChange: (league: string) => void }) {
     const selected = leagues.find((league) => league.name === value);
 
     return (
@@ -33,7 +22,7 @@ export function LeagueSwitcher({
                     <Button
                         type="button"
                         variant="outline"
-                        disabled={disabled || leagues.length === 0}
+                        disabled={leagues.length === 0}
                         aria-label={selected ? `League: ${selected.name}` : 'League'}
                         className="bg-card h-10 rounded-full px-3.5 font-normal disabled:opacity-60"
                     >
@@ -53,7 +42,6 @@ export function LeagueSwitcher({
                     </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
             </DropdownMenu>
-            {disabled && <Soon />}
         </div>
     );
 }
