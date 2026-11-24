@@ -31,6 +31,7 @@ function toRange(variant: string | undefined): { min: number; max: number } | un
     if (variant === undefined) return { min: 0, max: Infinity };
 
     const min = BREAKPOINTS[variant];
+
     if (min !== undefined) return { min, max: Infinity };
 
     const max = variant.startsWith('max-') ? BREAKPOINTS[variant.slice(4)] : undefined;
@@ -52,13 +53,17 @@ function isDisplayed(element: Element, width: number): boolean {
         const parts = token.split(':');
         const utility = parts[parts.length - 1] ?? '';
         const isShowing = DISPLAYS.has(utility) && utility !== 'hidden';
+
         if (!HIDING.has(utility) && !isShowing && utility !== 'not-sr-only') continue;
 
         const range = toRange(parts.length > 1 ? parts[0] : undefined);
+
         if (parts.length > 2 || !range) throw new Error('Unreadable class in a visibility check: ' + token);
+
         if (width < range.min || width >= range.max) continue;
 
         const order = range.max === Infinity ? range.min : 10_000 - range.max;
+
         if (order < rank) continue;
 
         rank = order;
