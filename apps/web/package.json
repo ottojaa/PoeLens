@@ -1,12 +1,15 @@
 {
     "name": "@poelens/web",
+    "productName": "PoeLens",
     "version": "0.0.1",
     "private": true,
     "type": "module",
     "main": "dist-electron/main.mjs",
     "build": {
         "appId": "dev.poelens.app",
-        "productName": "PoeLens",
+        "extraMetadata": {
+            "name": "poelens"
+        },
         "directories": {
             "output": "release"
         },
