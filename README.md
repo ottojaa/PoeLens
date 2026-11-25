@@ -2,9 +2,46 @@
 
 A self-hosted companion app for Path of Exile 2 (and later Path of Exile 1). It records economy prices over time, lets you watch the items you care about, and answers price questions over MCP.
 
-**Status:** the workspace is set up and the API, web app and desktop shell start. The price collector and accounts are next; see [ROADMAP.md](ROADMAP.md).
+**Status:** live at https://poelens.com with hourly price history from [poe.ninja](https://poe.ninja), a configurable economy view, search across everything, per-item history charts, a watchlist, dashboards, themes, an MCP server and invite-only accounts. The [desktop app](#desktop-app) is built for macOS and Windows. An Android app is still to come; see [ROADMAP.md](ROADMAP.md).
 
-Planned for the first version: hourly price history from [poe.ninja](https://poe.ninja), an economy view you can configure, search across everything, per-item history charts, a watchlist, an MCP server, and invite-only accounts. It ships as a web app, an Electron desktop app and an Android app.
+## Desktop app
+
+A window onto https://poelens.com: you sign in with the same account, and changes to the site reach the app without a new install. Download it from the [Releases page](https://github.com/ottojaa/PoeLens/releases):
+
+| System               | File                          |
+| -------------------- | ----------------------------- |
+| macOS, Apple silicon | `PoeLens-<version>-arm64.dmg` |
+| macOS, Intel         | `PoeLens-<version>.dmg`       |
+| Windows (64-bit)     | `PoeLens-Setup-<version>.exe` |
+
+The builds are not signed with a developer certificate, so your system stops them the first time:
+
+- **macOS (15 and newer):** open the app once and dismiss the warning, then go to System Settings → Privacy & Security and choose **Open Anyway**.
+- **Windows:** when SmartScreen appears, choose **More info** → **Run anyway**.
+
+### Updates
+
+The app looks for a new release when it starts and every six hours after that.
+
+- **Windows:** the update downloads in the background, then the app offers to restart. If you choose **Later**, it installs when you quit.
+- **macOS:** the app says a new version is available, and **Download** opens its release page. Replace the app in Applications with the new one; its first launch needs **Open Anyway** again.
+
+### Releasing a desktop version
+
+1. Tag a commit on `main` with a version higher than the last release, and push the tag:
+
+    ```sh
+    git fetch origin
+    git tag desktop-vX.Y.Z origin/main
+    git push origin desktop-vX.Y.Z
+    ```
+
+2. The Desktop workflow (`.github/workflows/desktop.yml`) builds both systems, takes the version from the tag and creates a **draft** release with the installers and update files.
+3. Check the draft on the Releases page and publish it. Nobody is offered the update before that.
+
+Desktop releases are the repository's only full releases, because the app updates from GitHub's latest one. Publish anything else, such as a future Android APK, as a **prerelease**.
+
+`npx nx run @poelens/web:package:mac` (or `package:win`, `package:linux`) builds the installers into `apps/web/release` without publishing them. No Linux build is released.
 
 ## Development
 

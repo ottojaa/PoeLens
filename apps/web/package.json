@@ -7,24 +7,56 @@
     "build": {
         "appId": "dev.poelens.app",
         "productName": "PoeLens",
+        "extraMetadata": {
+            "name": "poelens",
+            "productName": "PoeLens"
+        },
         "directories": {
             "output": "release"
         },
         "files": [
             "dist-electron/**/*"
         ],
+        "npmRebuild": false,
+        "publish": {
+            "provider": "github",
+            "owner": "ottojaa",
+            "repo": "PoeLens",
+            "tagNamePrefix": "desktop-v"
+        },
         "mac": {
             "category": "public.app-category.games",
+            "identity": "-",
+            "hardenedRuntime": false,
             "target": [
-                "dmg",
-                "zip"
+                {
+                    "target": "dmg",
+                    "arch": [
+                        "arm64",
+                        "x64"
+                    ]
+                },
+                {
+                    "target": "zip",
+                    "arch": [
+                        "arm64",
+                        "x64"
+                    ]
+                }
             ]
         },
         "win": {
             "target": [
-                "nsis",
-                "portable"
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
             ]
+        },
+        "nsis": {
+            "artifactName": "${productName}-Setup-${version}.${ext}"
         },
         "linux": {
             "target": [
@@ -32,6 +64,9 @@
             ],
             "category": "Game"
         }
+    },
+    "dependencies": {
+        "electron-updater": "6.8.11"
     },
     "devDependencies": {
         "@dnd-kit/dom": "0.5.3",
@@ -51,8 +86,8 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
-        "electron": "^40.0.0",
-        "electron-builder": "^26.4.0",
+        "electron": "40.10.5",
+        "electron-builder": "26.15.6",
         "happy-dom": "^21",
         "immer": "^11.2.9",
         "lucide-react": "^0.562.0",

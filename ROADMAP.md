@@ -2,13 +2,20 @@
 
 ## v1
 
+Done:
+
 - Invite-only accounts: sign-up and login for the owner and friends, with email and password.
 - A collector that stores poe.ninja Path of Exile 2 prices about every hour, for every category. poe.ninja has no history endpoint, so an hour that is not collected is lost for good.
 - A configurable economy view with global search.
 - Per-item history charts, so every currency and item shows its trend over time.
 - A watchlist for specific items.
+- Dashboards you arrange yourself, and selectable themes.
 - An MCP server, to ask Claude about prices.
-- Clients: web, Electron desktop and Android.
+- Clients: the web app, and the Electron desktop app for macOS and Windows, packaged for GitHub Releases, with update checks.
+
+To do:
+
+- The Android client.
 
 ## Later
 
