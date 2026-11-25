@@ -1,14 +1,15 @@
 {
     "name": "@poelens/web",
-    "productName": "PoeLens",
     "version": "0.0.1",
     "private": true,
     "type": "module",
     "main": "dist-electron/main.mjs",
     "build": {
         "appId": "dev.poelens.app",
+        "productName": "PoeLens",
         "extraMetadata": {
-            "name": "poelens"
+            "name": "poelens",
+            "productName": "PoeLens"
         },
         "directories": {
             "output": "release"
@@ -86,7 +87,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "electron": "40.10.5",
-        "electron-builder": "^26.4.0",
+        "electron-builder": "26.15.6",
         "happy-dom": "^21",
         "immer": "^11.2.9",
         "lucide-react": "^0.562.0",

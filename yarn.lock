@@ -3951,7 +3951,7 @@ __metadata:
     clsx: "npm:^2.1.1"
     cmdk: "npm:^1.1.1"
     electron: "npm:40.10.5"
-    electron-builder: "npm:^26.4.0"
+    electron-builder: "npm:26.15.6"
     electron-updater: "npm:6.8.11"
     happy-dom: "npm:^21"
     immer: "npm:^11.2.9"
@@ -9750,7 +9750,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-builder@npm:^26.4.0":
+"electron-builder@npm:26.15.6":
   version: 26.15.6
   resolution: "electron-builder@npm:26.15.6"
   dependencies:
