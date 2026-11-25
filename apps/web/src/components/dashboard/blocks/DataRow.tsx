@@ -19,3 +19,8 @@ export function ItemLink({ item, className, children }: { item: Pick<ItemRef, 'i
 export function BlockMessage({ children }: { children: ReactNode }) {
     return <p className="text-muted-foreground text-[13px]">{children}</p>;
 }
+
+/** The small line above a block that names what it shows ("Movers · all uniques · 24 h"). */
+export function BlockTitle({ children }: { children: ReactNode }) {
+    return <p className="text-muted-foreground mb-1.5 truncate text-xs font-semibold">{children}</p>;
+}

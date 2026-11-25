@@ -1,4 +1,4 @@
-import { UnitChoiceSchema } from '@poelens/shared';
+import { HISTORY_RANGES, MAX_FILTER_LENGTH, MAX_MIN_LIQUIDITY, UnitChoiceSchema } from '@poelens/shared';
 import { z } from 'zod';
 import { DEFAULT_COLUMNS, DEFAULT_SORT, OPTIONAL_COLUMNS, SORT_KEYS, type OptionalColumn, type SortDirection, type SortKey } from './columns';
 
@@ -8,7 +8,7 @@ import { DEFAULT_COLUMNS, DEFAULT_SORT, OPTIONAL_COLUMNS, SORT_KEYS, type Option
  * JSON-decoded each value (`q=123` arrives as a number, `min=abc` as a string), and the schemas accept that.
  */
 
-export const RANGES = ['24h', '7d', '30d', 'league'] as const;
+export const RANGES = HISTORY_RANGES;
 export type Range = (typeof RANGES)[number];
 export const DEFAULT_RANGE: Range = '7d';
 
@@ -23,8 +23,8 @@ const RootSearchSchema = z.object({
 const EconomySearchSchema = z.object({
     sort: z.enum(SORT_KEYS).optional().catch(undefined),
     dir: z.enum(['asc', 'desc']).optional().catch(undefined),
-    q: z.union([z.string(), z.number(), z.boolean()]).transform(String).optional().catch(undefined),
-    min: z.number().nonnegative().finite().optional().catch(undefined),
+    q: z.union([z.string(), z.number(), z.boolean()]).transform(String).pipe(z.string().max(MAX_FILTER_LENGTH)).optional().catch(undefined),
+    min: z.number().nonnegative().max(MAX_MIN_LIQUIDITY).optional().catch(undefined),
     hideLow: z.boolean().optional().catch(undefined),
     cols: z.string().optional().catch(undefined),
 });

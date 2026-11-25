@@ -5,7 +5,8 @@ import {
     SearchResponseSchema,
     TableResponseSchema,
     type Game,
-    type HistoryBucket,
+    toHistoryWindow,
+    type HistoryRange,
     type UnitChoice,
 } from '@poelens/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -14,9 +15,6 @@ import { fetchApi } from './client';
 /** Prices change about hourly (PoE 2), so the open page checks for new ones every five minutes, and when the window regains focus. */
 export const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const LEAGUES_STALE_MS = 60 * 60 * 1000;
-
-const HOUR_MS = 3_600_000;
-const DAY_MS = 24 * HOUR_MS;
 
 function toQuery(params: Record<string, string | number | boolean | undefined>): string {
     const query = new URLSearchParams();
@@ -73,26 +71,7 @@ export function useLatest(scope: PriceScope, items: readonly number[], options: 
     });
 }
 
-export const RANGE_SPANS = {
-    '24h': { bucket: 'hour', spanMs: DAY_MS },
-    '7d': { bucket: 'hour', spanMs: 7 * DAY_MS },
-    '30d': { bucket: 'day', spanMs: 30 * DAY_MS },
-} as const satisfies Record<string, { bucket: HistoryBucket; spanMs: number }>;
-
-export type HistoryRange = keyof typeof RANGE_SPANS | 'league';
-
-/** The bucket and start of a history range. "League" is daily from the league's first sighting. */
-export function toHistoryWindow(range: HistoryRange, leagueFirstSeen: string | undefined, now: Date): { bucket: HistoryBucket; from: string } | null {
-    if (range === 'league') {
-        if (!leagueFirstSeen) return null;
-
-        return { bucket: 'day', from: leagueFirstSeen };
-    }
-
-    const { bucket, spanMs } = RANGE_SPANS[range];
-
-    return { bucket, from: new Date(now.getTime() - spanMs).toISOString() };
-}
+export { toHistoryWindow, type HistoryRange } from '@poelens/shared';
 
 /**
  * One item's price series over a range. The start is computed when the request is sent, not in the query key, so the

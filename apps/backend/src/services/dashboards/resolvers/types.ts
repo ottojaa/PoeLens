@@ -1,12 +1,16 @@
 import type { BlockData, DataBlock, Game, UnitChoice } from '@poelens/shared';
 import type { Kysely } from 'kysely';
 import type { Database } from '../../../db/schema.js';
+import type { DataLog } from './data-log.js';
 
 /** What every block of one data request shares. */
 export interface ResolverContext {
     game: Game;
     /** A league name, or `'current'`. */
     league: string;
+    /** The moment the request is answered at: where "the last 24 hours" ends. */
+    now: Date;
+    log?: DataLog | undefined;
 }
 
 /** A block with the unit its panel reads it in (the panel's own, else the request's). */

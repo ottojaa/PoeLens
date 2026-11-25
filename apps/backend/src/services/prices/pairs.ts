@@ -1,6 +1,7 @@
-import type { Game, ItemRef } from '@poelens/shared';
+import { NotFoundError, type Game, type HistoryBucket, type HistoryPoint, type ItemRef, type LeagueRef } from '@poelens/shared';
 import type { Kysely } from 'kysely';
 import type { Database } from '../../db/schema.js';
+import { resolveLeague } from './context.js';
 import { getItemRows } from './item-rows.js';
 import { loadItemRefs } from './item-refs.js';
 import { DAY_MS, loadBucketedPrices } from './series.js';
@@ -106,4 +107,65 @@ export async function getPairs(db: Kysely<Database>, query: PairQuery): Promise<
             },
         ];
     });
+}
+
+export interface PairSeriesQuery {
+    game: Game;
+    /** A league name, or `'current'`. */
+    league: string;
+    a: number;
+    b: number;
+    bucket: HistoryBucket;
+    /** Inclusive. */
+    from: Date;
+    /** Exclusive. */
+    to: Date;
+}
+
+export interface PairSeries {
+    game: Game;
+    league: LeagueRef;
+    a: ItemRef;
+    b: ItemRef;
+    /** How many `b` one `a` buys at the end of each bucket both sides have a confident price in. `low` and `high` bound it. */
+    points: HistoryPoint[];
+}
+
+/**
+ * The price history of `a` quoted in `b`: each side's last divine price of a bucket, divided. A bucket either side has
+ * no confident price in is dropped, as is one where `b` is worth nothing, so the line only has points that mean something.
+ * Both sides are read in divine, as `getPairs` does, since a ratio only means something when both share a unit.
+ */
+export async function getPairSeries(db: Kysely<Database>, query: PairSeriesQuery): Promise<PairSeries> {
+    const { game, league } = await resolveLeague(db, query);
+    const refs = await loadItemRefs(db, game, [query.a, query.b]);
+    const a = refs.get(query.a);
+    const b = refs.get(query.b);
+
+    if (!a) throw new NotFoundError('Item', String(query.a));
+
+    if (!b) throw new NotFoundError('Item', String(query.b));
+
+    const series = await loadBucketedPrices(db, {
+        game,
+        league: league.name,
+        unit: 'divine',
+        bucket: query.bucket,
+        itemIds: [a.id, b.id],
+        from: query.from,
+        to: query.to,
+        includeLowConfidence: false,
+    });
+    const quoteByBucket = new Map(series.filter((point) => point.itemId === b.id).map((point) => [point.bucket.getTime(), point]));
+    const points = series
+        .filter((point) => point.itemId === a.id)
+        .flatMap((point) => {
+            const quote = quoteByBucket.get(point.bucket.getTime());
+
+            if (!quote || quote.price <= 0) return [];
+
+            return [{ time: point.bucket.toISOString(), price: point.price / quote.price, low: point.low / quote.high, high: point.high / quote.low }];
+        });
+
+    return { game, league, a, b, points };
 }

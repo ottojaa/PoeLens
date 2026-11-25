@@ -2,7 +2,9 @@ import { z } from 'zod';
 import { ItemRefSchema, LeagueRefSchema, TableRowSchema } from '../api/schemas/prices.js';
 import { GameSchema } from '../domain/game.js';
 import { UnitChoiceSchema } from '../domain/units.js';
-import { BlockIdSchema, BlocksSchema, DataBlockSchema } from './blocks.js';
+import { ChartBlockDataSchema, MoversBlockDataSchema, ScreenerBlockDataSchema, TableBlockDataSchema } from './block-data.js';
+import { BlockIdSchema } from './block-base.js';
+import { BlockSchema, BlocksSchema, DataBlockSchema } from './blocks.js';
 import { GRID_COLUMNS, MAX_BLOCKS, MAX_DASHBOARDS, MAX_PANEL_ROWS, MAX_PANEL_Y, MAX_PANELS } from './limits.js';
 
 export const MAX_DASHBOARD_NAME = 40;
@@ -84,6 +86,41 @@ export const DashboardOrderBodySchema = z.object({
     ids: z.array(z.string().uuid()).min(1).max(MAX_DASHBOARDS),
 });
 
+/** Adds one block to a dashboard without the client holding its whole layout. */
+export const AppendBlockBodySchema = z.object({
+    /** The block to add. The server gives it a fresh id, so the client's id never has to be unique. */
+    block: BlockSchema,
+    /** The panel to add it to; without one the block goes in a new panel. */
+    panelId: z.string().min(1).max(64).optional(),
+    /** The title of the new panel; ignored when `panelId` is given. */
+    title: z.string().trim().max(MAX_PANEL_TITLE).optional(),
+});
+
+export const AppendBlockResponseSchema = z.object({
+    panelId: z.string(),
+    blockId: BlockIdSchema,
+    /** The dashboard's revision after the append. */
+    revision: z.number().int().min(1),
+});
+
+export const TemplatesQuerySchema = z.object({ game: GameSchema });
+
+export const PanelTemplateSchema = z.object({
+    id: z.string().min(1).max(40),
+    name: z.string(),
+    /** One line saying what the panel holds. */
+    description: z.string(),
+    /** A panel ready to place: the client gives it a fresh id and a spot. */
+    panel: PanelSchema,
+});
+
+export const TemplatesResponseSchema = z.object({ templates: z.array(PanelTemplateSchema) });
+
+export type AppendBlockBody = z.infer<typeof AppendBlockBodySchema>;
+export type AppendBlockResponse = z.infer<typeof AppendBlockResponseSchema>;
+export type TemplatesQuery = z.infer<typeof TemplatesQuerySchema>;
+export type PanelTemplate = z.infer<typeof PanelTemplateSchema>;
+export type TemplatesResponse = z.infer<typeof TemplatesResponseSchema>;
 export type DashboardParams = z.infer<typeof DashboardParamsSchema>;
 export type DashboardsQuery = z.infer<typeof DashboardsQuerySchema>;
 export type DashboardsResponse = z.infer<typeof DashboardsResponseSchema>;
@@ -137,7 +174,14 @@ export const PairBlockDataSchema = z.object({
     asOf: z.string().datetime().nullable(),
 });
 
-export const BlockDataSchema = z.discriminatedUnion('type', [ItemBlockDataSchema, PairBlockDataSchema]);
+export const BlockDataSchema = z.discriminatedUnion('type', [
+    ItemBlockDataSchema,
+    PairBlockDataSchema,
+    TableBlockDataSchema,
+    MoversBlockDataSchema,
+    ScreenerBlockDataSchema,
+    ChartBlockDataSchema,
+]);
 
 export const DashboardDataResponseSchema = z.object({
     game: GameSchema,

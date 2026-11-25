@@ -1,4 +1,4 @@
-import { DEFAULT_UNIT, type Game, type Prices, type Unit, type UnitChoice } from '@poelens/shared';
+import { DEFAULT_UNIT, type Game, type PriceRow, type Prices, type Unit, type UnitChoice } from '@poelens/shared';
 
 /** A step of a ladder: a price of at least `min` in `unit` reads in that unit. */
 interface Step {
@@ -38,4 +38,11 @@ export function toRowUnit(choice: UnitChoice, prices: Prices, game: Game): Unit 
     const reached = ladder.steps.find((step) => prices[step.unit] >= step.min * (1 - STEP_MARGIN));
 
     return reached?.unit ?? ladder.floor;
+}
+
+/** A row ranked in one unit, shown in the unit its price reads best in. Its change stays the one measured in the ranking unit. */
+export function toAutoRow<T extends PriceRow>(row: T, game: Game): T {
+    const unit = toRowUnit('auto', row.prices, game);
+
+    return { ...row, unit, price: row.prices[unit] };
 }

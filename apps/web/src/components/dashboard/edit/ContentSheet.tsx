@@ -149,7 +149,7 @@ export function ContentSheet({
                 </h3>
                 <AddBlockMenu scope={scope} unit={toPairUnit(panel, scope.unit)} disabled={full} onAdd={onAddBlock} />
             </div>
-            {panel.blocks.length === 0 && <p className="text-muted-foreground text-sm">No blocks yet. Add an item, a pair, a note or a heading.</p>}
+            {panel.blocks.length === 0 && <p className="text-muted-foreground text-sm">No blocks yet. Add the first one with Add block.</p>}
             <SortableList ids={panel.blocks.map((block) => block.id)} onReorder={(_ids, from, to) => onMoveBlock(from, to)}>
                 <ul className="flex flex-col gap-1.5">
                     {panel.blocks.map((block, index) => (

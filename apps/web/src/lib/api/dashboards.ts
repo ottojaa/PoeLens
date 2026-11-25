@@ -1,9 +1,12 @@
 import {
+    AppendBlockResponseSchema,
     DASHBOARD_CHANGED_CODE,
     DashboardDataResponseSchema,
     DashboardSchema,
     DashboardsResponseSchema,
+    TemplatesResponseSchema,
     toDataPanels,
+    type AppendBlockBody,
     type CreateDashboardBody,
     type Dashboard,
     type DashboardDataBody,
@@ -13,6 +16,7 @@ import {
     type SaveDashboardBody,
 } from '@poelens/shared';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDebouncedValue } from '@/lib/use-debounced';
 import { fetchApi, sendApi, ApiError } from './client';
 import { REFRESH_INTERVAL_MS, type PriceScope } from './prices';
 
@@ -39,9 +43,13 @@ export function toDataKey(body: DashboardDataBody) {
     return ['dashboard-data', body] as const;
 }
 
+/** How long edited blocks must stay unchanged before their prices are asked for: typing a setting asks once, not per key. */
+const EDIT_DEBOUNCE_MS = 300;
+
 /** The prices behind a set of panels. Keeps the old numbers on screen while a changed block or unit loads. */
-export function useDashboardData(scope: PriceScope, panels: readonly Pick<Panel, 'id' | 'unit' | 'blocks'>[]) {
-    const body = toDataBody(scope, panels);
+export function useDashboardData(scope: PriceScope, panels: readonly Pick<Panel, 'id' | 'unit' | 'blocks'>[], isEditing: boolean) {
+    const settled = useDebouncedValue(panels, EDIT_DEBOUNCE_MS);
+    const body = toDataBody(scope, isEditing ? settled : panels);
 
     return useQuery({
         queryKey: toDataKey(body),
@@ -78,6 +86,27 @@ export function useSaveDashboard(game: Game) {
     return useMutation({
         mutationFn: ({ id, ...body }: SaveDashboardBody & { id: string }) => fetchApi('/dashboards/' + id, DashboardSchema, { method: 'PUT', json: body }),
         onSuccess: (dashboard) => queryClient.setQueryData(dashboardsKey(game), (list: DashboardsResponse | undefined) => withDashboard(list, dashboard)),
+    });
+}
+
+/** Ready-made panels of a game, with their items resolved to the ids this server knows. They change only with the data, so they are read once. */
+export function useDashboardTemplates(game: Game) {
+    return useQuery({
+        queryKey: ['dashboard-templates', game],
+        queryFn: () => fetchApi('/dashboards/templates?game=' + game, TemplatesResponseSchema),
+        staleTime: Infinity,
+    });
+}
+
+/** Adds one block to a stored dashboard, in a panel it names or a new one, without the page holding the dashboard's layout. */
+export function useAppendBlock(game: Game) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ dashboardId, ...body }: AppendBlockBody & { dashboardId: string }) =>
+            fetchApi('/dashboards/' + dashboardId + '/blocks', AppendBlockResponseSchema, { method: 'POST', json: body }),
+        // Read again after a refusal too: it means the list no longer matches what is stored.
+        onSettled: () => queryClient.invalidateQueries({ queryKey: dashboardsKey(game) }),
     });
 }
 

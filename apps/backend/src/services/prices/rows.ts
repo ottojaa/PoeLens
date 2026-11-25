@@ -6,7 +6,7 @@ import { UNIT_COLUMN } from './series.js';
 
 const SECONDS = { h1: 3_600, h24: 86_400, d7: 604_800 } as const;
 
-type WindowKey = keyof typeof SECONDS;
+export type WindowKey = keyof typeof SECONDS;
 
 const WINDOWS = Object.keys(SECONDS) as WindowKey[];
 
@@ -29,7 +29,7 @@ export interface RowQuery {
 /** The reference price of each window in each unit, from the same reference row: `h1_divine`, `h1_exalted`, ... */
 type ReferenceColumns = Record<`${WindowKey}_${Unit}`, number | null>;
 
-interface RowResult extends ReferenceColumns {
+export interface RowResult extends ReferenceColumns {
     item_id: number;
     name: string;
     base_type: string | null;
@@ -45,11 +45,11 @@ interface RowResult extends ReferenceColumns {
 }
 
 /**
- * The same item's price about one window before this row, in every unit: the nearest snapshot to that moment, within
- * half a window either side, ignoring low-confidence rows (a lone listing is no reference). Nothing there, no change.
+ * The same item's price about `windowSeconds` before this row, in every unit: the nearest snapshot to that moment,
+ * within half a window either side, ignoring low-confidence rows (a lone listing is no reference). Nothing there, no
+ * change. The joined columns are named `alias`.
  */
-function referenceJoin(window: WindowKey): RawBuilder<unknown> {
-    const seconds = SECONDS[window];
+export function referenceJoin(alias: string, windowSeconds: number): RawBuilder<unknown> {
     const columns = sql.join(UNITS.map((unit) => sql.ref(`ref.${UNIT_COLUMN[unit]}`)));
 
     return sql`LEFT JOIN LATERAL (
@@ -57,14 +57,14 @@ function referenceJoin(window: WindowKey): RawBuilder<unknown> {
           FROM prices ref
          WHERE ref.game = p.game AND ref.league = p.league AND ref.item_id = p.item_id AND ref.source = p.source
            AND NOT ref.low_confidence
-           AND ref.time BETWEEN p.time - make_interval(secs => ${seconds * 1.5}) AND p.time - make_interval(secs => ${seconds * 0.5})
-         ORDER BY abs(extract(epoch FROM (p.time - make_interval(secs => ${seconds}) - ref.time)))
+           AND ref.time BETWEEN p.time - make_interval(secs => ${windowSeconds * 1.5}) AND p.time - make_interval(secs => ${windowSeconds * 0.5})
+         ORDER BY abs(extract(epoch FROM (p.time - make_interval(secs => ${windowSeconds}) - ref.time)))
          LIMIT 1
-    ) ${sql.id(window)} ON true`;
+    ) ${sql.id(alias)} ON true`;
 }
 
 /** `h1.divine AS h1_divine, ...`: every window's reference price in every unit. */
-function referenceSelect(): RawBuilder<unknown> {
+export function referenceSelect(): RawBuilder<unknown> {
     return sql.join(WINDOWS.flatMap((window) => UNITS.map((unit) => sql`${sql.id(window)}.${sql.id(unit)} AS ${sql.id(`${window}_${unit}`)}`)));
 }
 
@@ -102,7 +102,7 @@ function toChange(row: RowResult, unit: Unit): PriceChange {
     };
 }
 
-function toPriceRow(row: RowResult, choice: UnitChoice, game: Game): PriceRow {
+export function toPriceRow(row: RowResult, choice: UnitChoice, game: Game): PriceRow {
     const prices = toPrices(row);
     const unit = toRowUnit(choice, prices, game);
 
@@ -118,6 +118,43 @@ function toPriceRow(row: RowResult, choice: UnitChoice, game: Game): PriceRow {
     };
 }
 
+/** What a row query adds to the standard one: extra columns and joins, a narrower filter, another order and a smaller limit. */
+export interface RowClauses {
+    select?: RawBuilder<unknown>;
+    joins?: RawBuilder<unknown>;
+    where?: RawBuilder<unknown>;
+    orderBy?: RawBuilder<unknown>;
+    limit?: number;
+}
+
+/**
+ * The one query behind every price row: the given snapshots' rows with their item, price in every unit, liquidity and
+ * the three standard reference prices. Filtering on `(time, raw_id)` lets TimescaleDB skip every other chunk. A caller
+ * with its own rule adds to it through `clauses` instead of writing the query again.
+ */
+export async function queryRows<T extends RowResult = RowResult>(db: Kysely<Database>, query: RowQuery, clauses: RowClauses = {}): Promise<T[]> {
+    const orderColumn = sql.ref(`p.${UNIT_COLUMN[query.unit === 'auto' ? 'divine' : query.unit]}`);
+    const itemFilter = query.itemIds ? sql`AND p.item_id = ANY(${query.itemIds})` : sql``;
+    const times = query.times.map((time) => time.toISOString());
+    const confidenceFilter = query.includeLowConfidence ? sql`` : sql`AND NOT p.low_confidence`;
+    const { rows } = await sql<T>`
+        SELECT i.id AS item_id, i.name, i.base_type, i.category, i.icon,
+               p.divine, p.exalted, p.chaos, p.time, p.listings, p.volume, p.low_confidence,
+               ${referenceSelect()} ${clauses.select ?? sql``}
+          FROM prices p
+          JOIN items i ON i.id = p.item_id
+          ${sql.join(
+              WINDOWS.map((window) => referenceJoin(window, SECONDS[window])),
+              sql` `,
+          )}
+          ${clauses.joins ?? sql``}
+         WHERE p.time = ANY(${times}::timestamptz[]) AND p.raw_id = ANY(${query.rawIds}) ${itemFilter} ${confidenceFilter} ${clauses.where ?? sql``}
+         ORDER BY ${clauses.orderBy ?? sql`${orderColumn} DESC, i.name`}
+         LIMIT ${clauses.limit ?? MAX_ROWS}`.execute(db);
+
+    return rows;
+}
+
 /**
  * Rows of the given snapshots with liquidity, and price and change over 1h, 24h and 7d in each row's unit (the
  * requested one, or under `auto` the one its price reads best in), most valuable first.
@@ -125,20 +162,7 @@ function toPriceRow(row: RowResult, choice: UnitChoice, game: Game): PriceRow {
 export async function loadPriceRows(db: Kysely<Database>, query: RowQuery): Promise<PriceRow[]> {
     if (!query.rawIds.length) return [];
 
-    const orderColumn = sql.ref(`p.${UNIT_COLUMN[query.unit === 'auto' ? 'divine' : query.unit]}`);
-    const itemFilter = query.itemIds ? sql`AND p.item_id = ANY(${query.itemIds})` : sql``;
-    const times = query.times.map((time) => time.toISOString());
-    const confidenceFilter = query.includeLowConfidence ? sql`` : sql`AND NOT p.low_confidence`;
-    const { rows } = await sql<RowResult>`
-        SELECT i.id AS item_id, i.name, i.base_type, i.category, i.icon,
-               p.divine, p.exalted, p.chaos, p.time, p.listings, p.volume, p.low_confidence,
-               ${referenceSelect()}
-          FROM prices p
-          JOIN items i ON i.id = p.item_id
-          ${sql.join(WINDOWS.map(referenceJoin), sql` `)}
-         WHERE p.time = ANY(${times}::timestamptz[]) AND p.raw_id = ANY(${query.rawIds}) ${itemFilter} ${confidenceFilter}
-         ORDER BY ${orderColumn} DESC, i.name
-         LIMIT ${MAX_ROWS}`.execute(db);
+    const rows = await queryRows(db, query);
 
     return rows.map((row) => toPriceRow(row, query.unit, query.game));
 }

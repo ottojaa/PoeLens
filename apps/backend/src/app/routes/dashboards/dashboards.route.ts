@@ -1,4 +1,6 @@
 import {
+    AppendBlockBodySchema,
+    AppendBlockResponseSchema,
     CreateDashboardBodySchema,
     DashboardDataBodySchema,
     DashboardDataResponseSchema,
@@ -8,6 +10,10 @@ import {
     DashboardsQuerySchema,
     DashboardsResponseSchema,
     SaveDashboardBodySchema,
+    TemplatesQuerySchema,
+    TemplatesResponseSchema,
+    type AppendBlockBody,
+    type AppendBlockResponse,
     type CreateDashboardBody,
     type Dashboard,
     type DashboardDataBody,
@@ -17,10 +23,21 @@ import {
     type DashboardsQuery,
     type DashboardsResponse,
     type SaveDashboardBody,
+    type TemplatesQuery,
+    type TemplatesResponse,
 } from '@poelens/shared';
 import type { FastifyInstance } from 'fastify';
 import { db } from '../../../db/kysely.js';
-import { createDashboard, deleteDashboard, getDashboardData, listDashboards, reorderDashboards, saveDashboard } from '../../../services/dashboards/index.js';
+import {
+    appendBlock,
+    createDashboard,
+    deleteDashboard,
+    getDashboardData,
+    listDashboards,
+    listTemplates,
+    reorderDashboards,
+    saveDashboard,
+} from '../../../services/dashboards/index.js';
 
 export default async function (fastify: FastifyInstance) {
     fastify.get<{ Querystring: DashboardsQuery; Reply: DashboardsResponse }>(
@@ -78,6 +95,34 @@ export default async function (fastify: FastifyInstance) {
             },
         },
         async (request) => getDashboardData(db, request.body, request.log),
+    );
+
+    fastify.get<{ Querystring: TemplatesQuery; Reply: TemplatesResponse }>(
+        '/templates',
+        {
+            schema: {
+                tags: ['dashboards'],
+                description: "The panels Add panel offers, with the ids of the items they hold looked up in the game's catalog",
+                querystring: TemplatesQuerySchema,
+                response: { 200: TemplatesResponseSchema },
+            },
+        },
+        async (request) => listTemplates(db, request.query.game),
+    );
+
+    fastify.post<{ Params: DashboardParams; Body: AppendBlockBody; Reply: AppendBlockResponse }>(
+        '/:id/blocks',
+        {
+            schema: {
+                tags: ['dashboards'],
+                description:
+                    "Adds one block on the stored copy of a dashboard, to a panel or to a new one, and takes the revision up by one. The server gives the block and a new panel their ids. The starter's id works before it has been stored",
+                params: DashboardParamsSchema,
+                body: AppendBlockBodySchema,
+                response: { 201: AppendBlockResponseSchema },
+            },
+        },
+        async (request, reply) => reply.status(201).send(await appendBlock(db, request.user.id, request.params.id, request.body)),
     );
 
     fastify.put<{ Params: DashboardParams; Body: SaveDashboardBody; Reply: Dashboard }>(

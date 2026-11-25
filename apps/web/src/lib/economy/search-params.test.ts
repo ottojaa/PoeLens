@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { toTableBlock } from '../dashboard/editor';
 import { DEFAULT_COLUMNS } from './columns';
 import { parseColumns, parseEconomySearch, parseItemSearch, parseRootSearch, toColumnsParam, toEconomyView, toRange } from './search-params';
 
@@ -28,6 +29,17 @@ describe('economy search', () => {
 
     it('rejects a negative minimum', () => {
         expect(toEconomyView(parseEconomySearch({ min: -4 })).min).toBe(0);
+    });
+
+    it('drops a filter or a minimum longer or higher than a price table takes, so the view can always be saved as one', () => {
+        const view = toEconomyView(parseEconomySearch({ q: 'a'.repeat(101), min: 2_000_000_000 }));
+
+        expect(view).toMatchObject({ q: '', min: 0 });
+        expect(() => toTableBlock('Currency', view)).not.toThrow();
+        expect(toTableBlock('Currency', toEconomyView(parseEconomySearch({ q: 'a'.repeat(100), min: 1_000_000_000 })))).toMatchObject({
+            q: 'a'.repeat(100),
+            minLiquidity: 1_000_000_000,
+        });
     });
 
     it('reads a text filter the router decoded as a number or a boolean', () => {
