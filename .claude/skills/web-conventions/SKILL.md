@@ -28,7 +28,7 @@ src/
   theme/         # themes.ts (registry), <id>.css (one per theme), audit.ts, theme.test.ts
   motion/        # tokens.ts, motion.css, MotionProvider, PageTransition, AnimatedNumber, AnimatedList, TogglePop
   lib/           # api client and hooks, theme provider, utilities
-electron/        # main.mts, preload.cts, navigation.mts (+ test); compiled by electron/tsconfig.json
+electron/        # main.mts, preload.cts, navigation.mts and updates.mts (+ tests); compiled by electron/tsconfig.json
 ```
 
 ## Data Fetching
@@ -88,7 +88,9 @@ All animation goes through `src/motion/`; the numbers live in `tokens.ts` (secon
 
 - `electron/main.mts` (ESM) loads the hosted app with `loadURL`; the preload is `.cts` (sandboxed preloads must be CommonJS) and exposes only `platform`
 - `decideNavigation(url, appUrl)` in `navigation.mts` is the one place that decides `allow | external | block`; `will-navigate`, `will-redirect` and `setWindowOpenHandler` all use it. It compares parsed origins, never string prefixes. Keep `contextIsolation` on and `nodeIntegration` off.
-- electron-builder ships only `dist-electron/**/*`, and bundles a package's `dependencies`: keep all renderer dependencies in `devDependencies`
+- electron-builder ships `dist-electron/**/*` and bundles a package's `dependencies`: `electron-updater` is the one runtime dependency, and all renderer dependencies stay in `devDependencies`
+- `updates.mts` decides what each platform does with a new release (macOS offers the release page, Windows downloads and installs). It takes the updater and dialogs from `main.mts`, so it is tested without Electron; its prompts are native dialogs from the main process, with no IPC
+- Import `electron-updater` by its default export (`electronUpdater.autoUpdater`): a named import fails at startup in the packaged app
 - `nx run @poelens/web:serve:electron` for dev; `build:electron` is `tsc -p electron/tsconfig.json`
 - Never launch Electron or a browser from automated runs that forbid it; test the decision logic instead
 

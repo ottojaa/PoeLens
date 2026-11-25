@@ -41,13 +41,13 @@ API `3100`, web `4300` (offset from reverie's, so both stacks run at once). Post
 - `nx run @poelens/backend:migrate` applies migrations (`nx migrate` is Nx's own package-upgrade command, so the target needs `nx run`), `nx run @poelens/backend:migrate:down` rolls back one. In production the build also emits the runner: `node dist/apps/backend/src/db/migrate.js` (the esbuild output is nested under `dist/apps/backend/src`).
 - `nx serve @poelens/backend` answers `/health` with "degraded" when Postgres is not running; nothing needs a `.env` on a clean checkout.
 - A production web build needs `VITE_API_URL` (the API's base URL; empty means same-origin): `VITE_API_URL=https://api.example.com nx build @poelens/web`. Forgetting it fails the build instead of shipping a bundle that calls the wrong host.
-- `nx run @poelens/web:serve:electron` runs the Vite dev server and the desktop shell. `package:mac|win|linux` build installers.
+- `nx run @poelens/web:serve:electron` runs the Vite dev server and the desktop shell. `package:mac|win|linux` build installers and never publish them; a `desktop-vX.Y.Z` tag makes CI draft a release (README, "Releasing a desktop version").
 - Only run tests/typecheck/lint when it's relevant to the change or the user asks — don't run them reflexively after every edit.
 
 ## Production safety
 
 - **No test files under `apps/backend/src/app/routes` or `app/plugins`.** Production autoloads every file in both folders and has no dev dependencies, so a test file there crash-loops the server. Tests live next to the code elsewhere (`src/app/*.test.ts`, `src/config/`, ...). `routes-autoload.test.ts` guards this.
-- Electron packaging ships only `dist-electron/**/*`, and electron-builder bundles a package's `dependencies`. All of `apps/web`'s renderer dependencies therefore live in its `devDependencies` (Vite bundles them for the hosted app). Do not add runtime `dependencies` there.
+- Electron packaging ships `dist-electron/**/*` plus the package's `dependencies`, which electron-builder bundles. All of `apps/web`'s renderer dependencies therefore live in its `devDependencies` (Vite bundles them for the hosted app). `electron-updater`, which the main process imports, is the one allowed entry in its `dependencies`: add no other.
 - The desktop window may only show the hosted app's origin (`electron/navigation.mts`); other http(s) links open in the default browser.
 
 ## Code Style

@@ -81,7 +81,7 @@
             "executor": "nx:run-commands",
             "dependsOn": ["build:electron"],
             "options": {
-                "command": "electron-builder build --mac",
+                "command": "electron-builder build --mac --publish never",
                 "cwd": "apps/web"
             }
         },
@@ -89,7 +89,7 @@
             "executor": "nx:run-commands",
             "dependsOn": ["build:electron"],
             "options": {
-                "command": "electron-builder build --win",
+                "command": "electron-builder build --win --publish never",
                 "cwd": "apps/web"
             }
         },
@@ -97,7 +97,7 @@
             "executor": "nx:run-commands",
             "dependsOn": ["build:electron"],
             "options": {
-                "command": "electron-builder build --linux",
+                "command": "electron-builder build --linux --publish never",
                 "cwd": "apps/web"
             }
         },

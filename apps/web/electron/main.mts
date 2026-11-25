@@ -1,6 +1,9 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, dialog, shell, type MessageBoxOptions } from 'electron';
+// The default import, then its property: a named import of this CommonJS package fails at startup from inside app.asar.
+import electronUpdater from 'electron-updater';
 import * as path from 'path';
 import { decideNavigation } from './navigation.mjs';
+import { startUpdates, type UpdatePrompt } from './updates.mjs';
 
 // The desktop app is a window onto the hosted web app, so a web release reaches desktop users without a new install.
 const APP_URL = app.isPackaged ? 'https://poelens.com' : 'http://localhost:4300';
@@ -54,8 +57,25 @@ function createWindow(): void {
     if (!app.isPackaged) webContents.openDevTools();
 }
 
+async function askAboutUpdate({ message, detail, confirm }: UpdatePrompt): Promise<boolean> {
+    const options: MessageBoxOptions = { type: 'info', message, detail, buttons: [confirm, 'Later'], defaultId: 0, cancelId: 1 };
+    // macOS keeps the app running with no window, so there may be nothing to attach the dialog to.
+    const [window] = BrowserWindow.getAllWindows();
+    const { response } = await (window ? dialog.showMessageBox(window, options) : dialog.showMessageBox(options));
+
+    return response === 0;
+}
+
 void app.whenReady().then(() => {
     createWindow();
+    startUpdates({
+        isPackaged: app.isPackaged,
+        platform: process.platform,
+        updater: electronUpdater.autoUpdater,
+        ask: askAboutUpdate,
+        openExternal: (url) => shell.openExternal(url),
+        log: (line) => console.log(line),
+    });
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
