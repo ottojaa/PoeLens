@@ -50,10 +50,11 @@ export function ItemBlockView({ block, data }: { block: ItemBlock; data: ItemBlo
         );
     }
 
+    // In a panel too narrow to hold the price beside the change, the change takes a line of its own.
     return (
-        <ItemLink item={item} className="flex items-center gap-2.5">
+        <ItemLink item={item} className="flex items-center gap-2.5 @max-[220px]:flex-wrap @max-[220px]:gap-y-0.5">
             <ItemIcon item={item} size="xs" />
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5 @max-[220px]:basis-[calc(100%-2.375rem)]">
                 <span className="text-muted-foreground truncate text-[13px]">{name}</span>
                 <span className="flex items-center gap-1.5 text-[15px] font-semibold whitespace-nowrap">
                     {price}
@@ -63,7 +64,7 @@ export function ItemBlockView({ block, data }: { block: ItemBlock; data: ItemBlo
             <span className="hidden shrink-0 @min-[320px]:block">
                 <Sparkline points={row.sparkline} change={row.change.d7} width={64} height={24} />
             </span>
-            <Change percent={row.change.h24} className="min-w-[58px] shrink-0 text-right text-[13px]" />
+            <Change percent={row.change.h24} className="min-w-[58px] shrink-0 text-right text-[13px] @max-[220px]:ml-auto" />
         </ItemLink>
     );
 }

@@ -1,4 +1,4 @@
-import type { Panel } from '@poelens/shared';
+import type { Panel, TableBlock } from '@poelens/shared';
 import { describe, expect, it } from 'vitest';
 import { toDataBody, toDataKey } from './dashboards';
 
@@ -59,5 +59,28 @@ describe('dashboard data key', () => {
         expect(keyOf([panel({ unit: 'chaos' })])).not.toBe(base);
         expect(keyOf([panel({ blocks: [{ id: 'b1', type: 'item', v: 1, item: 99, display: 'compact' }] })])).not.toBe(base);
         expect(JSON.stringify(toDataKey(toDataBody({ ...scope, league: 'Standard' }, [panel()])))).not.toBe(base);
+    });
+});
+
+describe('dashboard data key of the data blocks', () => {
+    it("ignores a table's columns and every data block's name, and changes with its settings", () => {
+        const table: TableBlock = {
+            id: 't',
+            type: 'table',
+            v: 1,
+            category: 'Currency',
+            sort: 'price',
+            dir: 'desc',
+            q: '',
+            minLiquidity: 0,
+            hideLowConfidence: true,
+            columns: ['d7'],
+            limit: 10,
+        };
+        const base = keyOf([panel({ blocks: [table] })]);
+
+        expect(keyOf([panel({ blocks: [{ ...table, columns: ['h1', 'trend'], name: 'Mine' }] })])).toBe(base);
+        expect(keyOf([panel({ blocks: [{ ...table, sort: 'd7' }] })])).not.toBe(base);
+        expect(keyOf([panel({ blocks: [{ ...table, limit: 11 }] })])).not.toBe(base);
     });
 });

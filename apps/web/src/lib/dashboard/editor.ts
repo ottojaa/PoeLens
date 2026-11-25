@@ -1,15 +1,24 @@
 import {
+    ChartBlockSchema,
     MAX_BLOCKS,
     MAX_PANELS,
+    MoversBlockSchema,
     normalize,
     place,
+    ScreenerBlockSchema,
+    TableBlockSchema,
     type Block,
+    type ChartBlock,
     type Dashboard,
     type HeadingBlock,
     type ItemBlock,
+    type MoversBlock,
     type NoteBlock,
     type PairBlock,
     type Panel,
+    type PanelTemplate,
+    type ScreenerBlock,
+    type TableBlock,
 } from '@poelens/shared';
 import { produce } from 'immer';
 
@@ -24,7 +33,11 @@ export type PanelPatch = Partial<Pick<Panel, 'title' | 'unit' | 'hideOnPhone'>>;
 export type BlockPatch = Partial<Pick<ItemBlock, 'name' | 'display' | 'item'>> &
     Partial<Pick<PairBlock, 'a' | 'b'>> &
     Partial<Pick<NoteBlock, 'markdown'>> &
-    Partial<Pick<HeadingBlock, 'text'>>;
+    Partial<Pick<HeadingBlock, 'text'>> &
+    Partial<Omit<TableBlock, 'id' | 'type' | 'v'>> &
+    Partial<Omit<MoversBlock, 'id' | 'type' | 'v'>> &
+    Partial<Omit<ScreenerBlock, 'id' | 'type' | 'v'>> &
+    Partial<Pick<ChartBlock, 'quote' | 'range'>>;
 
 export type DraftAction =
     | { type: 'reset'; draft: Draft }
@@ -58,6 +71,23 @@ export function newPanel(panels: readonly Panel[]): Panel | undefined {
     return { id: newId('panel'), title: 'New panel', ...place(panels, NEW_PANEL_SIZE), hideOnPhone: false, unit: null, blocks: [] };
 }
 
+/**
+ * A template's panel as a new panel at the bottom of the grid: its own id and block ids, so the same template can be
+ * added twice. Undefined when the dashboard already holds as many panels as it can.
+ */
+export function fromTemplate(template: Pick<PanelTemplate, 'panel'>, panels: readonly Panel[]): Panel | undefined {
+    if (panels.length >= MAX_PANELS) return undefined;
+
+    const { panel } = template;
+
+    return {
+        ...panel,
+        id: newId('panel'),
+        ...place(panels, { w: panel.w, h: panel.h }),
+        blocks: panel.blocks.map((block) => ({ ...block, id: newId('b') })),
+    };
+}
+
 export function newItemBlock(item: number): ItemBlock {
     return { id: newId('b'), type: 'item', v: 1, item, display: 'compact' };
 }
@@ -72,6 +102,56 @@ export function newNoteBlock(): NoteBlock {
 
 export function newHeadingBlock(): HeadingBlock {
     return { id: newId('b'), type: 'heading', v: 1, text: '' };
+}
+
+/** A price table of a category, with every other setting at its default. */
+export function newTableBlock(category: string): TableBlock {
+    return TableBlockSchema.parse({ id: newId('b'), type: 'table', v: 1, category });
+}
+
+/** The shape the economy page shows a category in, which a table block is built from. */
+export interface TableView {
+    sort: TableBlock['sort'];
+    dir: TableBlock['dir'];
+    q: string;
+    min: number;
+    hideLow: boolean;
+    columns: readonly TableBlock['columns'][number][];
+}
+
+/** How many rows a table saved from the economy page shows. */
+export const SAVED_TABLE_ROWS = 20;
+
+/** The price table that shows what the economy page shows now: the same category, filter, sort and columns. */
+export function toTableBlock(category: string, view: TableView): TableBlock {
+    return TableBlockSchema.parse({
+        id: newId('b'),
+        type: 'table',
+        v: 1,
+        category,
+        sort: view.sort,
+        dir: view.dir,
+        q: view.q,
+        minLiquidity: view.min,
+        hideLowConfidence: view.hideLow,
+        columns: [...view.columns],
+        limit: SAVED_TABLE_ROWS,
+    });
+}
+
+/** Movers over every category, at the defaults. */
+export function newMoversBlock(): MoversBlock {
+    return MoversBlockSchema.parse({ id: newId('b'), type: 'movers', v: 1 });
+}
+
+/** A screener over every category, at the defaults: up 20% in 3 hours, 50+ listings, 1+ divine. */
+export function newScreenerBlock(): ScreenerBlock {
+    return ScreenerBlockSchema.parse({ id: newId('b'), type: 'screener', v: 1 });
+}
+
+/** A price chart of one item over the last 7 days. */
+export function newChartBlock(item: number): ChartBlock {
+    return ChartBlockSchema.parse({ id: newId('b'), type: 'chart', v: 1, item });
 }
 
 /** Whether a panel can take one more block. */

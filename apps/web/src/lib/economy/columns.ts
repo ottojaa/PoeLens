@@ -1,23 +1,18 @@
-/** The table columns the viewer can hide. The item and price columns are always there. */
-export const OPTIONAL_COLUMNS = ['h1', 'h24', 'd7', 'trend', 'liquidity'] as const;
+import type { Category } from '@poelens/shared';
 
-export type OptionalColumn = (typeof OPTIONAL_COLUMNS)[number];
+// The column and sort keys live in shared, where the dashboards' table block reads them too.
+export {
+    COLUMN_LABELS,
+    DEFAULT_COLUMNS,
+    DEFAULT_SORT,
+    OPTIONAL_COLUMNS,
+    SORT_KEYS,
+    type OptionalColumn,
+    type SortDirection,
+    type SortKey,
+} from '@poelens/shared';
 
-/** What a fresh visit shows: every optional column but the 1 hour change. */
-export const DEFAULT_COLUMNS: readonly OptionalColumn[] = ['h24', 'd7', 'trend', 'liquidity'];
-
-export const COLUMN_LABELS: Record<OptionalColumn, string> = {
-    h1: '1 hour',
-    h24: '24 hours',
-    d7: '7 days',
-    trend: 'Trend',
-    liquidity: 'Liquidity',
-};
-
-/** The columns the table can be sorted by. `trend` sorts by the sparkline's net change over its week. */
-export const SORT_KEYS = ['name', 'price', 'h1', 'h24', 'd7', 'trend', 'liquidity'] as const;
-
-export type SortKey = (typeof SORT_KEYS)[number];
-export type SortDirection = 'asc' | 'desc';
-
-export const DEFAULT_SORT: { sort: SortKey; dir: SortDirection } = { sort: 'price', dir: 'desc' };
+/** A category's own label for what its liquidity column counts: stash items have listings, exchange items a traded value in divine. */
+export function toLiquidityLabel(category: Category): string {
+    return category.endpoint === 'stash' ? 'Listings' : 'Traded (div)';
+}

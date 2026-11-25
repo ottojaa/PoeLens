@@ -1,5 +1,6 @@
 import { CATEGORIES } from '@poelens/shared';
 import { Link, useParams, useRouterState } from '@tanstack/react-router';
+import { LayoutDashboard } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { LeagueSwitcher } from './LeagueSwitcher';
@@ -8,8 +9,8 @@ import { useWatchlist } from '@/lib/api/watchlist';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { cn } from '@/lib/utils';
 
-/** The way to the home page, where the user's dashboards are. */
-function DashboardsLink({ onNavigate }: { onNavigate?: () => void }) {
+/** The way to the home page, where the user's dashboards are: the first thing in the menu. */
+function DashboardLink({ onNavigate }: { onNavigate?: () => void }) {
     const { location } = useRouterState();
     const isCurrent = location.pathname === '/';
 
@@ -18,9 +19,10 @@ function DashboardsLink({ onNavigate }: { onNavigate?: () => void }) {
             to="/"
             aria-current={isCurrent ? 'page' : undefined}
             onClick={onNavigate}
-            className={cn(buttonVariants({ variant: 'ghost' }), NAV_ITEM_CLASS, isCurrent && 'bg-accent text-foreground')}
+            className={cn(buttonVariants({ variant: 'ghost' }), NAV_ITEM_CLASS, 'justify-start gap-2.5 font-medium', isCurrent && 'bg-accent text-foreground')}
         >
-            Dashboards
+            <LayoutDashboard aria-hidden="true" className="size-4" />
+            Dashboard
         </Link>
     );
 }
@@ -67,10 +69,10 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
     return (
         <nav aria-label="Sections" className="flex flex-col gap-0.5">
+            <DashboardLink onNavigate={onNavigate} />
             <CategoryNav categories={CATEGORIES[GAME]} value={category ?? null} onNavigate={onNavigate} />
             <NavHeading>Yours</NavHeading>
             <WatchlistLink onNavigate={onNavigate} />
-            <DashboardsLink onNavigate={onNavigate} />
             <TokensLink onNavigate={onNavigate} />
         </nav>
     );

@@ -2,7 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CATEGORIES, DEFAULT_UNIT, MOVER_WINDOWS, type Game, type PriceRow } from '@poelens/shared';
 import { z } from 'zod';
 import { getMoversIn } from '../../services/prices/index.js';
-import { toRowUnit } from '../../services/prices/display-unit.js';
+import { toAutoRow } from '../../services/prices/display-unit.js';
 import { readDefaults, type ToolContext } from '../context.js';
 import { runTool, textResult, ToolError } from '../errors.js';
 import { formatPercent, formatPriceLine, header, newestAsOf, withCredit } from '../format.js';
@@ -24,13 +24,6 @@ function toCategories(game: Game, category: string): string[] | undefined {
     if (match) return [match.id];
 
     throw new ToolError(`Unknown category "${category}". Use all, uniques, economy or one of: ${all.map((entry) => entry.id).join(', ')}.`);
-}
-
-/** A mover row shown in the unit its price reads best in. Its change stays the one measured in the ranking unit. */
-function toAutoRow(row: PriceRow, game: Game): PriceRow {
-    const unit = toRowUnit('auto', row.prices, game);
-
-    return { ...row, unit, price: row.prices[unit] };
 }
 
 function section(title: string, rows: PriceRow[], window: (typeof MOVER_WINDOWS)[number], now: Date): string[] {

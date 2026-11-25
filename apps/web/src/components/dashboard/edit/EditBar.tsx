@@ -1,6 +1,8 @@
-import { LayoutDashboard, Plus } from 'lucide-react';
+import type { PanelTemplate } from '@poelens/shared';
+import { LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Segmented } from '@/components/ui/segmented';
+import { AddPanelMenu } from './AddPanelMenu';
 
 export type EditLevel = 'layout' | 'content';
 
@@ -12,6 +14,7 @@ export function EditBar({
     canLayout,
     hint,
     canAddPanel,
+    templates,
     saving,
     onLevel,
     onAddPanel,
@@ -27,9 +30,10 @@ export function EditBar({
     /** Replaces the usual line of help, e.g. when the window has been narrowed while editing. */
     hint?: string;
     canAddPanel: boolean;
+    templates: readonly PanelTemplate[] | undefined;
     saving: boolean;
     onLevel: (level: EditLevel) => void;
-    onAddPanel: () => void;
+    onAddPanel: (template: PanelTemplate | undefined) => void;
     onCancel: () => void;
     onDone: () => void;
 }) {
@@ -58,10 +62,7 @@ export function EditBar({
                         : 'Drag a panel by its top bar, resize it from the corner, or open its content.')}
             </span>
             <div className="ml-auto flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={onAddPanel} disabled={!canAddPanel} className="gap-2">
-                    <Plus aria-hidden="true" className="text-primary" />
-                    Add panel
-                </Button>
+                <AddPanelMenu templates={templates} disabled={!canAddPanel} onAdd={onAddPanel} />
                 <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
                     Cancel
                 </Button>

@@ -217,6 +217,7 @@ export type PriceRow = z.infer<typeof PriceRowSchema>;
 export type TableRow = z.infer<typeof TableRowSchema>;
 export type MoverWindow = z.infer<typeof MoverWindowSchema>;
 export type HistoryBucket = z.infer<typeof HistoryBucketSchema>;
+export type HistoryPoint = z.infer<typeof HistoryPointSchema>;
 export type TableQuery = z.infer<typeof TableQuerySchema>;
 export type LatestQuery = z.infer<typeof LatestQuerySchema>;
 export type HistoryQuery = z.infer<typeof HistoryQuerySchema>;

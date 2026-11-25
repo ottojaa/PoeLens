@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSparklinePath, SPARKLINE_HEIGHT, SPARKLINE_WIDTH, toTrendChange } from './sparkline';
+import { buildSparklinePath, SPARKLINE_HEIGHT, SPARKLINE_WIDTH } from './sparkline';
 
 describe('buildSparklinePath', () => {
     it('draws nothing for no points', () => {
@@ -35,16 +35,5 @@ describe('buildSparklinePath', () => {
 
     it('draws a flat series as a line across the middle', () => {
         expect(buildSparklinePath([4, 4, 4], 100, 30)).toBe('M2 15 L50 15 L98 15');
-    });
-});
-
-describe('toTrendChange', () => {
-    it('is the percent from the first point to the last', () => {
-        expect(toTrendChange([100, 150, 125])).toBe(25);
-    });
-
-    it('is null without a line or from a zero start', () => {
-        expect(toTrendChange([5])).toBeNull();
-        expect(toTrendChange([0, 5])).toBeNull();
     });
 });

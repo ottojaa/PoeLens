@@ -1,28 +1,25 @@
 import { CATEGORIES, type Category, type Prices, type TableRow } from '@poelens/shared';
 import { useNavigate } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api/client';
 import { useCurrencyRows, useTable } from '@/lib/api/prices';
 import { useWatchlist } from '@/lib/api/watchlist';
-import { DEFAULT_SORT } from '@/lib/economy/columns';
+import { DEFAULT_SORT, toLiquidityLabel } from '@/lib/economy/columns';
 import { toColumnsParam, type EconomyView } from '@/lib/economy/search-params';
 import { filterRows, sortRows } from '@/lib/economy/sort';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
 import { formatRates, toRates } from '@/lib/economy/rates';
 import { formatAgo } from '@/lib/format';
 import { useMediaQuery } from '@/lib/use-media-query';
+import { toTableBlock } from '@/lib/dashboard/editor';
+import { AddToDashboard } from './AddToDashboard';
 import { EconomyCards, SortControl } from './EconomyCards';
 import { EconomyTable } from './EconomyTable';
 import { EconomyToolbar, type ViewChange } from './EconomyToolbar';
 import { ErrorState, NoDataState, NoMatchState, TableSkeleton } from './states';
 import type { SortKey } from '@/lib/economy/columns';
-
-/** A category's own label for what its liquidity column counts: stash items have listings, exchange items a traded value in divine. */
-function toLiquidityLabel(category: Category): string {
-    return category.endpoint === 'stash' ? 'Listings' : 'Traded (div)';
-}
 
 /** Where a category's prices come from, as the page's meta line names it. */
 function toSourceLabel(category: Category): string {
@@ -69,17 +66,32 @@ export function useViewNavigation(view: EconomyView) {
     };
 }
 
-function PageHeading({ title, meta, hideLow, onHideLow }: { title: string; meta: string; hideLow: boolean; onHideLow: (hideLow: boolean) => void }) {
+function PageHeading({
+    title,
+    meta,
+    hideLow,
+    onHideLow,
+    action,
+}: {
+    title: string;
+    meta: string;
+    hideLow: boolean;
+    onHideLow: (hideLow: boolean) => void;
+    action: ReactNode;
+}) {
     return (
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
             <div>
                 <h1 className="font-heading text-[30px] leading-tight font-bold">{title}</h1>
                 <p className="text-muted-foreground mt-1 text-sm">{meta}</p>
             </div>
-            <Label className="flex min-h-11 cursor-pointer items-center gap-2 font-normal">
-                <Checkbox checked={hideLow} onCheckedChange={(checked) => onHideLow(checked === true)} />
-                Hide low-confidence prices
-            </Label>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <Label className="flex min-h-11 cursor-pointer items-center gap-2 font-normal">
+                    <Checkbox checked={hideLow} onCheckedChange={(checked) => onHideLow(checked === true)} />
+                    Hide low-confidence prices
+                </Label>
+                {action}
+            </div>
         </div>
     );
 }
@@ -123,7 +135,13 @@ function CategoryView({ category, view }: { category: Category; view: EconomyVie
 
     return (
         <div className="flex flex-col gap-5">
-            <PageHeading title={category.label} meta={meta} hideLow={view.hideLow} onHideLow={navigation.setHideLow} />
+            <PageHeading
+                title={category.label}
+                meta={meta}
+                hideLow={view.hideLow}
+                onHideLow={navigation.setHideLow}
+                action={<AddToDashboard block={toTableBlock(category.id, view)} title={category.label} />}
+            />
             <EconomyToolbar view={view} liquidityLabel={liquidityLabel} onChange={navigation.change} />
             {!isWide && <SortControl sort={{ key: view.sort, direction: view.dir }} liquidityLabel={liquidityLabel} onSort={navigation.sortBy} />}
             <div className="bg-card overflow-x-auto rounded-xl border">
