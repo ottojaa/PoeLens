@@ -78,9 +78,12 @@ export function ChartBlockView({ block, data }: { block: ChartBlock; data: Chart
                 <Change percent={toTrendChange(prices)} className="text-[13px]" />
             </div>
             <Plot path={path} label={label} />
-            <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[11px]">
+            {/* In a panel too narrow for all three on one line, the price range takes a line of its own under the dates. */}
+            <div className="text-muted-foreground mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[11px] whitespace-nowrap">
                 <span>{first && formatDate(first.time)}</span>
-                <Range low={low} high={high} data={data} />
+                <span className="flex justify-center @max-[300px]:order-last @max-[300px]:basis-full">
+                    <Range low={low} high={high} data={data} />
+                </span>
                 <span>{last && formatDate(last.time)}</span>
             </div>
         </div>

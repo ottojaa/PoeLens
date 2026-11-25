@@ -64,7 +64,7 @@ export function AddToDashboard({ block, title }: { block: Block; title: string }
                     Add to dashboard
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuContent align="end" className="w-52 sm:w-64">
                 <DropdownMenuLabel className="text-muted-foreground text-[11px] font-semibold tracking-[0.08em] uppercase">
                     Add as a price table to
                 </DropdownMenuLabel>
@@ -72,7 +72,7 @@ export function AddToDashboard({ block, title }: { block: Block; title: string }
                 {list.map((dashboard) => (
                     <DropdownMenuSub key={dashboard.id}>
                         <DropdownMenuSubTrigger>{dashboard.name}</DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="max-h-72 w-60 overflow-y-auto">
+                        <DropdownMenuSubContent className="max-h-72 w-60 max-w-(--radix-dropdown-menu-content-available-width) overflow-y-auto">
                             <PlaceItems dashboard={dashboard} onPick={(panelId) => add(dashboard.id, dashboard.name, panelId)} />
                         </DropdownMenuSubContent>
                     </DropdownMenuSub>

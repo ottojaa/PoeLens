@@ -1,8 +1,9 @@
-import { COLUMN_LABELS, type OptionalColumn, type TableBlock, type TableBlockData, type TableRow } from '@poelens/shared';
+import { CATEGORIES, COLUMN_LABELS, type OptionalColumn, type TableBlock, type TableBlockData, type TableRow } from '@poelens/shared';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { Change } from '@/components/economy/Change';
 import { ItemIcon } from '@/components/economy/ItemIcon';
 import { Sparkline } from '@/components/economy/Sparkline';
+import { toLiquidityLabel } from '@/lib/economy/columns';
 import { GAME } from '@/lib/economy/use-economy-context';
 import { formatLiquidity, formatPrice } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -12,11 +13,14 @@ import { UnitMark } from './UnitMark';
 
 const CHANGE_KEY = { h1: 'h1', h24: 'h24', d7: 'd7' } as const;
 
+/** Wide enough that a sorted change column's arrow and heading stay on one line. */
+const CHANGE_CLASS = 'w-[76px] shrink-0 text-right whitespace-nowrap';
+
 /** Trend shows from a 420px panel and listings from 520px; `toColumnClass` says when a change column shows. */
 const COLUMN_CLASS: Record<OptionalColumn, string> = {
-    h1: 'w-16 shrink-0 text-right',
-    h24: 'w-16 shrink-0 text-right',
-    d7: 'w-16 shrink-0 text-right',
+    h1: CHANGE_CLASS,
+    h24: CHANGE_CLASS,
+    d7: CHANGE_CLASS,
     trend: 'hidden w-[70px] shrink-0 justify-end @min-[420px]:flex',
     liquidity: 'hidden w-[70px] shrink-0 text-right @min-[520px]:block',
 };
@@ -48,6 +52,13 @@ function Cell({ column, index, row }: { column: OptionalColumn; index: number; r
     );
 }
 
+/** The column's heading, in the words the category's own page uses for its liquidity. */
+function toHeading(column: OptionalColumn, categoryId: string): string {
+    const category = CATEGORIES[GAME].find((candidate) => candidate.id === categoryId);
+
+    return column === 'liquidity' && category ? toLiquidityLabel(category) : COLUMN_LABELS[column];
+}
+
 function HeaderCell({ column, index, block }: { column: OptionalColumn; index: number; block: TableBlock }) {
     const Arrow = block.dir === 'asc' ? ArrowUp : ArrowDown;
     const sorted = block.sort === column;
@@ -55,12 +66,12 @@ function HeaderCell({ column, index, block }: { column: OptionalColumn; index: n
     return (
         <span className={cn(toColumnClass(column, index), sorted && 'text-foreground')}>
             {sorted && <Arrow aria-label={block.dir === 'asc' ? 'ascending' : 'descending'} className="mr-0.5 inline size-3 align-[-1px]" />}
-            {COLUMN_LABELS[column]}
+            {toHeading(column, block.category)}
         </span>
     );
 }
 
-const HEADER_CLASS = 'text-muted-foreground flex items-center gap-2.5 pb-1 text-[11px] font-semibold tracking-[0.08em] uppercase';
+const HEADER_CLASS = 'text-muted-foreground flex items-center gap-2.5 pb-1 text-[11px] font-semibold tracking-[0.06em] uppercase';
 
 /** A category's items as a compact price table: the same rows, sort and filter as the economy page, top N of them. */
 export function TableBlockView({ block, data }: { block: TableBlock; data: TableBlockData | null | undefined }) {

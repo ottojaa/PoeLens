@@ -1,7 +1,9 @@
 import {
     CATEGORIES,
     COLUMN_LABELS,
+    MAX_FILTER_LENGTH,
     MAX_LIST_ROWS,
+    MAX_MIN_LIQUIDITY,
     MAX_SCREENER_HOURS,
     MAX_TABLE_ROWS,
     OPTIONAL_COLUMNS,
@@ -60,14 +62,14 @@ export function TableSettings({ block, onPatch }: { block: TableBlock; onPatch: 
                 />
             </Field>
             <Field label="Name contains" htmlFor={id('q')}>
-                <Input id={id('q')} value={block.q} maxLength={100} onChange={(event) => onPatch({ q: event.target.value })} />
+                <Input id={id('q')} value={block.q} maxLength={MAX_FILTER_LENGTH} onChange={(event) => onPatch({ q: event.target.value })} />
             </Field>
             <Field label="At least this many listings" htmlFor={id('liquidity')} hint="Items traded in divine count their traded value instead.">
                 <NumberField
                     id={id('liquidity')}
                     value={block.minLiquidity}
                     min={0}
-                    max={1_000_000}
+                    max={MAX_MIN_LIQUIDITY}
                     onChange={(next) => onPatch({ minLiquidity: next ?? 0 })}
                 />
             </Field>
@@ -157,7 +159,7 @@ export function ScreenerSettings({ block, onPatch }: { block: ScreenerBlock; onP
                     id={id('liquidity')}
                     value={block.minLiquidity}
                     min={0}
-                    max={1_000_000}
+                    max={MAX_MIN_LIQUIDITY}
                     onChange={(next) => onPatch({ minLiquidity: next ?? 0 })}
                 />
             </Field>

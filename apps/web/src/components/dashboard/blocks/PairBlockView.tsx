@@ -41,8 +41,11 @@ export function PairBlockView({ block, data }: { block: PairBlock; data: PairBlo
         <ItemLink item={data.a} className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
             <Figure data={data} />
             <span className="flex min-w-0 flex-1 flex-col gap-0.5 @max-[260px]:order-last @max-[260px]:basis-full">
-                {/* A generated label that would be cut ("Divine Orb / E…") says less than the icons do, so it is hidden; a name the user typed always shows. */}
-                <span ref={ref} className={cn('text-muted-foreground truncate text-[13px]', truncated && !block.name && 'invisible')}>
+                {/*
+                 * A generated label that would be cut ("Divine Orb / E…") says less than the icons do, so it is hidden and
+                 * takes no line; it keeps its width, which is what is measured. A name the user typed always shows.
+                 */}
+                <span ref={ref} className={cn('text-muted-foreground truncate text-[13px]', truncated && !block.name && 'invisible h-0')}>
                     {name}
                 </span>
                 {truncated && !block.name && <span className="sr-only">{name}</span>}

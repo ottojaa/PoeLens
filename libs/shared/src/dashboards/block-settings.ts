@@ -57,7 +57,7 @@ export const ScreenerBlockSchema = z.object({
     /** A magnitude: 20 means "20% or more", in the direction chosen. */
     minChangePct: z.number().min(0).max(100_000).default(20),
     /** The fewest listings (or, for exchange items, the lowest traded value in divine) an item needs. */
-    minLiquidity: z.number().min(0).max(1_000_000_000).default(50),
+    minLiquidity: z.number().min(0).max(MAX_MIN_LIQUIDITY).default(50),
     /** The least an item is worth, in divine; null for no floor. */
     minDivine: z.number().min(0).max(1_000_000_000).nullable().default(1),
     limit: listLimit.default(5),

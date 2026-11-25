@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api/client';
 import { useCurrencyRows, useTable } from '@/lib/api/prices';
 import { useWatchlist } from '@/lib/api/watchlist';
-import { DEFAULT_SORT } from '@/lib/economy/columns';
+import { DEFAULT_SORT, toLiquidityLabel } from '@/lib/economy/columns';
 import { toColumnsParam, type EconomyView } from '@/lib/economy/search-params';
 import { filterRows, sortRows } from '@/lib/economy/sort';
 import { GAME, useEconomyContext } from '@/lib/economy/use-economy-context';
@@ -20,11 +20,6 @@ import { EconomyTable } from './EconomyTable';
 import { EconomyToolbar, type ViewChange } from './EconomyToolbar';
 import { ErrorState, NoDataState, NoMatchState, TableSkeleton } from './states';
 import type { SortKey } from '@/lib/economy/columns';
-
-/** A category's own label for what its liquidity column counts: stash items have listings, exchange items a traded value in divine. */
-function toLiquidityLabel(category: Category): string {
-    return category.endpoint === 'stash' ? 'Listings' : 'Traded (div)';
-}
 
 /** Where a category's prices come from, as the page's meta line names it. */
 function toSourceLabel(category: Category): string {
